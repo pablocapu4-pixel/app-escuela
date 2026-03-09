@@ -61,6 +61,8 @@ padding:8px;
 
 <input id="dniLogin" placeholder="DNI">
 
+<input type="password" id="passwordLogin" placeholder="Contraseña (solo docentes y directivos)">
+
 <select id="rolLogin">
 <option value="admin">Directivo</option>
 <option value="docente">Docente</option>
@@ -143,35 +145,84 @@ let notas = JSON.parse(localStorage.getItem("notas")) || []
 
 let usuarioActual = null
 
+// USUARIOS DEL SISTEMA
+
+let usuariosSistema = {
+
+admin:{
+dni:"123",
+password:"admin123"
+},
+
+docente:{
+dni:"456",
+password:"docente123"
+}
+
+}
+
+// LOGIN
+
 function login(){
 
 let dni = document.getElementById("dniLogin").value
+let password = document.getElementById("passwordLogin").value
 let rol = document.getElementById("rolLogin").value
 
 usuarioActual = dni
 
-document.getElementById("loginPanel").style.display="none"
-
 if(rol=="admin"){
+
+if(dni==usuariosSistema.admin.dni && password==usuariosSistema.admin.password){
+
+document.getElementById("loginPanel").style.display="none"
 document.getElementById("panelAdmin").style.display="block"
+
 mostrarAlumnos()
+
+}else{
+
+alert("Usuario o contraseña incorrecta")
+
+}
+
 }
 
 if(rol=="docente"){
+
+if(dni==usuariosSistema.docente.dni && password==usuariosSistema.docente.password){
+
+document.getElementById("loginPanel").style.display="none"
 document.getElementById("panelDocente").style.display="block"
+
 cargarSelectAlumnos()
+
+}else{
+
+alert("Usuario o contraseña incorrecta")
+
+}
+
 }
 
 if(rol=="alumno"){
+
+document.getElementById("loginPanel").style.display="none"
 document.getElementById("panelAlumno").style.display="block"
+
 mostrarBoletin()
+
 }
 
 }
+
+// SALIR
 
 function salir(){
 location.reload()
 }
+
+// GUARDAR ALUMNO
 
 function guardarAlumno(){
 
@@ -198,6 +249,8 @@ cargarSelectAlumnos()
 
 }
 
+// MOSTRAR ALUMNOS
+
 function mostrarAlumnos(){
 
 let html=""
@@ -221,6 +274,8 @@ document.getElementById("listaAlumnos").innerHTML=html
 
 }
 
+// CARGAR ALUMNOS EN SELECT
+
 function cargarSelectAlumnos(){
 
 let select=document.getElementById("alumnoNota")
@@ -239,6 +294,8 @@ select.appendChild(op)
 })
 
 }
+
+// GUARDAR NOTA
 
 function guardarNota(){
 
@@ -259,6 +316,8 @@ localStorage.setItem("notas",JSON.stringify(notas))
 alert("Nota guardada")
 
 }
+
+// MOSTRAR BOLETIN
 
 function mostrarBoletin(){
 
