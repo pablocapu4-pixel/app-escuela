@@ -1,232 +1,255 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
 <meta charset="utf-8">
 <title>Sistema Escolar CENS 451</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <style>
-body { font-family:sans-serif; max-width:800px; margin:auto; background:#f5f5f5; padding:20px; }
-input,select,button { width:100%; padding:12px; margin:8px 0; border-radius:6px; border:1px solid #ccc; }
-button { background:#4CAF50; color:white; font-weight:bold; cursor:pointer; }
+body { font-family: sans-serif; max-width: 800px; margin: auto; padding: 20px; background: #f5f5f5; }
+input, select, button { width: 100%; padding: 10px; margin: 8px 0; border-radius: 6px; border:1px solid #ccc; }
+button { background: #4CAF50; color: white; font-weight: bold; cursor:pointer; }
 button:hover { background:#45a049; }
-.card { background:white; padding:15px; border-radius:8px; margin:10px 0; box-shadow:0 2px 4px rgba(0,0,0,0.1); }
+.card { background:white; border-radius:8px; padding:15px; margin:10px 0; box-shadow:0 2px 4px rgba(0,0,0,0.1); }
 .hidden { display:none; }
-#error { color:red; font-weight:bold; text-align:center; }
-.rite-tea { background:#c8e6c9; color:#2e7d32; padding:2px 6px; border-radius:4px; font-weight:bold; }
-.rite-tep { background:#fff9c4; color:#f57f17; padding:2px 6px; border-radius:4px; font-weight:bold; }
-.rite-ted { background:#ffcdd2; color:#c62828; padding:2px 6px; border-radius:4px; font-weight:bold; }
+#error { color:red; text-align:center; font-weight:bold; }
+.rite-tag { display:inline-block; padding:2px 8px; border-radius:4px; font-weight:bold; }
+.rite-tea { background:#c8e6c9; color:#2e7d32; }
+.rite-tep { background:#fff9c4; color:#f57f17; }
+.rite-ted { background:#ffcdd2; color:#c62828; }
 </style>
 </head>
-
 <body>
 
 <!-- LOGIN -->
 <div id="login-screen">
-<h2>🔐 Sistema Escolar CENS 451</h2>
-<input id="email" placeholder="Usuario (email)">
-<input id="password" type="password" value="123456" placeholder="Contraseña">
-<button onclick="login()">Entrar</button>
-<p id="error"></p>
+  <h2>🔐 Iniciar Sesión - CENS 451</h2>
+  <input id="usuario" placeholder="Usuario (ej: dni o correo)">
+  <input id="password" type="password" placeholder="Contraseña">
+  <button onclick="login()">Entrar</button>
+  <p id="error"></p>
 </div>
 
 <!-- PANEL DIRECTIVO -->
 <div id="admin-screen" class="hidden">
-<h2>📊 Panel Directivo</h2>
-<button onclick="mostrarDocentes()">👨‍🏫 Ver docentes</button>
-<button onclick="mostrarAlumnos()">🎓 Ver alumnos</button>
-<button onclick="verEstadisticas()">📈 Estadísticas</button>
-<button onclick="logout()" style="background:#f44336;">🚪 Salir</button>
-<div id="admin-panel"></div>
+  <h2>📊 Panel Directivo</h2>
+  <button onclick="mostrarUsuarios()">👨‍🏫 Gestionar Docentes</button>
+  <button onclick="mostrarAlumnos()">👥 Gestionar Alumnos</button>
+  <button onclick="mostrarEstadisticas()">📈 Estadísticas</button>
+  <button onclick="logout()" style="background:#f44336;">🚪 Salir</button>
+  <div id="admin-panel"></div>
 </div>
 
 <!-- PANEL DOCENTE -->
 <div id="teacher-screen" class="hidden">
-<h2>👨‍🏫 Panel Docente</h2>
-<label>Materia:</label>
-<select id="teacher-subject" onchange="loadStudents()">
-  <option value="">Seleccione materia</option>
-</select>
-<div id="teacher-students"></div>
-<button onclick="logout()" style="background:#f44336;">🚪 Salir</button>
+  <h2>👨‍🏫 Panel Docente</h2>
+  <label>Materia:</label>
+  <select id="teacher-subject" onchange="cargarEstudiantesDocente()">
+    <option value="">Seleccione materia</option>
+  </select>
+  <div id="teacher-students"></div>
+  <button onclick="logout()" style="background:#f44336;">🚪 Salir</button>
 </div>
 
 <!-- PANEL ALUMNO -->
 <div id="student-screen" class="hidden">
-<h2>🎓 Boletín de Calificaciones</h2>
-<div id="student-grades">Cargando...</div>
-<button onclick="logout()" style="background:#f44336;">🚪 Salir</button>
+  <h2>🎓 Boletín de Calificaciones</h2>
+  <div id="student-grades">Cargando...</div>
+  <button onclick="logout()" style="background:#f44336;">🚪 Salir</button>
 </div>
 
 <script>
 const firebaseConfig = {
-apiKey: "AIzaSyAeezu1BHZch8eaNnVV-MJ6Rpdl1BzFHXY",
-authDomain: "app-escuela-cens451.firebaseapp.com",
-projectId: "app-escuela-cens451"
+  apiKey: "AIzaSyAeezu1BHZch8eaNnVV-MJ6Rpdl1BzFHXY",
+  authDomain: "app-escuela-cens451.firebaseapp.com",
+  projectId: "app-escuela-cens451"
 };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-let currentUserData = null;
-let evaluations = {};
-let currentSubject = "";
+let currentUser = null;
 
-// LOGIN
-function login(){
-  const email=document.getElementById("email").value.trim();
-  const pass=document.getElementById("password").value;
-  document.getElementById("error").innerText = "";
+// --- LOGIN ---
+async function login() {
+  const user = document.getElementById("usuario").value.trim();
+  const pass = document.getElementById("password").value;
+  const errorEl = document.getElementById("error");
+  errorEl.innerText = "";
 
-  if(!email||!pass){ document.getElementById("error").innerText="Completa todos los campos"; return; }
+  if(!user || !pass) { errorEl.innerText="Complete todos los campos"; return; }
 
-  auth.signInWithEmailAndPassword(email,pass)
-  .then(async () => {
+  let email = user.includes("@") ? user : user+"@cens451.edu.ar";
+
+  try {
+    await auth.signInWithEmailAndPassword(email, pass);
     const dni = email.split("@")[0];
     const doc = await db.collection("usuarios").doc(dni).get();
-    if(!doc.exists){ document.getElementById("error").innerText="Usuario no registrado"; auth.signOut(); return; }
-    currentUserData = doc.data();
-    showScreen(currentUserData.rol);
-    if(currentUserData.rol==="teacher") loadTeacherSubjects();
-    if(currentUserData.rol==="student") loadStudentGrades(dni);
-  })
-  .catch(err=>{ document.getElementById("error").innerText="Usuario o contraseña incorrectos"; });
+    if(!doc.exists) { errorEl.innerText="Usuario no registrado"; return; }
+    currentUser = { dni: dni, ...doc.data() };
+
+    // mostrar panel según rol
+    if(currentUser.rol==="admin") showScreen("admin-screen");
+    else if(currentUser.rol==="teacher") {
+      showScreen("teacher-screen");
+      cargarMateriasDocente();
+    }
+    else if(currentUser.rol==="student") {
+      showScreen("student-screen");
+      cargarBoletinAlumno(currentUser.dni);
+    }
+
+  } catch(err) {
+    errorEl.innerText="Usuario o contraseña incorrectos";
+  }
 }
 
-// LOGOUT
-function logout(){
-  auth.signOut().then(()=>{ location.reload(); });
-}
-
-// MOSTRAR PANTALLAS
-function showScreen(role){
-  document.querySelectorAll("div[id$='-screen']").forEach(el=>el.classList.add("hidden"));
-  if(role==="admin") document.getElementById("admin-screen").classList.remove("hidden");
-  if(role==="teacher") document.getElementById("teacher-screen").classList.remove("hidden");
-  if(role==="student") document.getElementById("student-screen").classList.remove("hidden");
-}
-
-// ========== DIRECTIVO ==========
-async function mostrarDocentes(){
-  const panel = document.getElementById("admin-panel");
-  panel.innerHTML="<h3>Docentes registrados</h3>";
-  const snap = await db.collection("usuarios").where("rol","==","teacher").get();
-  snap.forEach(doc=>{
-    const d = doc.data();
-    panel.innerHTML+=`<div class="card">👤 ${d.nombre}<br>Usuario: ${doc.id}<br>Materia: ${d.materia}</div>`;
+// --- CAMBIO DE PANTALLA ---
+function showScreen(id) {
+  ["login-screen","admin-screen","teacher-screen","student-screen"].forEach(e => {
+    document.getElementById(e).classList.add("hidden");
   });
+  document.getElementById(id).classList.remove("hidden");
 }
 
-async function mostrarAlumnos(){
-  const panel = document.getElementById("admin-panel");
-  panel.innerHTML="<h3>Alumnos registrados</h3>";
-  const snap = await db.collection("usuarios").where("rol","==","student").get();
-  snap.forEach(doc=>{
-    const s = doc.data();
-    panel.innerHTML+=`<div class="card">
-      👤 ${s.nombre}<br>
-      DNI: ${doc.id}<br>
-      Fecha Nac.: ${s.fechaNacimiento || "—"}<br>
-      Lugar Nac.: ${s.lugarNacimiento || "—"}<br>
-      Nacionalidad: ${s.nacionalidad || "—"}<br>
-      Año ingreso: ${s.anioIngreso || "—"}
-    </div>`;
-  });
-}
+// --- LOGOUT ---
+function logout() { auth.signOut().then(()=> location.reload()); }
 
-async function verEstadisticas(){
-  const panel = document.getElementById("admin-panel");
-  panel.innerHTML="<h3>Estadísticas de aprobacion</h3>";
-  const evalSnap = await db.collection("evaluaciones").get();
-  let total = evalSnap.size, aprobados = 0;
-  evalSnap.forEach(doc=>{
-    const e = doc.data();
-    if(e.notaFinal>=7) aprobados++;
-  });
-  panel.innerHTML+=`<div class="card">Total evaluaciones: ${total}<br>Aprobadas (>=7): ${aprobados}</div>`;
-}
-
-// ========== DOCENTE ==========
-async function loadTeacherSubjects(){
+// --- PANEL DOCENTE ---
+async function cargarMateriasDocente() {
   const select = document.getElementById("teacher-subject");
-  select.innerHTML='<option value="">Seleccione materia</option>';
-  if(!currentUserData.materia) return;
-  const materias = currentUserData.materia.split(",");
-  materias.forEach(m=>{
+  select.innerHTML = '<option value="">Seleccione materia</option>';
+  const snap = await db.collection("materias").where("docenteDni","==",currentUser.dni).get();
+  snap.forEach(doc=> {
+    const m = doc.data();
     const opt = document.createElement("option");
-    opt.value = m;
-    opt.textContent = m;
+    opt.value = doc.id;
+    opt.textContent = m.nombre;
     select.appendChild(opt);
   });
 }
 
-async function loadStudents(){
-  currentSubject = document.getElementById("teacher-subject").value;
+async function cargarEstudiantesDocente() {
+  const materiaId = document.getElementById("teacher-subject").value;
   const container = document.getElementById("teacher-students");
-  container.innerHTML="Cargando estudiantes...";
-  if(!currentSubject) return;
-  const snap = await db.collection("usuarios").where("rol","==","student").get();
+  container.innerHTML="Cargando...";
+
+  if(!materiaId) { container.innerHTML=""; return; }
+
+  const materiaDoc = await db.collection("materias").doc(materiaId).get();
+  const year = materiaDoc.data().anio;
+
+  const snap = await db.collection("alumnos").where("anio","==",year).get();
   container.innerHTML="";
-  snap.forEach(doc=>{
-    const s = doc.data();
-    container.innerHTML+=`
-    <div class="card">
-      <strong>${s.nombre}</strong><br>
-      <div>
-        <label>RITE (T.E.P, T.E.D, T.E.A)</label>
-        <select onchange="updateEval('${doc.id}','${currentSubject}','rite',this.value)">
+
+  snap.forEach(doc=> {
+    const a = doc.data();
+    const div = document.createElement("div");
+    div.className="card";
+    div.innerHTML=`
+      <strong>${a.nombre}</strong> - ${a.anio}° Año<br>
+      <small>DNI: ${a.dni}</small>
+      <div style="margin-top:10px;">
+        <label>RITE:</label>
+        <select onchange="guardarNota('${doc.id}','${materiaId}','rite',this.value)">
           <option value="">Seleccione</option>
-          <option value="T.E.A">T.E.A</option>
-          <option value="T.E.P">T.E.P</option>
-          <option value="T.E.D">T.E.D</option>
+          <option value="T.E.A.">T.E.A.</option>
+          <option value="T.E.P.">T.E.P.</option>
+          <option value="T.E.D.">T.E.D.</option>
         </select>
       </div>
       <div>
-        <label>Nota final (numérica)</label>
-        <input type="number" min="0" max="10" step="0.1" onchange="updateEval('${doc.id}','${currentSubject}','notaFinal',this.value)">
+        <label>Nota Final (0-10):</label>
+        <input type="number" min="0" max="10" step="0.1" onchange="guardarNota('${doc.id}','${materiaId}','notaFinal',this.value)">
       </div>
-    </div>
     `;
+    container.appendChild(div);
   });
 }
 
-// Guardar evaluaciones
-function updateEval(studentId, subject, field, value){
-  if(!evaluations[studentId]) evaluations[studentId]={};
-  if(!evaluations[studentId][subject]) evaluations[studentId][subject]={};
-  evaluations[studentId][subject][field]=value;
-  // Guardar automáticamente en Firestore
-  db.collection("evaluaciones").doc(`${studentId}_${subject}`).set({
-    studentId,
-    subject,
-    rite: evaluations[studentId][subject].rite || null,
-    notaFinal: evaluations[studentId][subject].notaFinal?parseFloat(evaluations[studentId][subject].notaFinal):null,
-    teacherId: currentUserData.email
-  });
+function guardarNota(alumnoDni,materiaId,campo,valor) {
+  db.collection("notas")
+    .doc(`${alumnoDni}_${materiaId}`)
+    .set({ alumnoDni, materiaId, [campo]: campo==="notaFinal"? parseFloat(valor):valor, docenteDni: currentUser.dni }, { merge:true });
 }
 
-// ========== ALUMNO ==========
-async function loadStudentGrades(dni){
+// --- PANEL ALUMNO ---
+async function cargarBoletinAlumno(dni) {
   const container = document.getElementById("student-grades");
-  const snap = await db.collection("evaluaciones").where("studentId","==",dni).get();
-  if(snap.empty){ container.innerHTML="<p>No hay evaluaciones registradas</p>"; return; }
-  let html = "";
+  const snap = await db.collection("notas").where("alumnoDni","==",dni).get();
+  if(snap.empty) { container.innerHTML="📭 Aún no hay evaluaciones."; return; }
+
+  let html="";
   snap.forEach(doc=>{
-    const e = doc.data();
-    let riteClass = e.rite==="T.E.A"? "rite-tea" : e.rite==="T.E.P"? "rite-tep" : e.rite==="T.E.D"? "rite-ted":"";
-    html+=`<div class="card">
-      <strong>${e.subject}</strong><br>
-      RITE: ${e.rite ? `<span class="${riteClass}">${e.rite}</span>`:"—"}<br>
-      Nota Final: ${e.notaFinal!==null?e.notaFinal:"—"}
-    </div>`;
+    const n = doc.data();
+    const riteClass = n.rite==="T.E.A."?"rite-tea":n.rite==="T.E.P."?"rite-tep":n.rite==="T.E.D."?"rite-ted":"";
+    html+=`
+      <div class="card">
+        <strong>Materia:</strong> ${n.materiaId}<br>
+        <strong>RITE:</strong> ${n.rite? `<span class="rite-tag ${riteClass}">${n.rite}</span>`:"—"}<br>
+        <strong>Nota Final:</strong> ${n.notaFinal!==undefined?n.notaFinal:"—"}<br>
+        <strong>Estado:</strong> ${n.notaFinal>=7?"Aprobado":"Desaprobado"}
+      </div>
+    `;
   });
   container.innerHTML=html;
 }
 
+// --- PANEL ADMIN ---
+async function mostrarUsuarios() {
+  const panel = document.getElementById("admin-panel");
+  panel.innerHTML="<h3>Usuarios</h3>";
+  const snap = await db.collection("usuarios").get();
+  snap.forEach(doc=>{
+    const u = doc.data();
+    panel.innerHTML+=`
+      <div class="card">
+        ${u.nombre} - ${u.rol}<br>
+        Usuario: ${doc.id}<br>
+        <button onclick="eliminarUsuario('${doc.id}')">Eliminar</button>
+      </div>
+    `;
+  });
+}
+
+async function eliminarUsuario(id) { if(!confirm("Eliminar usuario?")) return; await db.collection("usuarios").doc(id).delete(); mostrarUsuarios(); }
+
+async function mostrarAlumnos() {
+  const panel = document.getElementById("admin-panel");
+  panel.innerHTML="<h3>Alumnos</h3>";
+  const snap = await db.collection("alumnos").get();
+  snap.forEach(doc=>{
+    const a = doc.data();
+    panel.innerHTML+=`
+      <div class="card">
+        ${a.nombre} - Año: ${a.anio}<br>
+        DNI: ${a.dni}<br>
+        Fecha Nac.: ${a.fechaNacimiento} - Lugar: ${a.lugarNacimiento} - Nacionalidad: ${a.nacionalidad}<br>
+        Año ingreso: ${a.anioIngreso}<br>
+        <button onclick="eliminarAlumnoAdmin('${doc.id}')">Eliminar</button>
+      </div>
+    `;
+  });
+}
+
+async function eliminarAlumnoAdmin(id) { if(!confirm("Eliminar alumno?")) return; await db.collection("alumnos").doc(id).delete(); mostrarAlumnos(); }
+
+async function mostrarEstadisticas() {
+  const panel = document.getElementById("admin-panel");
+  panel.innerHTML="<h3>Estadísticas</h3>";
+  const snap = await db.collection("notas").get();
+  let total = snap.size;
+  let aprobados = snap.docs.filter(d=>d.data().notaFinal>=7).length;
+  let desaprobados = total - aprobados;
+  panel.innerHTML+=`<div class="card">Total evaluaciones: ${total}</div>
+                    <div class="card">Aprobados: ${aprobados}</div>
+                    <div class="card">Desaprobados: ${desaprobados}</div>`;
+}
 </script>
 </body>
 </html>
