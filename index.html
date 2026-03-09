@@ -7,7 +7,7 @@
 <style>
 
 body{
-font-family: Arial;
+font-family:Arial;
 background:#f2f2f2;
 text-align:center;
 padding:20px;
@@ -17,7 +17,7 @@ padding:20px;
 background:white;
 padding:20px;
 margin:20px auto;
-width:500px;
+width:520px;
 border-radius:10px;
 box-shadow:0 0 10px rgba(0,0,0,0.2);
 }
@@ -59,9 +59,11 @@ padding:8px;
 
 <h2>Ingreso</h2>
 
-<input id="dniLogin" placeholder="DNI">
+<input id="usuarioLogin" placeholder="Usuario (docente/directivo)">
 
-<input type="password" id="passwordLogin" placeholder="Contraseña (solo docentes y directivos)">
+<input type="password" id="passwordLogin" placeholder="Contraseña">
+
+<input id="dniLogin" placeholder="DNI (solo alumnos)">
 
 <select id="rolLogin">
 <option value="admin">Directivo</option>
@@ -79,24 +81,23 @@ padding:8px;
 
 <h2>Panel Directivo</h2>
 
+<h3>Cambiar usuario</h3>
+
+<input id="nuevoUsuarioAdmin" placeholder="Nuevo usuario">
+<button onclick="cambiarUsuarioAdmin()">Cambiar usuario</button>
+
 <h3>Cargar alumno</h3>
 
 <input id="nombreAlumno" placeholder="Nombre">
-
 <input id="dniAlumno" placeholder="DNI">
-
 <input type="date" id="fechaNacimiento">
-
 <input id="lugarNacimiento" placeholder="Lugar de nacimiento">
-
 <input id="nacionalidad" placeholder="Nacionalidad">
-
 <input id="anioIngreso" placeholder="Año de ingreso">
 
 <button onclick="guardarAlumno()">Guardar alumno</button>
 
 <h3>Lista de alumnos</h3>
-
 <div id="listaAlumnos"></div>
 
 <button onclick="salir()">Salir</button>
@@ -108,6 +109,11 @@ padding:8px;
 <div class="panel" id="panelDocente" style="display:none">
 
 <h2>Panel Docente</h2>
+
+<h3>Cambiar usuario</h3>
+
+<input id="nuevoUsuarioDocente" placeholder="Nuevo usuario">
+<button onclick="cambiarUsuarioDocente()">Cambiar usuario</button>
 
 <select id="alumnoNota"></select>
 
@@ -143,37 +149,36 @@ padding:8px;
 let alumnos = JSON.parse(localStorage.getItem("alumnos")) || []
 let notas = JSON.parse(localStorage.getItem("notas")) || []
 
-let usuarioActual = null
-
-// USUARIOS DEL SISTEMA
-
-let usuariosSistema = {
+let usuariosSistema = JSON.parse(localStorage.getItem("usuariosSistema")) || {
 
 admin:{
-dni:"123",
+usuario:"director",
 password:"admin123"
 },
 
 docente:{
-dni:"456",
+usuario:"docente",
 password:"docente123"
 }
 
 }
 
-// LOGIN
+let usuarioActual=null
+
+function guardarUsuarios(){
+localStorage.setItem("usuariosSistema",JSON.stringify(usuariosSistema))
+}
 
 function login(){
 
-let dni = document.getElementById("dniLogin").value
-let password = document.getElementById("passwordLogin").value
-let rol = document.getElementById("rolLogin").value
-
-usuarioActual = dni
+let usuario=document.getElementById("usuarioLogin").value
+let password=document.getElementById("passwordLogin").value
+let dni=document.getElementById("dniLogin").value
+let rol=document.getElementById("rolLogin").value
 
 if(rol=="admin"){
 
-if(dni==usuariosSistema.admin.dni && password==usuariosSistema.admin.password){
+if(usuario==usuariosSistema.admin.usuario && password==usuariosSistema.admin.password){
 
 document.getElementById("loginPanel").style.display="none"
 document.getElementById("panelAdmin").style.display="block"
@@ -182,7 +187,7 @@ mostrarAlumnos()
 
 }else{
 
-alert("Usuario o contraseña incorrecta")
+alert("Usuario o contraseña incorrectos")
 
 }
 
@@ -190,7 +195,7 @@ alert("Usuario o contraseña incorrecta")
 
 if(rol=="docente"){
 
-if(dni==usuariosSistema.docente.dni && password==usuariosSistema.docente.password){
+if(usuario==usuariosSistema.docente.usuario && password==usuariosSistema.docente.password){
 
 document.getElementById("loginPanel").style.display="none"
 document.getElementById("panelDocente").style.display="block"
@@ -199,13 +204,15 @@ cargarSelectAlumnos()
 
 }else{
 
-alert("Usuario o contraseña incorrecta")
+alert("Usuario o contraseña incorrectos")
 
 }
 
 }
 
 if(rol=="alumno"){
+
+usuarioActual=dni
 
 document.getElementById("loginPanel").style.display="none"
 document.getElementById("panelAlumno").style.display="block"
@@ -216,22 +223,42 @@ mostrarBoletin()
 
 }
 
-// SALIR
-
 function salir(){
 location.reload()
 }
 
-// GUARDAR ALUMNO
+function cambiarUsuarioAdmin(){
+
+let nuevo=document.getElementById("nuevoUsuarioAdmin").value
+
+usuariosSistema.admin.usuario=nuevo
+
+guardarUsuarios()
+
+alert("Usuario actualizado")
+
+}
+
+function cambiarUsuarioDocente(){
+
+let nuevo=document.getElementById("nuevoUsuarioDocente").value
+
+usuariosSistema.docente.usuario=nuevo
+
+guardarUsuarios()
+
+alert("Usuario actualizado")
+
+}
 
 function guardarAlumno(){
 
-let nombre = document.getElementById("nombreAlumno").value
-let dni = document.getElementById("dniAlumno").value
-let fecha = document.getElementById("fechaNacimiento").value
-let lugar = document.getElementById("lugarNacimiento").value
-let nacionalidad = document.getElementById("nacionalidad").value
-let ingreso = document.getElementById("anioIngreso").value
+let nombre=document.getElementById("nombreAlumno").value
+let dni=document.getElementById("dniAlumno").value
+let fecha=document.getElementById("fechaNacimiento").value
+let lugar=document.getElementById("lugarNacimiento").value
+let nacionalidad=document.getElementById("nacionalidad").value
+let ingreso=document.getElementById("anioIngreso").value
 
 alumnos.push({
 nombre:nombre,
@@ -248,8 +275,6 @@ mostrarAlumnos()
 cargarSelectAlumnos()
 
 }
-
-// MOSTRAR ALUMNOS
 
 function mostrarAlumnos(){
 
@@ -274,8 +299,6 @@ document.getElementById("listaAlumnos").innerHTML=html
 
 }
 
-// CARGAR ALUMNOS EN SELECT
-
 function cargarSelectAlumnos(){
 
 let select=document.getElementById("alumnoNota")
@@ -294,8 +317,6 @@ select.appendChild(op)
 })
 
 }
-
-// GUARDAR NOTA
 
 function guardarNota(){
 
@@ -316,8 +337,6 @@ localStorage.setItem("notas",JSON.stringify(notas))
 alert("Nota guardada")
 
 }
-
-// MOSTRAR BOLETIN
 
 function mostrarBoletin(){
 
@@ -352,7 +371,6 @@ let estado="-"
 if(c1!="-" && c2!="-"){
 
 promedio=(c1+c2)/2
-
 estado=promedio>=7 ? "Aprobado" : "Desaprobado"
 
 }
