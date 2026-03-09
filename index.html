@@ -63,7 +63,7 @@ padding:8px;
 
 <input type="password" id="passwordLogin" placeholder="Contraseña">
 
-<input id="dniLogin" placeholder="DNI (solo alumnos)">
+<input id="dniLogin" placeholder="DNI (solo alumno)">
 
 <select id="rolLogin">
 <option value="admin">Directivo</option>
@@ -98,6 +98,7 @@ padding:8px;
 <button onclick="guardarAlumno()">Guardar alumno</button>
 
 <h3>Lista de alumnos</h3>
+
 <div id="listaAlumnos"></div>
 
 <button onclick="salir()">Salir</button>
@@ -166,7 +167,9 @@ password:"docente123"
 let usuarioActual=null
 
 function guardarUsuarios(){
+
 localStorage.setItem("usuariosSistema",JSON.stringify(usuariosSistema))
+
 }
 
 function login(){
@@ -224,7 +227,9 @@ mostrarBoletin()
 }
 
 function salir(){
+
 location.reload()
+
 }
 
 function cambiarUsuarioAdmin(){
