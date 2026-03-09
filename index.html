@@ -66,8 +66,7 @@ text-align:center;
 <h2>🔐 Sistema Escolar CENS 451</h2>
 
 <input id="dni" placeholder="DNI">
-
-<input id="password" type="password" value="123456" placeholder="Contraseña">
+<input id="password" type="password" value="123456">
 
 <button onclick="login()">Entrar</button>
 
@@ -82,13 +81,9 @@ text-align:center;
 
 <h2>📊 Panel Directivo</h2>
 
-<div id="stats"></div>
-
 <button onclick="mostrarCargaAlumnos()">➕ Cargar estudiantes</button>
 
 <button onclick="verAlumnos()">📋 Ver estudiantes</button>
-
-<button onclick="cargarEstadisticas()">🔄 Actualizar estadísticas</button>
 
 <button onclick="logout()" style="background:#f44336">🚪 Salir</button>
 
@@ -97,11 +92,26 @@ text-align:center;
 </div>
 
 
+<!-- PANEL DOCENTE -->
+
+<div id="docente-screen" class="hidden">
+
+<h2>👨‍🏫 Panel Docente</h2>
+
+<button onclick="mostrarCargaNotas()">📝 Cargar notas</button>
+
+<button onclick="logout()" style="background:#f44336">🚪 Salir</button>
+
+<div id="docente-panel"></div>
+
+</div>
+
+
 <script>
 
 const firebaseConfig = {
 
-apiKey: "AIzaSyAeezu1BHZch8eaNnVV-MJ6Rpdl1BzFHXY",
+apiKey: "APIKEY",
 authDomain: "app-escuela-cens451.firebaseapp.com",
 projectId: "app-escuela-cens451"
 
@@ -142,7 +152,11 @@ if(rol==="admin"){
 
 document.getElementById("admin-screen").classList.remove("hidden");
 
-cargarEstadisticas();
+}
+
+if(rol==="docente"){
+
+document.getElementById("docente-screen").classList.remove("hidden");
 
 }
 
@@ -170,44 +184,13 @@ location.reload();
 
 
 
-async function cargarEstadisticas(){
-
-let total=0;
-
-for(const anio of ["1","2","3"]){
-
-const snap=await db.collection("colegios")
-.doc("cens451")
-.collection("alumnos")
-.doc(anio)
-.collection("lista")
-.get();
-
-total+=snap.size;
-
-}
-
-document.getElementById("stats").innerHTML=`
-
-<div class="card">
-
-👥 Total de estudiantes registrados: <b>${total}</b>
-
-</div>
-
-`;
-
-}
-
-
-
 function mostrarCargaAlumnos(){
 
 const panel=document.getElementById("admin-panel");
 
 panel.innerHTML=`
 
-<h3>➕ Registrar estudiante</h3>
+<h3>Registrar estudiante</h3>
 
 <input id="dniAlumno" placeholder="DNI">
 
@@ -216,16 +199,13 @@ panel.innerHTML=`
 <select id="anioAlumno">
 
 <option value="">Seleccione año</option>
-
 <option value="1">1° Año</option>
-
 <option value="2">2° Año</option>
-
 <option value="3">3° Año</option>
 
 </select>
 
-<button onclick="guardarAlumno()">💾 Guardar estudiante</button>
+<button onclick="guardarAlumno()">Guardar estudiante</button>
 
 `;
 
@@ -239,13 +219,6 @@ const dni=document.getElementById("dniAlumno").value;
 const nombre=document.getElementById("nombreAlumno").value;
 const anio=document.getElementById("anioAlumno").value;
 
-if(!dni||!nombre||!anio){
-
-alert("Complete todos los campos");
-return;
-
-}
-
 db.collection("colegios")
 .doc("cens451")
 .collection("alumnos")
@@ -255,18 +228,15 @@ db.collection("colegios")
 .set({
 
 dni:dni,
-nombre:nombre,
-estado:"activo"
+nombre:nombre
 
 })
 
 .then(()=>{
 
-alert("Estudiante guardado");
+alert("Alumno guardado");
 
 mostrarCargaAlumnos();
-
-cargarEstadisticas();
 
 });
 
@@ -278,7 +248,7 @@ async function verAlumnos(){
 
 const panel=document.getElementById("admin-panel");
 
-panel.innerHTML="<h3>📋 Lista de estudiantes</h3>";
+panel.innerHTML="<h3>Lista de estudiantes</h3>";
 
 for(const anio of ["1","2","3"]){
 
@@ -301,13 +271,9 @@ panel.innerHTML+=`
 
 <div class="card">
 
-👤 ${a.nombre}<br>
+${a.nombre} - ${a.dni}
 
-🪪 DNI: ${a.dni}
-
-<br><br>
-
-<button onclick="eliminarAlumno('${anio}','${doc.id}')">🗑 Eliminar</button>
+<button onclick="eliminarAlumno('${anio}','${doc.id}')">Eliminar</button>
 
 </div>
 
@@ -325,8 +291,6 @@ panel.innerHTML+=`
 
 function eliminarAlumno(anio,id){
 
-if(!confirm("Eliminar estudiante?")) return;
-
 db.collection("colegios")
 .doc("cens451")
 .collection("alumnos")
@@ -339,7 +303,58 @@ db.collection("colegios")
 
 verAlumnos();
 
-cargarEstadisticas();
+});
+
+}
+
+
+
+function mostrarCargaNotas(){
+
+const panel=document.getElementById("docente-panel");
+
+panel.innerHTML=`
+
+<h3>Cargar nota</h3>
+
+<input id="dniNota" placeholder="DNI alumno">
+
+<input id="materiaNota" placeholder="Materia">
+
+<input id="trimestreNota" placeholder="Trimestre">
+
+<input id="notaAlumno" placeholder="Nota">
+
+<button onclick="guardarNota()">Guardar nota</button>
+
+`;
+
+}
+
+
+
+function guardarNota(){
+
+const dni=document.getElementById("dniNota").value;
+const materia=document.getElementById("materiaNota").value;
+const trimestre=document.getElementById("trimestreNota").value;
+const nota=document.getElementById("notaAlumno").value;
+
+db.collection("notas").add({
+
+dni:dni,
+materia:materia,
+trimestre:trimestre,
+nota:nota,
+fecha:new Date()
+
+})
+
+.then(()=>{
+
+alert("Nota guardada");
+
+mostrarCargaNotas();
 
 });
 
