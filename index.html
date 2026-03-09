@@ -2,15 +2,15 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Sistema Escolar CENS 451</title>
+<title>Sistema Escolar CENS 451 - Profesional</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <style>
-body { font-family:sans-serif; max-width:800px; margin:auto; background:#f5f5f5; padding:20px; }
-input, select, button { width:100%; padding:12px; margin:8px 0; border-radius:6px; border:1px solid #ccc; }
+body { font-family:sans-serif; max-width:900px; margin:auto; background:#f5f5f5; padding:20px; }
+input, select, button { width:100%; padding:10px; margin:5px 0; border-radius:6px; border:1px solid #ccc; }
 button { background:#4CAF50; color:white; font-weight:bold; cursor:pointer; }
 button:hover { background:#45a049; }
 .card { background:white; padding:15px; border-radius:8px; margin:10px 0; box-shadow:0 2px 4px rgba(0,0,0,0.1); }
@@ -27,7 +27,7 @@ button:hover { background:#45a049; }
 <div id="login-screen">
   <h2>🔐 Sistema Escolar CENS 451</h2>
   <input id="user" placeholder="Usuario (DNI o ID)">
-  <input id="password" type="password" value="123456" placeholder="Contraseña">
+  <input id="password" type="password" placeholder="Contraseña">
   <button onclick="login()">Entrar</button>
   <p id="error"></p>
 </div>
@@ -39,9 +39,9 @@ button:hover { background:#45a049; }
     <label>Materia:</label>
     <select id="teacher-subject" onchange="loadStudentsForTeacher()"><option>Seleccione</option></select>
     <label>Año:</label>
-    <select id="teacher-year"><option>Seleccione</option></select>
+    <select id="teacher-year" onchange="loadStudentsForTeacher()"><option>Seleccione</option></select>
     <label>Cuatrimestre:</label>
-    <select id="teacher-cuatrimestre"><option>Seleccione</option></select>
+    <select id="teacher-cuatrimestre" onchange="loadStudentsForTeacher()"><option>Seleccione</option></select>
   </div>
   <div id="teacher-students"></div>
   <button onclick="saveGrades()" id="save-btn">💾 Guardar Evaluaciones</button>
@@ -58,8 +58,8 @@ button:hover { background:#45a049; }
 <!-- PANEL DIRECTIVO -->
 <div id="admin-screen" class="hidden">
   <h2>📊 Panel Directivo</h2>
-  <button onclick="mostrarAlumnos()">👨‍🎓 Ver alumnos</button>
-  <button onclick="mostrarDocentes()">👨‍🏫 Ver docentes</button>
+  <button onclick="mostrarAlumnos()">👨‍🎓 Gestionar Alumnos</button>
+  <button onclick="mostrarDocentes()">👨‍🏫 Gestionar Docentes</button>
   <button onclick="verEstadisticas()">📈 Estadísticas</button>
   <div id="admin-panel"></div>
   <button onclick="logout()" style="background:#f44336;">🚪 Salir</button>
@@ -82,10 +82,9 @@ let evaluations = {};
 async function login(){
   const userId = document.getElementById("user").value.trim();
   const pass = document.getElementById("password").value;
-
   if(!userId){ document.getElementById("error").innerText="Ingrese usuario"; return; }
 
-  const email = userId + "@cens451.edu.ar"; // usar mismo patrón para Firebase Auth
+  const email = userId + "@cens451.edu.ar"; 
   try{
     await auth.signInWithEmailAndPassword(email, pass);
     const userDoc = await db.collection("usuarios").doc(userId).get();
@@ -115,7 +114,6 @@ async function loadTeacherData(){
   yearSelect.innerHTML="<option>Seleccione</option>";
   cuatrimestreSelect.innerHTML="<option>Seleccione</option>";
 
-  // Materias asignadas
   (currentUser.materias||[]).forEach(m=>subjectsSelect.innerHTML += `<option value="${m}">${m}</option>`);
   ["1","2","3"].forEach(a=>yearSelect.innerHTML += `<option value="${a}">${a}° Año</option>`);
   ["1","2"].forEach(c=>cuatrimestreSelect.innerHTML += `<option value="${c}">${c}° Cuatrimestre</option>`);
@@ -134,10 +132,10 @@ async function loadStudentsForTeacher(){
   snap.forEach(doc=>{
     const s = doc.data();
     const studentId = doc.id;
-    const html = `
+    container.innerHTML += `
       <div class="card">
         <strong>${s.nombre}</strong><br>
-        <small>${year}° Año - ${cuatri}° Cuatrimestre - ${subject}</small>
+        ${s.fechaNacimiento} - ${s.lugarNacimiento} - ${s.nacionalidad} - Ingreso: ${s.anioIngreso}<br>
         <div>
           <label>RITE:</label>
           <select onchange="updateEval('${studentId}','rite',this.value)">
@@ -151,22 +149,19 @@ async function loadStudentsForTeacher(){
           <label>Nota Final:</label>
           <input type="number" min="0" max="10" step="0.1" onchange="updateEval('${studentId}','notaFinal',this.value)">
         </div>
-      </div>
-    `;
-    container.innerHTML += html;
+      </div>`;
   });
 }
 
 function updateEval(studentId, field, value){
   if(!evaluations[studentId]) evaluations[studentId]={};
-  evaluations[studentId][field] = value;
+  evaluations[studentId][field]=value;
 }
 
 function saveGrades(){
   const subject = document.getElementById("teacher-subject").value;
   const year = document.getElementById("teacher-year").value;
   const cuatri = document.getElementById("teacher-cuatrimestre").value;
-
   if(!subject||!year||!cuatri){ alert("Seleccione materia, año y cuatrimestre"); return; }
   if(Object.keys(evaluations).length==0){ alert("No hay evaluaciones para guardar"); return; }
 
@@ -175,11 +170,7 @@ function saveGrades(){
     const data = evaluations[studentId];
     const ref = db.collection("evaluaciones").doc();
     batch.set(ref,{
-      studentId,
-      teacherId: currentUser.id,
-      subject,
-      year,
-      cuatrimestre: cuatri,
+      studentId, teacherId: currentUser.id, subject, year, cuatrimestre: cuatri,
       rite: data.rite||null,
       notaFinal: data.notaFinal?parseFloat(data.notaFinal):null,
       date: firebase.firestore.FieldValue.serverTimestamp()
@@ -216,7 +207,7 @@ async function mostrarAlumnos(){
       panel.innerHTML += `<h4>${year}° Año</h4>`;
       snap.forEach(doc=>{
         const s=doc.data();
-        panel.innerHTML += `<div class="card">👤 ${s.nombre}<br>🪪 ${doc.id}<br>Estado: ${s.estado}</div>`;
+        panel.innerHTML += `<div class="card">👤 ${s.nombre}<br>DNI: ${doc.id}<br>${s.fechaNacimiento} - ${s.lugarNacimiento} - ${s.nacionalidad}<br>Ingreso: ${s.anioIngreso}<br>Estado: ${s.estado}</div>`;
       });
     }
   }
@@ -228,7 +219,7 @@ async function mostrarDocentes(){
   const snap = await db.collection("usuarios").where("rol","==","teacher").get();
   snap.forEach(doc=>{
     const d=doc.data();
-    panel.innerHTML += `<div class="card">👨‍🏫 ${d.nombre}<br>Materias: ${(d.materias||[]).join(", ")}</div>`;
+    panel.innerHTML += `<div class="card">👨‍🏫 ${d.nombre}<br>Usuario: ${doc.id}<br>Materias: ${(d.materias||[]).join(", ")}</div>`;
   });
 }
 
@@ -242,6 +233,5 @@ async function verEstadisticas(){
   panel.innerHTML += `<div class="card">Total evaluaciones: ${total}<br>Aprobadas: ${aprobadas}<br>Porcentaje: ${((aprobadas/total)*100).toFixed(1)}%</div>`;
 }
 </script>
-
 </body>
 </html>
