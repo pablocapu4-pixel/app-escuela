@@ -1,70 +1,69 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <title>Sistema Escolar CENS 451</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <style>
-body { font-family:sans-serif; max-width:800px; margin:auto; background:#f5f5f5; padding:20px; }
-input, select, button { width:100%; padding:12px; margin:8px 0; border-radius:6px; border:1px solid #ccc; }
-button { background:#4CAF50; color:white; font-weight:bold; cursor:pointer; }
-button:hover { opacity:0.9; }
-.card { background:white; padding:15px; border-radius:8px; margin:10px 0; box-shadow:0 2px 4px rgba(0,0,0,0.1); }
-.hidden { display:none; }
-#error { color:red; font-weight:bold; text-align:center; }
-.rite-tag { display:inline-block; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:0.9em; margin-right:6px; }
-.rite-tea { background:#c8e6c9; color:#2e7d32; }
-.rite-tep { background:#fff9c4; color:#f57f17; }
-.rite-ted { background:#ffcdd2; color:#c62828; }
+body { font-family:sans-serif; max-width:700px; margin:auto; background:#f5f5f5; padding:20px; }
+input,select,button{width:100%;padding:12px;margin:8px 0;border-radius:6px;border:1px solid #ccc;}
+button{background:#4CAF50;color:white;font-weight:bold;cursor:pointer;}
+button:hover{background:#45a049;}
+.card{background:white;padding:15px;border-radius:8px;margin:10px 0;box-shadow:0 2px 4px rgba(0,0,0,0.1);}
+.hidden{display:none;}
+#error{color:red;font-weight:bold;text-align:center;}
+.rite-tag{display:inline-block;padding:2px 8px;border-radius:4px;font-weight:bold;font-size:0.9em;}
+.rite-tea{background:#c8e6c9;color:#2e7d32;}
+.rite-tep{background:#fff9c4;color:#f57f17;}
+.rite-ted{background:#ffcdd2;color:#c62828;}
 </style>
 </head>
-
 <body>
 
 <!-- LOGIN -->
 <div id="login-screen">
   <h2>🔐 Sistema Escolar CENS 451</h2>
-  <input id="usuario" placeholder="Usuario (ej: 14004400)" />
-  <input id="password" type="password" placeholder="Contraseña" value="123456"/>
+  <input id="usuario" placeholder="Usuario">
+  <input id="password" type="password" value="123456" placeholder="Contraseña">
   <button onclick="login()">Entrar</button>
   <p id="error"></p>
 </div>
 
-<!-- PANEL DOCENTE -->
-<div id="teacher-screen" class="hidden">
-  <h2>👨‍🏫 Panel Docente</h2>
-  <div>
-    <label>Materia:</label>
-    <select id="teacher-subject"></select>
-  </div>
-  <div id="teacher-students"></div>
-  <button onclick="guardarNotas()" style="margin-top:10px;">💾 Guardar Evaluaciones</button>
-  <button onclick="logout()" style="background:#f44336; margin-top:10px;">🚪 Salir</button>
-</div>
-
-<!-- PANEL DIRECTIVO -->
+<!-- ADMIN -->
 <div id="admin-screen" class="hidden">
   <h2>📊 Panel Directivo</h2>
-  <button onclick="cargarEstudiantes()">📋 Ver Estudiantes</button>
-  <button onclick="cargarDocentes()">👨‍🏫 Ver Docentes</button>
-  <button onclick="verEstadisticas()">📈 Estadísticas</button>
+  <button onclick="mostrarCargaAlumnos()">➕ Cargar estudiantes</button>
+  <button onclick="verAlumnos()">📋 Ver estudiantes</button>
+  <button onclick="verDocentes()">👨‍🏫 Ver docentes</button>
+  <button onclick="logout()" style="background:#f44336">🚪 Salir</button>
   <div id="admin-panel"></div>
-  <button onclick="logout()" style="background:#f44336; margin-top:10px;">🚪 Salir</button>
 </div>
 
-<!-- PANEL ESTUDIANTE -->
+<!-- DOCENTE -->
+<div id="teacher-screen" class="hidden">
+  <h2>👨‍🏫 Panel Docente</h2>
+  <label>Seleccione materia:</label>
+  <select id="teacher-subject" onchange="loadStudents()" disabled>
+    <option value="">Seleccione materia</option>
+  </select>
+  <div id="teacher-students"></div>
+  <button onclick="saveGrades()" id="save-btn" disabled>💾 Guardar Evaluaciones</button>
+  <button onclick="logout()" style="background:#f44336;">🚪 Salir</button>
+</div>
+
+<!-- ESTUDIANTE -->
 <div id="student-screen" class="hidden">
   <h2>🎓 Boletín de Calificaciones</h2>
-  <div id="student-grades"></div>
-  <button onclick="logout()" style="background:#f44336; margin-top:10px;">🚪 Salir</button>
+  <div id="student-grades">Cargando...</div>
+  <button onclick="logout()" style="background:#f44336;">🚪 Salir</button>
 </div>
 
 <script>
-// FIREBASE
 const firebaseConfig = {
   apiKey: "AIzaSyAeezu1BHZch8eaNnVV-MJ6Rpdl1BzFHXY",
   authDomain: "app-escuela-cens451.firebaseapp.com",
@@ -74,179 +73,218 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-let currentUser = null;
+let currentSubject = "";
 let evaluations = {};
 
 // LOGIN
 async function login() {
   const usuario = document.getElementById("usuario").value.trim();
-  const password = document.getElementById("password").value;
-  document.getElementById("error").innerText = "";
+  const pass = document.getElementById("password").value;
+  const errorEl = document.getElementById("error");
+  errorEl.innerText = "";
 
-  if(!usuario || !password){ document.getElementById("error").innerText="Ingrese usuario y contraseña"; return; }
+  if (!usuario || !pass) { errorEl.innerText="Complete todos los campos"; return; }
+  const email = usuario+"@cens451.edu.ar";
 
-  const email = usuario + "@cens451.edu.ar";
+  auth.signInWithEmailAndPassword(email, pass)
+    .then(async () => {
+      const userDoc = await db.collection("usuarios").doc(usuario).get();
+      if (!userDoc.exists) { errorEl.innerText="Usuario no registrado"; auth.signOut(); return; }
+      const data = userDoc.data();
+      const rol = data.rol;
 
-  try{
-    await auth.signInWithEmailAndPassword(email, password);
-    const userDoc = await db.collection("usuarios").doc(usuario).get();
-    if(!userDoc.exists){ document.getElementById("error").innerText="Usuario no registrado"; return; }
-    const data = userDoc.data();
-    currentUser = { usuario, rol: data.rol.toLowerCase(), materias: data.materias || [], nombre: data.nombre };
-
-    if(currentUser.rol==="docente") showTeacherPanel();
-    else if(currentUser.rol==="directivo") showAdminPanel();
-    else if(currentUser.rol==="estudiante") loadStudentBoletin(usuario);
-    else document.getElementById("error").innerText="Rol incorrecto";
-  } catch(err){
-    document.getElementById("error").innerText="Usuario o contraseña incorrectos";
-  }
+      document.getElementById("login-screen").classList.add("hidden");
+      if (rol==="directivo") document.getElementById("admin-screen").classList.remove("hidden");
+      else if (rol==="docente") { 
+        document.getElementById("teacher-screen").classList.remove("hidden"); 
+        loadMateriasDocente(usuario);
+      }
+      else if (rol==="estudiante") loadStudentGradesByDni(usuario);
+    })
+    .catch(err => { errorEl.innerText="❌ DNI o contraseña incorrectos"; });
 }
 
 // LOGOUT
-function logout(){
-  auth.signOut().then(()=>{
-    currentUser=null;
-    evaluations={};
-    document.querySelectorAll("div[id$='-screen']").forEach(el=>el.classList.add("hidden"));
-    document.getElementById("login-screen").classList.remove("hidden");
-  });
+function logout(){ auth.signOut().then(()=>location.reload()); }
+
+// ADMIN: CARGA ALUMNOS
+function mostrarCargaAlumnos() {
+  const panel=document.getElementById("admin-panel");
+  panel.innerHTML=`
+    <h3>Registrar estudiante</h3>
+    <input id="dniAlumno" placeholder="DNI">
+    <input id="nombreAlumno" placeholder="Nombre completo">
+    <input id="fechaNac" placeholder="Fecha de nacimiento (dd/mm/yyyy)">
+    <input id="lugarNac" placeholder="Lugar de nacimiento">
+    <input id="nacionalidad" placeholder="Nacionalidad">
+    <input id="anioIngreso" placeholder="Año de ingreso">
+    <select id="anioAlumno">
+      <option value="">Seleccione año</option>
+      <option value="1">1° Año</option>
+      <option value="2">2° Año</option>
+      <option value="3">3° Año</option>
+    </select>
+    <button onclick="guardarAlumno()">Guardar estudiante</button>
+  `;
 }
 
-// DOCENTE PANEL
-function showTeacherPanel(){
-  document.getElementById("login-screen").classList.add("hidden");
-  document.getElementById("teacher-screen").classList.remove("hidden");
+function guardarAlumno() {
+  const dni=document.getElementById("dniAlumno").value;
+  const nombre=document.getElementById("nombreAlumno").value;
+  const fechaNac=document.getElementById("fechaNac").value;
+  const lugarNac=document.getElementById("lugarNac").value;
+  const nacionalidad=document.getElementById("nacionalidad").value;
+  const anioIngreso=document.getElementById("anioIngreso").value;
+  const anio=document.getElementById("anioAlumno").value;
 
-  const subjectSelect = document.getElementById("teacher-subject");
-  subjectSelect.innerHTML="<option value=''>Seleccione materia</option>";
-  currentUser.materias.forEach(m=>{ 
-    const opt = document.createElement("option"); 
-    opt.value=m; opt.textContent=m; 
-    subjectSelect.appendChild(opt); 
-  });
+  if(!dni||!nombre||!anio) { alert("Complete todos los campos"); return; }
 
-  subjectSelect.onchange = loadStudentsForTeacher;
+  db.collection("colegios").doc("cens451").collection("alumnos").doc(anio).collection("lista").doc(dni).set({
+    dni, nombre, fechaNac, lugarNac, nacionalidad, anioIngreso, estado:"activo"
+  }).then(()=>{ alert("Estudiante guardado"); mostrarCargaAlumnos(); });
 }
 
-async function loadStudentsForTeacher(){
-  const subject = document.getElementById("teacher-subject").value;
-  const container = document.getElementById("teacher-students");
-  container.innerHTML = "Cargando estudiantes...";
-  evaluations = {};
-
-  if(!subject){ container.innerHTML=""; return; }
-
-  const snapshot = await db.collection("usuarios").where("rol","==","estudiante").get();
-  container.innerHTML = "";
-  snapshot.forEach(doc=>{
-    const s = doc.data();
-    const studentId = doc.id;
-    const div = document.createElement("div");
-    div.className="card";
-    div.innerHTML=`
-      <div>👤 ${s.nombre} - Año ${s.año || ''} - Nacido: ${s.lugarNacimiento || ''} ${s.fechaNacimiento || ''} - Nacionalidad: ${s.nacionalidad || ''} - Ingreso: ${s.añoIngreso || ''}</div>
-      <div>
-        <label>RITE:</label>
-        <select onchange="updateEvaluation('${studentId}','${s.año}','1','rite', this.value)">
-          <option value="">Seleccione</option>
-          <option value="T.E.A.">T.E.A.</option>
-          <option value="T.E.P.">T.E.P.</option>
-          <option value="T.E.D.">T.E.D.</option>
-        </select>
-      </div>
-      <div>
-        <label>Nota Final:</label>
-        <input type="number" min="0" max="10" step="0.1" onchange="updateEvaluation('${studentId}','${s.año}','1','notaFinal', this.value)" placeholder="Ej: 8.5" />
-      </div>
-    `;
-    container.appendChild(div);
-  });
-}
-
-function updateEvaluation(studentId, year, cuatrimestre, field, value){
-  if(!evaluations[studentId]) evaluations[studentId]={year, cuatrimestre};
-  evaluations[studentId][field]=value;
-}
-
-async function guardarNotas(){
-  for(const studentId in evaluations){
-    const e = evaluations[studentId];
-    const docRef = db.collection("evaluaciones").doc(`${studentId}_${e.year}_${e.cuatrimestre}`);
-    await docRef.set({
-      studentId,
-      subject: document.getElementById("teacher-subject").value,
-      year: e.year,
-      cuatrimestre: e.cuatrimestre,
-      rite: e.rite || null,
-      notaFinal: e.notaFinal ? parseFloat(e.notaFinal) : null,
-      teacher: currentUser.usuario,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    }, {merge:true});
+// ADMIN: VER ALUMNOS
+async function verAlumnos() {
+  const panel=document.getElementById("admin-panel");
+  panel.innerHTML="<h3>Lista de estudiantes</h3>";
+  for(const anio of ["1","2","3"]) {
+    const snap=await db.collection("colegios").doc("cens451").collection("alumnos").doc(anio).collection("lista").get();
+    if(snap.size>0){ panel.innerHTML+=`<h4>${anio}° Año</h4>`; snap.forEach(doc=>{
+      const a=doc.data();
+      panel.innerHTML+=`<div class="card">
+        👤 ${a.nombre}<br>
+        🪪 DNI: ${a.dni}<br>
+        🏫 Año ingreso: ${a.anioIngreso}<br>
+        📅 Fecha Nac: ${a.fechaNac}<br>
+        🌎 Lugar Nac: ${a.lugarNac}<br>
+        🧬 Nacionalidad: ${a.nacionalidad}<br><br>
+        <button onclick="eliminarAlumno('${anio}','${doc.id}')">Eliminar</button>
+      </div>`;
+    })}
   }
-  alert("✅ Evaluaciones guardadas");
 }
 
-// DIRECTIVO PANEL
-function showAdminPanel(){
-  document.getElementById("login-screen").classList.add("hidden");
-  document.getElementById("admin-screen").classList.remove("hidden");
+function eliminarAlumno(anio,id){
+  if(!confirm("Eliminar estudiante?")) return;
+  db.collection("colegios").doc("cens451").collection("alumnos").doc(anio).collection("lista").doc(id).delete().then(()=>verAlumnos());
 }
 
-async function cargarEstudiantes(){
-  const panel = document.getElementById("admin-panel");
-  panel.innerHTML="<h3>Estudiantes</h3>";
-  const snapshot = await db.collection("usuarios").where("rol","==","estudiante").get();
-  snapshot.forEach(doc=>{
-    const s = doc.data();
-    panel.innerHTML+=`<div class="card">👤 ${s.nombre} - Año ${s.año || ''} - Nacido: ${s.lugarNacimiento || ''} ${s.fechaNacimiento || ''} - Nacionalidad: ${s.nacionalidad || ''} - Ingreso: ${s.añoIngreso || ''}</div>`;
-  });
-}
-
-async function cargarDocentes(){
-  const panel = document.getElementById("admin-panel");
-  panel.innerHTML="<h3>Docentes</h3>";
+// ADMIN: VER DOCENTES
+async function verDocentes() {
+  const panel=document.getElementById("admin-panel");
+  panel.innerHTML="<h3>👨‍🏫 Lista de docentes</h3>";
   const snapshot = await db.collection("usuarios").where("rol","==","docente").get();
+  if(snapshot.empty){ panel.innerHTML+="<p>No hay docentes cargados</p>"; return; }
   snapshot.forEach(doc=>{
-    const u = doc.data();
-    panel.innerHTML+=`<div class="card">👤 ${u.nombre} - Materias: ${u.materias.join(", ")}</div>`;
-  });
-}
-
-async function verEstadisticas(){
-  const panel = document.getElementById("admin-panel");
-  panel.innerHTML="<h3>Estadísticas de RITE y Nota Final</h3>";
-  const snapshot = await db.collection("evaluaciones").get();
-  let total=0, aprobados=0;
-  snapshot.forEach(doc=>{
-    const e = doc.data();
-    if(e.notaFinal>=7) aprobados++;
-    total++;
-  });
-  panel.innerHTML+=`<div class="card">Total evaluaciones: ${total}<br>Alumnos aprobados: ${aprobados}</div>`;
-}
-
-// PANEL ESTUDIANTE
-async function loadStudentBoletin(usuario){
-  document.getElementById("login-screen").classList.add("hidden");
-  document.getElementById("student-screen").classList.remove("hidden");
-  const container = document.getElementById("student-grades");
-  const snapshot = await db.collection("evaluaciones").where("studentId","==",usuario).get();
-  if(snapshot.empty){ container.innerHTML="<p>📭 No hay evaluaciones registradas aún</p>"; return; }
-  let html="";
-  snapshot.forEach(doc=>{
-    const e = doc.data();
-    html+=`<div class="card">
-      <strong>${e.subject}</strong><br>
-      Año ${e.year} - Cuatrimestre ${e.cuatrimestre}<br>
-      RITE: ${e.rite || "—"} 
-      ${e.rite? `<span class="rite-tag ${e.rite==='T.E.A.'?'rite-tea':e.rite==='T.E.P.'?'rite-tep':'rite-ted'}">${e.rite}</span>`:""}<br>
-      Nota Final: ${e.notaFinal !== null ? e.notaFinal : "—"}
+    const d = doc.data();
+    panel.innerHTML += `<div class="card">
+      👤 ${d.nombre}<br>
+      🪪 Usuario: ${doc.id}<br>
+      📚 Materias: ${d.materias ? d.materias.join(", ") : "Sin asignar"}<br><br>
+      <button onclick="eliminarUsuario('${doc.id}')">Eliminar</button>
     </div>`;
   });
-  container.innerHTML = html;
 }
 
+function eliminarUsuario(usuarioId){
+  if(!confirm("¿Eliminar este usuario?")) return;
+  db.collection("usuarios").doc(usuarioId).delete().then(()=>{ alert("Usuario eliminado"); verDocentes(); });
+}
+
+// DOCENTE: CARGA MATERIAS
+async function loadMateriasDocente(usuario){
+  const userDoc = await db.collection("usuarios").doc(usuario).get();
+  const materias = userDoc.data().materias || [];
+  const select = document.getElementById("teacher-subject");
+  select.innerHTML=`<option value="">Seleccione materia</option>`;
+  materias.forEach(m=>{ const opt=document.createElement("option"); opt.value=m; opt.textContent=m; select.appendChild(opt); });
+  select.disabled = materias.length === 0;
+}
+
+// DOCENTE: CARGA ESTUDIANTES POR MATERIA
+async function loadStudents(){
+  const subject=document.getElementById("teacher-subject").value;
+  if(!subject) return;
+  currentSubject = subject;
+  const container=document.getElementById("teacher-students");
+  container.innerHTML="Cargando estudiantes...";
+
+  let html="";
+  for(const anio of ["1","2","3"]){
+    const snap = await db.collection("colegios").doc("cens451").collection("alumnos").doc(anio).collection("lista").where("estado","==","activo").get();
+    snap.forEach(doc=>{
+      const s = doc.data();
+      html+=`<div class="card">
+        <strong>${s.nombre}</strong><br>
+        <small>${anio}° Año - ${subject}</small>
+        <div class="eval-section">
+          <h4>RITE</h4>
+          <select onchange="updateEval('${doc.id}','rite',this.value)">
+            <option value="">Seleccione</option>
+            <option value="T.E.A.">T.E.A.</option>
+            <option value="T.E.P.">T.E.P.</option>
+            <option value="T.E.D.">T.E.D.</option>
+          </select>
+        </div>
+        <div class="eval-section">
+          <h4>Nota Final</h4>
+          <input type="number" min="0" max="10" step="0.1" onchange="updateEval('${doc.id}','notaFinal',this.value)">
+        </div>
+      </div>`;
+    });
+  }
+  container.innerHTML = html;
+  document.getElementById("save-btn").disabled=false;
+}
+
+// DOCENTE: ACTUALIZA EVALUACIONES EN MEMORIA
+function updateEval(studentId,field,value){
+  if(!evaluations[studentId]) evaluations[studentId]={};
+  evaluations[studentId][field] = value;
+}
+
+// DOCENTE: GUARDA EVALUACIONES EN FIRESTORE
+function saveGrades(){
+  if(!currentSubject){ alert("Seleccione materia"); return; }
+  if(Object.keys(evaluations).length===0){ alert("No hay evaluaciones"); return; }
+  const batch=db.batch();
+  const teacherDni=auth.currentUser.email.split("@")[0];
+  for(const studentId in evaluations){
+    const data=evaluations[studentId];
+    const evalRef=db.collection("evaluaciones").doc();
+    batch.set(evalRef,{
+      studentId,
+      subject:currentSubject,
+      teacherDni,
+      rite:data.rite || null,
+      notaFinal:data.notaFinal ? parseFloat(data.notaFinal) : null,
+      date:firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }
+  batch.commit().then(()=>{ alert("✅ Evaluaciones guardadas"); evaluations={}; loadStudents(); });
+}
+
+// ESTUDIANTE: VER NOTAS
+function loadStudentGradesByDni(dni){
+  const container=document.getElementById("student-grades");
+  container.innerHTML="Cargando...";
+  db.collection("evaluaciones").where("studentId","==",dni).get().then(snapshot=>{
+    if(snapshot.empty){ container.innerHTML="<p>📭 No hay evaluaciones</p>"; return; }
+    let html="";
+    snapshot.forEach(doc=>{
+      const e=doc.data();
+      const riteClass = e.rite==="T.E.A."?"rite-tea": e.rite==="T.E.P."?"rite-tep": e.rite==="T.E.D."?"rite-ted":"";
+      html+=`<div class="card">
+        <strong>${e.subject}</strong><br>
+        <div><strong>RITE:</strong> ${e.rite?`<span class="rite-tag ${riteClass}">${e.rite}</span>`:"—"}</div>
+        <div><strong>Nota Final:</strong> ${e.notaFinal!==null?e.notaFinal:"—"}</div>
+      </div>`;
+    });
+    container.innerHTML = html;
+    document.getElementById("student-screen").classList.remove("hidden");
+  });
+}
 </script>
 </body>
 </html>
