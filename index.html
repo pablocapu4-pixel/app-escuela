@@ -80,7 +80,16 @@ padding:8px;
 <h3>Cargar alumno</h3>
 
 <input id="nombreAlumno" placeholder="Nombre">
+
 <input id="dniAlumno" placeholder="DNI">
+
+<input type="date" id="fechaNacimiento">
+
+<input id="lugarNacimiento" placeholder="Lugar de nacimiento">
+
+<input id="nacionalidad" placeholder="Nacionalidad">
+
+<input id="anioIngreso" placeholder="Año de ingreso">
 
 <button onclick="guardarAlumno()">Guardar alumno</button>
 
@@ -129,14 +138,10 @@ padding:8px;
 
 <script>
 
-// BASE DE DATOS LOCAL
-
 let alumnos = JSON.parse(localStorage.getItem("alumnos")) || []
 let notas = JSON.parse(localStorage.getItem("notas")) || []
 
 let usuarioActual = null
-
-// LOGIN
 
 function login(){
 
@@ -164,22 +169,26 @@ mostrarBoletin()
 
 }
 
-// SALIR
-
 function salir(){
 location.reload()
 }
-
-// GUARDAR ALUMNO
 
 function guardarAlumno(){
 
 let nombre = document.getElementById("nombreAlumno").value
 let dni = document.getElementById("dniAlumno").value
+let fecha = document.getElementById("fechaNacimiento").value
+let lugar = document.getElementById("lugarNacimiento").value
+let nacionalidad = document.getElementById("nacionalidad").value
+let ingreso = document.getElementById("anioIngreso").value
 
 alumnos.push({
 nombre:nombre,
-dni:dni
+dni:dni,
+fechaNacimiento:fecha,
+lugarNacimiento:lugar,
+nacionalidad:nacionalidad,
+anioIngreso:ingreso
 })
 
 localStorage.setItem("alumnos",JSON.stringify(alumnos))
@@ -189,21 +198,28 @@ cargarSelectAlumnos()
 
 }
 
-// MOSTRAR ALUMNOS
-
 function mostrarAlumnos(){
 
 let html=""
 
 alumnos.forEach(a=>{
-html+=a.nombre+" - "+a.dni+"<br>"
+
+html+=`
+<div style="border:1px solid #ccc;padding:10px;margin:5px">
+<b>${a.nombre}</b><br>
+DNI: ${a.dni}<br>
+Fecha nacimiento: ${a.fechaNacimiento}<br>
+Lugar nacimiento: ${a.lugarNacimiento}<br>
+Nacionalidad: ${a.nacionalidad}<br>
+Año ingreso: ${a.anioIngreso}
+</div>
+`
+
 })
 
 document.getElementById("listaAlumnos").innerHTML=html
 
 }
-
-// SELECT DOCENTE
 
 function cargarSelectAlumnos(){
 
@@ -224,8 +240,6 @@ select.appendChild(op)
 
 }
 
-// GUARDAR NOTA
-
 function guardarNota(){
 
 let dni=document.getElementById("alumnoNota").value
@@ -245,8 +259,6 @@ localStorage.setItem("notas",JSON.stringify(notas))
 alert("Nota guardada")
 
 }
-
-// MOSTRAR BOLETIN
 
 function mostrarBoletin(){
 
@@ -286,13 +298,15 @@ estado=promedio>=7 ? "Aprobado" : "Desaprobado"
 
 }
 
-html+=`<tr>
+html+=`
+<tr>
 <td>${m}</td>
 <td>${c1}</td>
 <td>${c2}</td>
 <td>${promedio}</td>
 <td>${estado}</td>
-</tr>`
+</tr>
+`
 
 }
 
