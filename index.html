@@ -79,7 +79,15 @@
 
 <div id="admin-screen" class="hidden">
   <h2>📊 Panel Directivo</h2>
-  <div id="admin-stats">Cargando estadísticas...</div>
+
+  <button onclick="mostrarCargaAlumnos()">➕ Cargar estudiantes</button>
+
+  <button onclick="mostrarProfesores()">👨‍🏫 Gestionar docentes</button>
+
+  <button onclick="loadAdminStats()">📈 Ver estadísticas</button>
+
+  <div id="admin-stats"></div>
+
   <button onclick="logout()" style="background:#f44336;">🚪 Salir</button>
 </div>
 
