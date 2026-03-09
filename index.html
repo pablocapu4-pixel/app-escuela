@@ -17,7 +17,7 @@ padding:20px;
 background:white;
 padding:20px;
 margin:20px auto;
-width:520px;
+width:550px;
 border-radius:10px;
 box-shadow:0 0 10px rgba(0,0,0,0.2);
 }
@@ -60,9 +60,7 @@ padding:8px;
 <h2>Ingreso</h2>
 
 <input id="usuarioLogin" placeholder="Usuario (docente/directivo)">
-
 <input type="password" id="passwordLogin" placeholder="Contraseña">
-
 <input id="dniLogin" placeholder="DNI (solo alumno)">
 
 <select id="rolLogin">
@@ -75,16 +73,19 @@ padding:8px;
 
 </div>
 
-<!-- PANEL ADMIN -->
+<!-- PANEL DIRECTOR -->
 
 <div class="panel" id="panelAdmin" style="display:none">
 
 <h2>Panel Directivo</h2>
 
-<h3>Cambiar usuario</h3>
+<h3>Crear docente</h3>
 
-<input id="nuevoUsuarioAdmin" placeholder="Nuevo usuario">
-<button onclick="cambiarUsuarioAdmin()">Cambiar usuario</button>
+<input id="usuarioDocente" placeholder="Usuario docente">
+<input id="passwordDocente" placeholder="Contraseña">
+<input id="materiaDocente" placeholder="Materia">
+
+<button onclick="crearDocente()">Crear docente</button>
 
 <h3>Cargar alumno</h3>
 
@@ -109,16 +110,9 @@ padding:8px;
 
 <div class="panel" id="panelDocente" style="display:none">
 
-<h2>Panel Docente</h2>
-
-<h3>Cambiar usuario</h3>
-
-<input id="nuevoUsuarioDocente" placeholder="Nuevo usuario">
-<button onclick="cambiarUsuarioDocente()">Cambiar usuario</button>
+<h2 id="tituloDocente"></h2>
 
 <select id="alumnoNota"></select>
-
-<input id="materiaNota" placeholder="Materia">
 
 <select id="cuatrimestreNota">
 <option value="1">1° Cuatrimestre</option>
@@ -137,7 +131,7 @@ padding:8px;
 
 <div class="panel" id="panelAlumno" style="display:none">
 
-<h2>Boletín del estudiante</h2>
+<h2>Boletín</h2>
 
 <div id="boletin"></div>
 
@@ -149,26 +143,18 @@ padding:8px;
 
 let alumnos = JSON.parse(localStorage.getItem("alumnos")) || []
 let notas = JSON.parse(localStorage.getItem("notas")) || []
+let docentes = JSON.parse(localStorage.getItem("docentes")) || []
 
-let usuariosSistema = JSON.parse(localStorage.getItem("usuariosSistema")) || {
-
-admin:{
-usuario:"director",
-password:"admin123"
-},
-
-docente:{
-usuario:"docente",
-password:"docente123"
-}
-
-}
+let director = {usuario:"director",password:"admin123"}
 
 let usuarioActual=null
+let materiaDocenteActual=null
 
-function guardarUsuarios(){
+function guardarDatos(){
 
-localStorage.setItem("usuariosSistema",JSON.stringify(usuariosSistema))
+localStorage.setItem("alumnos",JSON.stringify(alumnos))
+localStorage.setItem("notas",JSON.stringify(notas))
+localStorage.setItem("docentes",JSON.stringify(docentes))
 
 }
 
@@ -181,7 +167,7 @@ let rol=document.getElementById("rolLogin").value
 
 if(rol=="admin"){
 
-if(usuario==usuariosSistema.admin.usuario && password==usuariosSistema.admin.password){
+if(usuario==director.usuario && password==director.password){
 
 document.getElementById("loginPanel").style.display="none"
 document.getElementById("panelAdmin").style.display="block"
@@ -190,7 +176,7 @@ mostrarAlumnos()
 
 }else{
 
-alert("Usuario o contraseña incorrectos")
+alert("Usuario incorrecto")
 
 }
 
@@ -198,7 +184,13 @@ alert("Usuario o contraseña incorrectos")
 
 if(rol=="docente"){
 
-if(usuario==usuariosSistema.docente.usuario && password==usuariosSistema.docente.password){
+let docente=docentes.find(d=>d.usuario==usuario && d.password==password)
+
+if(docente){
+
+materiaDocenteActual=docente.materia
+
+document.getElementById("tituloDocente").innerText="Panel Docente - "+docente.materia
 
 document.getElementById("loginPanel").style.display="none"
 document.getElementById("panelDocente").style.display="block"
@@ -207,7 +199,7 @@ cargarSelectAlumnos()
 
 }else{
 
-alert("Usuario o contraseña incorrectos")
+alert("Docente no encontrado")
 
 }
 
@@ -227,32 +219,20 @@ mostrarBoletin()
 }
 
 function salir(){
-
 location.reload()
-
 }
 
-function cambiarUsuarioAdmin(){
+function crearDocente(){
 
-let nuevo=document.getElementById("nuevoUsuarioAdmin").value
+let usuario=document.getElementById("usuarioDocente").value
+let password=document.getElementById("passwordDocente").value
+let materia=document.getElementById("materiaDocente").value
 
-usuariosSistema.admin.usuario=nuevo
+docentes.push({usuario,password,materia})
 
-guardarUsuarios()
+guardarDatos()
 
-alert("Usuario actualizado")
-
-}
-
-function cambiarUsuarioDocente(){
-
-let nuevo=document.getElementById("nuevoUsuarioDocente").value
-
-usuariosSistema.docente.usuario=nuevo
-
-guardarUsuarios()
-
-alert("Usuario actualizado")
+alert("Docente creado")
 
 }
 
@@ -266,15 +246,15 @@ let nacionalidad=document.getElementById("nacionalidad").value
 let ingreso=document.getElementById("anioIngreso").value
 
 alumnos.push({
-nombre:nombre,
-dni:dni,
+nombre,
+dni,
 fechaNacimiento:fecha,
 lugarNacimiento:lugar,
-nacionalidad:nacionalidad,
+nacionalidad,
 anioIngreso:ingreso
 })
 
-localStorage.setItem("alumnos",JSON.stringify(alumnos))
+guardarDatos()
 
 mostrarAlumnos()
 cargarSelectAlumnos()
@@ -290,11 +270,7 @@ alumnos.forEach(a=>{
 html+=`
 <div style="border:1px solid #ccc;padding:10px;margin:5px">
 <b>${a.nombre}</b><br>
-DNI: ${a.dni}<br>
-Fecha nacimiento: ${a.fechaNacimiento}<br>
-Lugar nacimiento: ${a.lugarNacimiento}<br>
-Nacionalidad: ${a.nacionalidad}<br>
-Año ingreso: ${a.anioIngreso}
+DNI: ${a.dni}
 </div>
 `
 
@@ -326,18 +302,17 @@ select.appendChild(op)
 function guardarNota(){
 
 let dni=document.getElementById("alumnoNota").value
-let materia=document.getElementById("materiaNota").value
 let cuatri=document.getElementById("cuatrimestreNota").value
 let nota=document.getElementById("notaValor").value
 
 notas.push({
-dni:dni,
-materia:materia,
+dni,
+materia:materiaDocenteActual,
 cuatrimestre:cuatri,
 nota:Number(nota)
 })
 
-localStorage.setItem("notas",JSON.stringify(notas))
+guardarDatos()
 
 alert("Nota guardada")
 
@@ -346,7 +321,7 @@ alert("Nota guardada")
 function mostrarBoletin(){
 
 let html="<table>"
-html+="<tr><th>Materia</th><th>1°C</th><th>2°C</th><th>Promedio</th><th>Estado</th></tr>"
+html+="<tr><th>Materia</th><th>1C</th><th>2C</th><th>Promedio</th><th>Estado</th></tr>"
 
 let materias={}
 
@@ -354,12 +329,10 @@ notas.forEach(n=>{
 
 if(n.dni==usuarioActual){
 
-if(!materias[n.materia]){
-materias[n.materia]={c1:"-",c2:"-"}
-}
+if(!materias[n.materia]) materias[n.materia]={c1:"-",c2:"-"}
 
-if(n.cuatrimestre=="1") materias[n.materia].c1=n.nota
-if(n.cuatrimestre=="2") materias[n.materia].c2=n.nota
+if(n.cuatrimestre==1) materias[n.materia].c1=n.nota
+if(n.cuatrimestre==2) materias[n.materia].c2=n.nota
 
 }
 
@@ -376,7 +349,7 @@ let estado="-"
 if(c1!="-" && c2!="-"){
 
 promedio=(c1+c2)/2
-estado=promedio>=7 ? "Aprobado" : "Desaprobado"
+estado=promedio>=7?"Aprobado":"Desaprobado"
 
 }
 
