@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <meta charset="utf-8">
 <title>Sistema Escolar CENS 451</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -58,6 +59,8 @@ text-align:center;
 
 <body>
 
+<!-- LOGIN -->
+
 <div id="login-screen">
 
 <h2>🔐 Sistema Escolar CENS 451</h2>
@@ -73,13 +76,19 @@ text-align:center;
 </div>
 
 
+<!-- PANEL ADMIN -->
+
 <div id="admin-screen" class="hidden">
 
 <h2>📊 Panel Directivo</h2>
 
+<div id="stats"></div>
+
 <button onclick="mostrarCargaAlumnos()">➕ Cargar estudiantes</button>
 
 <button onclick="verAlumnos()">📋 Ver estudiantes</button>
+
+<button onclick="cargarEstadisticas()">🔄 Actualizar estadísticas</button>
 
 <button onclick="logout()" style="background:#f44336">🚪 Salir</button>
 
@@ -133,6 +142,8 @@ if(rol==="admin"){
 
 document.getElementById("admin-screen").classList.remove("hidden");
 
+cargarEstadisticas();
+
 }
 
 })
@@ -159,13 +170,44 @@ location.reload();
 
 
 
+async function cargarEstadisticas(){
+
+let total=0;
+
+for(const anio of ["1","2","3"]){
+
+const snap=await db.collection("colegios")
+.doc("cens451")
+.collection("alumnos")
+.doc(anio)
+.collection("lista")
+.get();
+
+total+=snap.size;
+
+}
+
+document.getElementById("stats").innerHTML=`
+
+<div class="card">
+
+👥 Total de estudiantes registrados: <b>${total}</b>
+
+</div>
+
+`;
+
+}
+
+
+
 function mostrarCargaAlumnos(){
 
 const panel=document.getElementById("admin-panel");
 
 panel.innerHTML=`
 
-<h3>Registrar estudiante</h3>
+<h3>➕ Registrar estudiante</h3>
 
 <input id="dniAlumno" placeholder="DNI">
 
@@ -183,7 +225,7 @@ panel.innerHTML=`
 
 </select>
 
-<button onclick="guardarAlumno()">Guardar estudiante</button>
+<button onclick="guardarAlumno()">💾 Guardar estudiante</button>
 
 `;
 
@@ -200,23 +242,16 @@ const anio=document.getElementById("anioAlumno").value;
 if(!dni||!nombre||!anio){
 
 alert("Complete todos los campos");
-
 return;
 
 }
 
 db.collection("colegios")
-
 .doc("cens451")
-
 .collection("alumnos")
-
 .doc(anio)
-
 .collection("lista")
-
 .doc(dni)
-
 .set({
 
 dni:dni,
@@ -231,6 +266,8 @@ alert("Estudiante guardado");
 
 mostrarCargaAlumnos();
 
+cargarEstadisticas();
+
 });
 
 }
@@ -241,20 +278,15 @@ async function verAlumnos(){
 
 const panel=document.getElementById("admin-panel");
 
-panel.innerHTML="<h3>Lista de estudiantes</h3>";
+panel.innerHTML="<h3>📋 Lista de estudiantes</h3>";
 
 for(const anio of ["1","2","3"]){
 
 const snap=await db.collection("colegios")
-
 .doc("cens451")
-
 .collection("alumnos")
-
 .doc(anio)
-
 .collection("lista")
-
 .get();
 
 if(snap.size>0){
@@ -275,7 +307,7 @@ panel.innerHTML+=`
 
 <br><br>
 
-<button onclick="eliminarAlumno('${anio}','${doc.id}')">Eliminar</button>
+<button onclick="eliminarAlumno('${anio}','${doc.id}')">🗑 Eliminar</button>
 
 </div>
 
@@ -296,22 +328,18 @@ function eliminarAlumno(anio,id){
 if(!confirm("Eliminar estudiante?")) return;
 
 db.collection("colegios")
-
 .doc("cens451")
-
 .collection("alumnos")
-
 .doc(anio)
-
 .collection("lista")
-
 .doc(id)
-
 .delete()
 
 .then(()=>{
 
 verAlumnos();
+
+cargarEstadisticas();
 
 });
 
