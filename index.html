@@ -1,362 +1,304 @@
 <!DOCTYPE html>
 <html>
 <head>
-
-<meta charset="utf-8">
-<title>Sistema Escolar CENS 451</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<meta charset="UTF-8">
+<title>Sistema Escolar</title>
 
 <style>
 
 body{
-font-family:sans-serif;
-max-width:700px;
-margin:auto;
-background:#f5f5f5;
+font-family: Arial;
+background:#f2f2f2;
+text-align:center;
 padding:20px;
 }
 
+.panel{
+background:white;
+padding:20px;
+margin:20px auto;
+width:500px;
+border-radius:10px;
+box-shadow:0 0 10px rgba(0,0,0,0.2);
+}
+
 input,select,button{
-width:100%;
-padding:12px;
-margin:8px 0;
-border-radius:6px;
-border:1px solid #ccc;
+padding:10px;
+margin:5px;
+width:80%;
 }
 
 button{
-background:#4CAF50;
+background:#007BFF;
 color:white;
-font-weight:bold;
+border:none;
 cursor:pointer;
 }
 
-.card{
-background:white;
-padding:15px;
-border-radius:8px;
-margin:10px 0;
-box-shadow:0 2px 4px rgba(0,0,0,0.1);
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:10px;
 }
 
-.hidden{
-display:none;
-}
-
-#error{
-color:red;
-font-weight:bold;
-text-align:center;
+th,td{
+border:1px solid #ccc;
+padding:8px;
 }
 
 </style>
-
 </head>
 
 <body>
 
+<h1>📚 Sistema Escolar</h1>
+
 <!-- LOGIN -->
 
-<div id="login-screen">
+<div class="panel" id="loginPanel">
 
-<h2>🔐 Sistema Escolar CENS 451</h2>
+<h2>Ingreso</h2>
 
-<input id="dni" placeholder="DNI">
-<input id="password" type="password" value="123456">
+<input id="dniLogin" placeholder="DNI">
 
-<button onclick="login()">Entrar</button>
+<select id="rolLogin">
+<option value="admin">Directivo</option>
+<option value="docente">Docente</option>
+<option value="alumno">Alumno</option>
+</select>
 
-<p id="error"></p>
+<button onclick="login()">Ingresar</button>
 
 </div>
-
 
 <!-- PANEL ADMIN -->
 
-<div id="admin-screen" class="hidden">
+<div class="panel" id="panelAdmin" style="display:none">
 
-<h2>📊 Panel Directivo</h2>
+<h2>Panel Directivo</h2>
 
-<button onclick="mostrarCargaAlumnos()">➕ Cargar estudiantes</button>
+<h3>Cargar alumno</h3>
 
-<button onclick="verAlumnos()">📋 Ver estudiantes</button>
+<input id="nombreAlumno" placeholder="Nombre">
+<input id="dniAlumno" placeholder="DNI">
 
-<button onclick="logout()" style="background:#f44336">🚪 Salir</button>
+<button onclick="guardarAlumno()">Guardar alumno</button>
 
-<div id="admin-panel"></div>
+<h3>Lista de alumnos</h3>
+
+<div id="listaAlumnos"></div>
+
+<button onclick="salir()">Salir</button>
 
 </div>
-
 
 <!-- PANEL DOCENTE -->
 
-<div id="docente-screen" class="hidden">
+<div class="panel" id="panelDocente" style="display:none">
 
-<h2>👨‍🏫 Panel Docente</h2>
+<h2>Panel Docente</h2>
 
-<button onclick="mostrarCargaNotas()">📝 Cargar notas</button>
-
-<button onclick="logout()" style="background:#f44336">🚪 Salir</button>
-
-<div id="docente-panel"></div>
-
-</div>
-
-
-<script>
-
-const firebaseConfig = {
-
-apiKey: "APIKEY",
-authDomain: "app-escuela-cens451.firebaseapp.com",
-projectId: "app-escuela-cens451"
-
-};
-
-firebase.initializeApp(firebaseConfig);
-
-const auth = firebase.auth();
-const db = firebase.firestore();
-
-
-
-function login(){
-
-const dni=document.getElementById("dni").value;
-const pass=document.getElementById("password").value;
-
-const email=dni+"@cens451.edu.ar";
-
-auth.signInWithEmailAndPassword(email,pass)
-
-.then(async ()=>{
-
-const user=await db.collection("usuarios").doc(dni).get();
-
-if(!user.exists){
-
-document.getElementById("error").innerText="Usuario no registrado";
-return;
-
-}
-
-const rol=user.data().rol;
-
-document.getElementById("login-screen").classList.add("hidden");
-
-if(rol==="admin"){
-
-document.getElementById("admin-screen").classList.remove("hidden");
-
-}
-
-if(rol==="docente"){
-
-document.getElementById("docente-screen").classList.remove("hidden");
-
-}
-
-})
-
-.catch(()=>{
-
-document.getElementById("error").innerText="DNI o contraseña incorrectos";
-
-});
-
-}
-
-
-
-function logout(){
-
-auth.signOut().then(()=>{
-
-location.reload();
-
-});
-
-}
-
-
-
-function mostrarCargaAlumnos(){
-
-const panel=document.getElementById("admin-panel");
-
-panel.innerHTML=`
-
-<h3>Registrar estudiante</h3>
-
-<input id="dniAlumno" placeholder="DNI">
-
-<input id="nombreAlumno" placeholder="Nombre completo">
-
-<select id="anioAlumno">
-
-<option value="">Seleccione año</option>
-<option value="1">1° Año</option>
-<option value="2">2° Año</option>
-<option value="3">3° Año</option>
-
-</select>
-
-<button onclick="guardarAlumno()">Guardar estudiante</button>
-
-`;
-
-}
-
-
-
-function guardarAlumno(){
-
-const dni=document.getElementById("dniAlumno").value;
-const nombre=document.getElementById("nombreAlumno").value;
-const anio=document.getElementById("anioAlumno").value;
-
-db.collection("colegios")
-.doc("cens451")
-.collection("alumnos")
-.doc(anio)
-.collection("lista")
-.doc(dni)
-.set({
-
-dni:dni,
-nombre:nombre
-
-})
-
-.then(()=>{
-
-alert("Alumno guardado");
-
-mostrarCargaAlumnos();
-
-});
-
-}
-
-
-
-async function verAlumnos(){
-
-const panel=document.getElementById("admin-panel");
-
-panel.innerHTML="<h3>Lista de estudiantes</h3>";
-
-for(const anio of ["1","2","3"]){
-
-const snap=await db.collection("colegios")
-.doc("cens451")
-.collection("alumnos")
-.doc(anio)
-.collection("lista")
-.get();
-
-if(snap.size>0){
-
-panel.innerHTML+=`<h4>${anio}° Año</h4>`;
-
-snap.forEach(doc=>{
-
-const a=doc.data();
-
-panel.innerHTML+=`
-
-<div class="card">
-
-${a.nombre} - ${a.dni}
-
-<button onclick="eliminarAlumno('${anio}','${doc.id}')">Eliminar</button>
-
-</div>
-
-`;
-
-});
-
-}
-
-}
-
-}
-
-
-
-function eliminarAlumno(anio,id){
-
-db.collection("colegios")
-.doc("cens451")
-.collection("alumnos")
-.doc(anio)
-.collection("lista")
-.doc(id)
-.delete()
-
-.then(()=>{
-
-verAlumnos();
-
-});
-
-}
-
-
-
-function mostrarCargaNotas(){
-
-const panel=document.getElementById("docente-panel");
-
-panel.innerHTML=`
-
-<h3>Cargar nota</h3>
-
-<input id="dniNota" placeholder="DNI alumno">
+<select id="alumnoNota"></select>
 
 <input id="materiaNota" placeholder="Materia">
 
-<input id="trimestreNota" placeholder="Trimestre">
+<select id="cuatrimestreNota">
+<option value="1">1° Cuatrimestre</option>
+<option value="2">2° Cuatrimestre</option>
+</select>
 
-<input id="notaAlumno" placeholder="Nota">
+<input id="notaValor" placeholder="Nota">
 
-<button onclick="guardarNota()">Guardar nota</button>
+<button onclick="guardarNota()">Guardar Nota</button>
 
-`;
+<button onclick="salir()">Salir</button>
+
+</div>
+
+<!-- PANEL ALUMNO -->
+
+<div class="panel" id="panelAlumno" style="display:none">
+
+<h2>Boletín del estudiante</h2>
+
+<div id="boletin"></div>
+
+<button onclick="salir()">Salir</button>
+
+</div>
+
+<script>
+
+// BASE DE DATOS LOCAL
+
+let alumnos = JSON.parse(localStorage.getItem("alumnos")) || []
+let notas = JSON.parse(localStorage.getItem("notas")) || []
+
+let usuarioActual = null
+
+// LOGIN
+
+function login(){
+
+let dni = document.getElementById("dniLogin").value
+let rol = document.getElementById("rolLogin").value
+
+usuarioActual = dni
+
+document.getElementById("loginPanel").style.display="none"
+
+if(rol=="admin"){
+document.getElementById("panelAdmin").style.display="block"
+mostrarAlumnos()
+}
+
+if(rol=="docente"){
+document.getElementById("panelDocente").style.display="block"
+cargarSelectAlumnos()
+}
+
+if(rol=="alumno"){
+document.getElementById("panelAlumno").style.display="block"
+mostrarBoletin()
+}
 
 }
 
+// SALIR
 
+function salir(){
+location.reload()
+}
 
-function guardarNota(){
+// GUARDAR ALUMNO
 
-const dni=document.getElementById("dniNota").value;
-const materia=document.getElementById("materiaNota").value;
-const trimestre=document.getElementById("trimestreNota").value;
-const nota=document.getElementById("notaAlumno").value;
+function guardarAlumno(){
 
-db.collection("notas").add({
+let nombre = document.getElementById("nombreAlumno").value
+let dni = document.getElementById("dniAlumno").value
 
-dni:dni,
-materia:materia,
-trimestre:trimestre,
-nota:nota,
-fecha:new Date()
+alumnos.push({
+nombre:nombre,
+dni:dni
+})
+
+localStorage.setItem("alumnos",JSON.stringify(alumnos))
+
+mostrarAlumnos()
+cargarSelectAlumnos()
+
+}
+
+// MOSTRAR ALUMNOS
+
+function mostrarAlumnos(){
+
+let html=""
+
+alumnos.forEach(a=>{
+html+=a.nombre+" - "+a.dni+"<br>"
+})
+
+document.getElementById("listaAlumnos").innerHTML=html
+
+}
+
+// SELECT DOCENTE
+
+function cargarSelectAlumnos(){
+
+let select=document.getElementById("alumnoNota")
+
+select.innerHTML=""
+
+alumnos.forEach(a=>{
+
+let op=document.createElement("option")
+
+op.value=a.dni
+op.text=a.nombre+" - "+a.dni
+
+select.appendChild(op)
 
 })
 
-.then(()=>{
+}
 
-alert("Nota guardada");
+// GUARDAR NOTA
 
-mostrarCargaNotas();
+function guardarNota(){
 
-});
+let dni=document.getElementById("alumnoNota").value
+let materia=document.getElementById("materiaNota").value
+let cuatri=document.getElementById("cuatrimestreNota").value
+let nota=document.getElementById("notaValor").value
+
+notas.push({
+dni:dni,
+materia:materia,
+cuatrimestre:cuatri,
+nota:Number(nota)
+})
+
+localStorage.setItem("notas",JSON.stringify(notas))
+
+alert("Nota guardada")
+
+}
+
+// MOSTRAR BOLETIN
+
+function mostrarBoletin(){
+
+let html="<table>"
+html+="<tr><th>Materia</th><th>1°C</th><th>2°C</th><th>Promedio</th><th>Estado</th></tr>"
+
+let materias={}
+
+notas.forEach(n=>{
+
+if(n.dni==usuarioActual){
+
+if(!materias[n.materia]){
+materias[n.materia]={c1:"-",c2:"-"}
+}
+
+if(n.cuatrimestre=="1") materias[n.materia].c1=n.nota
+if(n.cuatrimestre=="2") materias[n.materia].c2=n.nota
+
+}
+
+})
+
+for(let m in materias){
+
+let c1=materias[m].c1
+let c2=materias[m].c2
+
+let promedio="-"
+let estado="-"
+
+if(c1!="-" && c2!="-"){
+
+promedio=(c1+c2)/2
+
+estado=promedio>=7 ? "Aprobado" : "Desaprobado"
+
+}
+
+html+=`<tr>
+<td>${m}</td>
+<td>${c1}</td>
+<td>${c2}</td>
+<td>${promedio}</td>
+<td>${estado}</td>
+</tr>`
+
+}
+
+html+="</table>"
+
+document.getElementById("boletin").innerHTML=html
 
 }
 
