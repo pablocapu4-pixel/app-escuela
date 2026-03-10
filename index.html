@@ -1,154 +1,57 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="utf-8">
-    <title>CENS 451 - Sistema Estable</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-    <style>
-        :root { --primary: #2c3e50; --success: #27ae60; --danger: #e74c3c; --bg: #f8f9fa; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
-        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .hidden { display: none; }
-        input, select, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; }
-        button { background: var(--success); color: white; border: none; font-weight: bold; cursor: pointer; }
-        .btn-logout { background: var(--danger); }
-        .student-row { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
-    </style>
-</head>
-<body>
-
-<div id="app">
-    <div id="login-screen" class="card">
-        <h2 style="text-align:center">🏢 Acceso CENS 451</h2>
-        <input id="user-dni" placeholder="DNI del Usuario">
-        <input id="user-pass" type="password" value="123456">
-        <button id="btn-entrar" onclick="login()">Ingresar al Sistema</button>
-        <p id="msg-error" style="color:red; text-align:center; font-weight:bold;"></p>
-    </div>
-
-    <div id="teacher-screen" class="hidden">
-        <div class="card">
-            <h2>Bienvenido: <span id="nombre-docente"></span></h2>
-            <select id="select-materia" onchange="mostrarAlumnos()">
-                <option value="">-- Seleccionar Materia --</option>
-            </select>
-            <button class="btn-logout" onclick="salir()">Cerrar Sesión</button>
-        </div>
-        <div id="planilla-card" class="card hidden">
-            <h3 id="titulo-materia"></h3>
-            <div id="lista-alumnos"></div>
-            <button onclick="guardarNotas()">💾 Guardar Todo</button>
-        </div>
-    </div>
-</div>
-
-<script>
-const firebaseConfig = {
-    apiKey: "AIzaSyAeezu1BHZch8eaNnVV-MJ6Rpdl1BzFHXY",
-    authDomain: "app-escuela-cens451.firebaseapp.com",
-    projectId: "app-escuela-cens451"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const auth = firebase.auth();
-
-let docenteActivo = null;
-
-async function login() {
-    const btn = document.getElementById("btn-entrar");
-    const msg = document.getElementById("msg-error");
-    const dni = document.getElementById("user-dni").value.trim();
-    const pass = document.getElementById("user-pass").value;
-
-    if(!dni) return alert("Por favor ingresa tu DNI");
-
-    btn.disabled = true;
-    btn.innerText = "Verificando...";
-    msg.innerText = "";
-
-    try {
-        console.log("Iniciando Auth para:", dni);
-        await auth.signInWithEmailAndPassword(dni + "@cens451.edu.ar", pass);
-        
-        console.log("Auth exitoso. Buscando en Firestore...");
-        const doc = await db.collection("usuarios").doc(dni).get();
-        
-        if(!doc.exists) {
-            msg.innerText = "DNI no encontrado en la base de datos de usuarios.";
-            return;
-        }
-
-        docenteActivo = doc.data();
-        docenteActivo.id = dni;
-
-        // LOGIN EXITOSO
-        document.getElementById("login-screen").classList.add("hidden");
-        document.getElementById("teacher-screen").classList.remove("hidden");
-        document.getElementById("nombre-docente").innerText = docenteActivo.nombre;
-        
-        cargarMenuMaterias();
-
-    } catch(e) {
-        console.error("Error completo:", e);
-        msg.innerText = "Error de acceso: " + e.message;
-    } finally {
-        btn.disabled = false;
-        btn.innerText = "Ingresar al Sistema";
-    }
-}
-
+// --- FUNCIÓN ACTUALIZADA PARA CARGAR MATERIAS POR CUATRIMESTRE ---
 function cargarMenuMaterias() {
     const select = document.getElementById("select-materia");
-    const materiasMap = docenteActivo.MATERIAS || {};
+    const materiasRaiz = docenteActivo.MATERIAS || {};
     select.innerHTML = '<option value="">-- Mis Materias --</option>';
     
-    // Iteramos sobre las llaves del mapa (que son los años)
-    Object.keys(materiasMap).forEach(añoKey => {
-        const lista = materiasMap[añoKey];
-        if (Array.isArray(lista)) {
-            lista.forEach(materia => {
-                let opt = document.createElement("option");
-                // Guardamos el nombre y la llave (año) para filtrar alumnos después
-                opt.value = `${materia.trim()}|${añoKey}`;
-                opt.textContent = `${materia.trim()} (${añoKey}° Año)`;
-                select.appendChild(opt);
-            });
-        }
+    // 1. Entramos al Año (Ej: "AÑO 1")
+    Object.keys(materiasRaiz).forEach(añoKey => {
+        const cuatrimestres = materiasRaiz[añoKey];
+        
+        // 2. Entramos al Cuatrimestre (Ej: "1er CUATRIMESTRE")
+        Object.keys(cuatrimestres).forEach(cuatKey => {
+            const listaMaterias = cuatrimestres[cuatKey];
+            
+            if (Array.isArray(listaMaterias)) {
+                listaMaterias.forEach(materia => {
+                    let opt = document.createElement("option");
+                    
+                    // Extraemos el número de cuatrimestre del texto (Ej: "1er" -> "1")
+                    const numCuat = cuatKey.match(/\d+/) ? cuatKey.match(/\d+/)[0] : "1";
+                    // Extraemos el número de año (Ej: "AÑO 1" -> "1")
+                    const numAño = añoKey.match(/\d+/) ? añoKey.match(/\d+/)[0] : "1";
+
+                    // Guardamos todo en el value para usarlo después
+                    opt.value = `${materia.trim()}|${numAño}|${numCuat}`;
+                    opt.textContent = `${materia.trim()} (${numAño}° Año - ${numCuat}° Cuat.)`;
+                    select.appendChild(opt);
+                });
+            }
+        });
     });
 }
 
+// --- FUNCIÓN ACTUALIZADA PARA MOSTRAR ALUMNOS ---
 async function mostrarAlumnos() {
     const val = document.getElementById("select-materia").value;
     if(!val) return;
 
-    const [materia, año] = val.split('|');
-    document.getElementById("titulo-materia").innerText = materia;
+    const [materia, año, cuat] = val.split('|');
+    document.getElementById("titulo-materia").innerText = `${materia} (${cuat}° Cuatrimestre)`;
     const container = document.getElementById("lista-alumnos");
     document.getElementById("planilla-card").classList.remove("hidden");
     
-    container.innerHTML = "Cargando lista...";
+    container.innerHTML = "Cargando alumnos...";
 
     try {
-        // Buscamos alumnos con rol estudiante y que coincidan en el año
-        // NOTA: Probamos con 'año' y con 'anio' por si acaso
-        let snap = await db.collection("usuarios")
+        // Buscamos alumnos que coincidan con el número de año
+        const snap = await db.collection("usuarios")
             .where("rol", "==", "estudiante")
-            .where("año", "==", año)
+            .where("año", "==", año) 
             .get();
 
-        // Si con 'año' no sale nada, intentamos con 'anio' para asegurar compatibilidad
         if (snap.empty) {
-            snap = await db.collection("usuarios")
-                .where("rol", "==", "estudiante")
-                .where("anio", "==", año)
-                .get();
-        }
-
-        if (snap.empty) {
-            container.innerHTML = `<p style="color:orange;">No se hallaron alumnos cargados en el año "${año}".</p>`;
+            container.innerHTML = `<p style="color:orange; text-align:center;">No hay alumnos cargados en ${año}° año.</p>`;
             return;
         }
 
@@ -168,13 +71,15 @@ async function mostrarAlumnos() {
                 </div>`;
         });
     } catch (err) {
-        container.innerHTML = "Error al obtener alumnos: " + err.message;
+        container.innerHTML = "Error: " + err.message;
     }
 }
 
+// --- FUNCIÓN ACTUALIZADA PARA GUARDAR NOTAS ---
 async function guardarNotas() {
-    const [materia] = document.getElementById("select-materia").value.split('|');
-    const cuat = materia.includes("2") || materia.includes("4") || materia.includes("6") ? "2" : "1";
+    const val = document.getElementById("select-materia").value;
+    const [materia, año, cuat] = val.split('|');
+    
     const batch = db.batch();
     const filas = document.querySelectorAll(".student-row");
 
@@ -184,28 +89,22 @@ async function guardarNotas() {
         const nota = parseFloat(document.getElementById(`nota-${dni}`).value);
 
         if(rite || !isNaN(nota)) {
-            const ref = db.collection("evaluaciones").doc(`${dni}_${materia.replace(/\s+/g, '')}`);
+            // El ID del documento ahora es más único: DNI + Materia + Cuatrimestre
+            const idDoc = `${dni}_${materia.replace(/\s+/g, '')}_C${cuat}`;
+            const ref = db.collection("evaluaciones").doc(idDoc);
+            
             batch.set(ref, {
                 alumnoDni: dni,
                 materia: materia,
+                año: año,
                 cuat: cuat,
                 rite: rite,
                 nota: nota,
-                aprobado: nota >= 7,
                 fecha: new Date().toISOString()
             });
         }
     });
 
-    try {
-        await batch.commit();
-        alert("¡Éxito! Planilla de " + materia + " guardada.");
-    } catch(e) {
-        alert("Error al guardar: " + e.message);
-    }
+    await batch.commit();
+    alert(`Planilla de ${materia} (${cuat}° Cuat.) guardada con éxito.`);
 }
-
-function salir() { auth.signOut().then(() => location.reload()); }
-</script>
-</body>
-</html>
