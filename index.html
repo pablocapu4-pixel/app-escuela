@@ -2,64 +2,76 @@
 <html lang="es">
 <head>
     <meta charset="utf-8">
-    <title>Sistema Escolar CENS 451 - Integrado</title>
+    <title>CENS 451 - Sistema Autónomo</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <style>
-        body { font-family: sans-serif; max-width: 900px; margin: auto; background: #f5f5f5; padding: 20px; }
-        .card { background: white; padding: 15px; border-radius: 8px; margin: 10px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        :root { --primary: #1a252f; --accent: #27ae60; --danger: #c0392b; --bg: #ecf0f1; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; }
+        .container { max-width: 900px; margin: auto; }
+        .card { background: white; padding: 20px; border-radius: 10px; shadow: 0 4px rgba(0,0,0,0.1); margin-bottom: 15px; border-top: 5px solid var(--primary); }
         .hidden { display: none; }
-        input, select, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box; }
-        button { background: #4CAF50; color: white; font-weight: bold; cursor: pointer; border: none; }
-        button:hover { background: #45a049; }
-        .btn-danger { background: #f44336; }
-        .rite-tag { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.8em; }
-        .TEA { background: #c8e6c9; color: #2e7d32; }
-        .TEP { background: #fff9c4; color: #f57f17; }
-        .TED { background: #ffcdd2; color: #c62828; }
-        #error { color: red; text-align: center; font-weight: bold; }
-        hr { border: 0; border-top: 1px solid #eee; margin: 15px 0; }
+        input, select, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 5px; border: 1px solid #bdc3c7; font-size: 16px; }
+        button { background: var(--accent); color: white; border: none; font-weight: bold; cursor: pointer; }
+        .btn-logout { background: var(--danger); }
+        table { width: 100%; border-collapse: collapse; background: white; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+        th { background: var(--primary); color: white; }
+        .stat-box { display: inline-block; padding: 20px; background: white; border-radius: 8px; margin: 10px; text-align: center; min-width: 120px; border: 1px solid #ddd; }
+        .rite-tag { padding: 3px 7px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .TEA { background: #d4edda; color: #155724; } .TEP { background: #fff3cd; color: #856404; } .TED { background: #f8d7da; color: #721c24; }
     </style>
 </head>
 <body>
 
-<div id="login-screen">
-    <div class="card">
-        <h2>🔐 CENS 451 - Ingreso</h2>
-        <input id="usuario" placeholder="Usuario (ej: jperis)">
-        <input id="password" type="password" value="123456" placeholder="Contraseña">
-        <button onclick="login()">Entrar al Sistema</button>
-        <p id="error"></p>
+<div class="container">
+    <div id="login-screen" class="card">
+        <h2 style="text-align:center">CENS 451 - Gestión</h2>
+        <input id="user-input" placeholder="DNI o Usuario">
+        <input id="pass-input" type="password" value="123456" placeholder="Contraseña">
+        <button onclick="iniciarSesion()">Entrar</button>
+        <p id="login-error" style="color:red; text-align:center"></p>
     </div>
-</div>
 
-<div id="teacher-screen" class="hidden">
-    <h2>👨‍🏫 Panel Docente</h2>
-    <div class="card">
-        <label>Materia y Año:</label>
-        <select id="teacher-subject" onchange="loadStudents()">
-            <option value="">Seleccione una materia</option>
-        </select>
+    <div id="admin-screen" class="hidden">
+        <div class="card">
+            <h2>📊 Panel Directivo</h2>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <button onclick="renderGestionUsuarios()">👥 Usuarios</button>
+                <button onclick="renderEstadisticas()">📈 Estadísticas</button>
+            </div>
+            <button class="btn-logout" onclick="cerrarSesion()">Salir</button>
+        </div>
+        <div id="admin-work-area"></div>
     </div>
-    <div id="teacher-students"></div>
-    <button id="save-btn" class="hidden" onclick="saveGrades()">💾 Guardar Calificaciones</button>
-    <button onclick="logout()" class="btn-danger">🚪 Salir</button>
-</div>
 
-<div id="admin-screen" class="hidden">
-    <h2>📊 Panel Administrativo</h2>
-    <div style="display: flex; gap: 10px;">
-        <button onclick="mostrarUsuarios()">👥 Gestionar Usuarios</button>
-        <button onclick="mostrarCargaMaterias()">📚 Materias Globales</button>
+    <div id="teacher-screen" class="hidden">
+        <div class="card">
+            <h2>👨‍🏫 Registro de Notas</h2>
+            <select id="sel-materia" onchange="mostrarAlumnos()"><option value="">Seleccione Materia</option></select>
+            <button class="btn-logout" onclick="cerrarSesion()">Salir</button>
+        </div>
+        <div id="lista-estudiantes"></div>
+        <button id="btn-save-grades" class="hidden" onclick="guardarNotas()">💾 Guardar Todo</button>
     </div>
-    <div id="admin-panel"></div>
-    <button onclick="logout()" class="btn-danger">🚪 Salir</button>
+
+    <div id="student-screen" class="hidden">
+        <div class="card">
+            <h2>🎓 Boletín Digital</h2>
+            <h3 id="student-name-display"></h3>
+            <table>
+                <thead><tr><th>Materia</th><th>Cuat.</th><th>RITE</th><th>Nota</th></tr></thead>
+                <tbody id="boletin-body"></tbody>
+            </table>
+            <button class="btn-logout" onclick="cerrarSesion()" style="margin-top:20px">Cerrar Sesión</button>
+        </div>
+    </div>
 </div>
 
 <script>
-// --- CONFIGURACIÓN FIREBASE ---
+// --- CONFIGURACIÓN ---
 const firebaseConfig = {
     apiKey: "AIzaSyAeezu1BHZch8eaNnVV-MJ6Rpdl1BzFHXY",
     authDomain: "app-escuela-cens451.firebaseapp.com",
@@ -69,168 +81,165 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-let currentUser = null;
-let evaluations = {};
-let currentSubject = "";
+let sesionActiva = { user: "", rol: "", datos: {} };
 
-// --- LÓGICA DE LOGIN ---
-async function login() {
-    const user = document.getElementById("usuario").value.trim();
-    const pass = document.getElementById("password").value;
-    const errorEl = document.getElementById("error");
-    
-    if(!user || !pass) { errorEl.innerText = "Complete los campos"; return; }
+// --- LOGIN ---
+async function iniciarSesion() {
+    const user = document.getElementById("user-input").value.trim();
+    const pass = document.getElementById("pass-input").value;
+    const err = document.getElementById("login-error");
 
     try {
         const email = user + "@cens451.edu.ar";
         await auth.signInWithEmailAndPassword(email, pass);
-        
         const doc = await db.collection("usuarios").doc(user).get();
-        if(!doc.exists) { errorEl.innerText = "Usuario no registrado en Base de Datos"; return; }
         
-        const userData = doc.data();
-        currentUser = user;
-
+        if(!doc.exists) { err.innerText = "Error: Usuario sin datos en Firestore"; return; }
+        
+        sesionActiva = { user, rol: doc.data().rol, datos: doc.data() };
         document.getElementById("login-screen").classList.add("hidden");
-        
-        if(userData.rol === "admin" || userData.rol === "directivo") {
+
+        if(sesionActiva.rol === "directivo") {
             document.getElementById("admin-screen").classList.remove("hidden");
-        } else if(userData.rol === "docente") {
+        } else if(sesionActiva.rol === "docente") {
             document.getElementById("teacher-screen").classList.remove("hidden");
-            setupTeacherMenu(userData.MATERIAS || {});
+            poblarMateriasDocente(sesionActiva.datos.MATERIAS);
+        } else {
+            document.getElementById("student-screen").classList.remove("hidden");
+            cargarBoletin(user);
         }
-    } catch(e) {
-        errorEl.innerText = "Error: Usuario o clave incorrectos";
-    }
+    } catch(e) { err.innerText = "Usuario o clave incorrectos"; }
 }
 
-function logout() { auth.signOut().then(() => location.reload()); }
+function cerrarSesion() { auth.signOut().then(() => location.reload()); }
 
 // --- LÓGICA DOCENTE ---
-function setupTeacherMenu(materiasMap) {
-    const select = document.getElementById("teacher-subject");
-    for (const anio in materiasMap) {
-        materiasMap[anio].forEach(m => {
+function poblarMateriasDocente(materias) {
+    const sel = document.getElementById("sel-materia");
+    for(let anio in materias) {
+        materias[anio].forEach(m => {
             let opt = document.createElement("option");
             opt.value = `${m}|${anio}`;
-            opt.textContent = `${m} - ${anio}° Año`;
-            select.appendChild(opt);
+            opt.textContent = `${m} (${anio}° Año)`;
+            sel.appendChild(opt);
         });
     }
 }
 
-async function loadStudents() {
-    const val = document.getElementById("teacher-subject").value;
-    if(!val) return;
-    [currentSubject, currentYear] = val.split('|');
+async function mostrarAlumnos() {
+    const [materia, anio] = document.getElementById("sel-materia").value.split('|');
+    const container = document.getElementById("lista-estudiantes");
+    container.innerHTML = "Buscando alumnos...";
     
-    const container = document.getElementById("teacher-students");
-    container.innerHTML = "Cargando alumnos...";
-    evaluations = {};
-
-    const snap = await db.collection("colegios").doc("cens451").collection("alumnos").get();
+    const snap = await db.collection("usuarios").where("rol","==","estudiante").where("anio","==",anio).get();
     container.innerHTML = "";
     
     snap.forEach(doc => {
-        const lista = doc.data().lista || {};
-        for(let dni in lista) {
-            let s = lista[dni];
-            // Solo mostramos alumnos que coincidan con el año de la materia
-            if(s.añoIngreso == currentYear) {
-                let div = document.createElement("div");
-                div.className = "card";
-                div.innerHTML = `
-                    <b>${s.nombre}</b> (DNI: ${dni})
-                    <div style="display:flex; gap:10px; margin-top:10px;">
-                        <select onchange="updateEval('${dni}', 'rite', this.value)">
-                            <option value="">RITE</option>
-                            <option value="TEA">T.E.A.</option>
-                            <option value="TEP">T.E.P.</option>
-                            <option value="TED">T.E.D.</option>
-                        </select>
-                        <input type="number" placeholder="Nota Final" onchange="updateEval('${dni}', 'nota', this.value)">
-                    </div>
-                `;
-                container.appendChild(div);
-            }
-        }
-    });
-    document.getElementById("save-btn").classList.remove("hidden");
-}
-
-function updateEval(dni, field, val) {
-    if(!evaluations[dni]) evaluations[dni] = {};
-    evaluations[dni][field] = val;
-}
-
-async function saveGrades() {
-    const batch = db.batch();
-    for(let dni in evaluations) {
-        let ref = db.collection("evaluaciones").doc();
-        batch.set(ref, {
-            alumnoDni: dni,
-            materia: currentSubject,
-            docente: currentUser,
-            rite: evaluations[dni].rite || null,
-            nota: evaluations[dni].nota || null,
-            fecha: new Date().toISOString()
-        });
-    }
-    await batch.commit();
-    alert("Notas guardadas correctamente");
-}
-
-// --- LÓGICA ADMINISTRADOR ---
-async function mostrarUsuarios() {
-    const panel = document.getElementById("admin-panel");
-    panel.innerHTML = "<h3>Gestión de Usuarios</h3>";
-    const snap = await db.collection("usuarios").get();
-    
-    snap.forEach(doc => {
-        const d = doc.data();
-        let materiasStr = "";
-        if(d.MATERIAS) {
-            materiasStr = Object.entries(d.MATERIAS).map(([a, m]) => `${a}:${m.join('-')}`).join(' | ');
-        }
-
-        panel.innerHTML += `
+        const alu = doc.data();
+        container.innerHTML += `
             <div class="card">
-                <b>Usuario:</b> ${doc.id} | <b>Rol:</b> ${d.rol} <br>
-                <input id="mat-${doc.id}" value="${materiasStr}" placeholder="Año:Mat1-Mat2 | Año:Mat3">
-                <button onclick="actualizarMateriasAdmin('${doc.id}')">Actualizar Materias</button>
-            </div>
-        `;
+                <b>${alu.nombre}</b><br>
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:5px; margin-top:10px;">
+                    <select id="cuat-${doc.id}"><option value="1">1° Cuat</option><option value="2">2° Cuat</option></select>
+                    <select id="rite-${doc.id}"><option value="TEA">TEA</option><option value="TEP">TEP</option><option value="TED">TED</option></select>
+                    <input type="number" id="nota-${doc.id}" placeholder="Nota" min="1" max="10">
+                </div>
+            </div>`;
+    });
+    document.getElementById("btn-save-grades").classList.remove("hidden");
+}
+
+async function guardarNotas() {
+    const [materia] = document.getElementById("sel-materia").value.split('|');
+    const batch = db.batch();
+    const selects = document.querySelectorAll('[id^="rite-"]');
+
+    selects.forEach(sel => {
+        const dni = sel.id.replace('rite-', '');
+        const cuat = document.getElementById(`cuat-${dni}`).value;
+        const nota = document.getElementById(`nota-${dni}`).value;
+        const rite = sel.value;
+
+        const ref = db.collection("evaluaciones").doc(`${dni}_${materia}_${cuat}`);
+        batch.set(ref, {
+            alumnoDni: dni, materia, cuat, rite, nota, 
+            docente: sesionActiva.user, fecha: new Date()
+        });
+    });
+    await batch.commit();
+    alert("¡Calificaciones guardadas!");
+}
+
+// --- LÓGICA ESTUDIANTE ---
+async function cargarBoletin(dni) {
+    document.getElementById("student-name-display").innerText = "DNI: " + dni;
+    const snap = await db.collection("evaluaciones").where("alumnoDni","==",dni).get();
+    const body = document.getElementById("boletin-body");
+    body.innerHTML = "";
+    snap.forEach(doc => {
+        const e = doc.data();
+        body.innerHTML += `<tr><td>${e.materia}</td><td>${e.cuat}</td><td><span class="rite-tag ${e.rite}">${e.rite}</span></td><td>${e.nota}</td></tr>`;
     });
 }
 
-async function actualizarMateriasAdmin(uid) {
-    const input = document.getElementById(`mat-${uid}`).value;
-    let nuevoMapa = {};
-    if(input) {
-        input.split('|').forEach(bloque => {
-            const [anio, lista] = bloque.split(':');
-            if(anio && lista) nuevoMapa[anio.trim()] = lista.split('-').map(m => m.trim());
-        });
-    }
-    await db.collection("usuarios").doc(uid).update({ MATERIAS: nuevoMapa });
-    alert("Materias actualizadas para " + uid);
+// --- LÓGICA DIRECTIVO ---
+function renderGestionUsuarios() {
+    const area = document.getElementById("admin-work-area");
+    area.innerHTML = `
+        <div class="card">
+            <h3>Nuevos Usuarios</h3>
+            <input id="new-id" placeholder="DNI">
+            <input id="new-name" placeholder="Nombre Apellido">
+            <select id="new-rol"><option value="estudiante">Estudiante</option><option value="docente">Docente</option></select>
+            <input id="new-anio" placeholder="Año (1, 2 o 3)">
+            <button onclick="crearEnFirestore()">Crear en Base de Datos</button>
+            <p><small>Nota: Debe crearlos manualmente en Firebase Auth con clave 123456</small></p>
+        </div>
+        <div id="admin-user-list"></div>`;
+    cargarListaAdmin();
 }
 
-async function mostrarCargaMaterias() {
-    const panel = document.getElementById("admin-panel");
-    panel.innerHTML = `
-        <h3>Cargar Nueva Materia</h3>
-        <input id="new-mat-name" placeholder="Nombre (ej: MATEMATICA)">
-        <input id="new-mat-anio" placeholder="Año (1, 2 o 3)">
-        <button onclick="guardarMateriaGlobal()">Guardar Materia</button>
-    `;
+async function cargarListaAdmin() {
+    const list = document.getElementById("admin-user-list");
+    const snap = await db.collection("usuarios").get();
+    list.innerHTML = "";
+    snap.forEach(doc => {
+        const u = doc.data();
+        list.innerHTML += `<div class="card" style="display:flex; justify-content:space-between">
+            <span>${u.nombre} (${u.rol})</span>
+            <button class="btn-logout" style="width:auto" onclick="eliminarF(${doc.id})">Borrar</button>
+        </div>`;
+    });
 }
 
-async function guardarMateriaGlobal() {
-    const n = document.getElementById("new-mat-name").value.toUpperCase();
-    const a = document.getElementById("new-mat-anio").value;
-    await db.collection("materias").doc(`${n}_${a}`).set({ nombre: n, anio: a });
-    alert("Materia registrada globalmente");
+async function crearEnFirestore() {
+    const id = document.getElementById("new-id").value;
+    const nombre = document.getElementById("new-name").value;
+    const rol = document.getElementById("new-rol").value;
+    const anio = document.getElementById("new-anio").value;
+    await db.collection("usuarios").doc(id).set({ nombre, rol, anio, MATERIAS: {} });
+    renderGestionUsuarios();
+}
+
+async function eliminarF(id) {
+    if(confirm("¿Seguro?")) { await db.collection("usuarios").doc(String(id)).delete(); renderGestionUsuarios(); }
+}
+
+async function renderEstadisticas() {
+    const area = document.getElementById("admin-work-area");
+    const snap = await db.collection("evaluaciones").get();
+    let tea = 0, tep = 0, ted = 0;
+    snap.forEach(doc => {
+        const r = doc.data().rite;
+        if(r === "TEA") tea++; if(r === "TEP") tep++; if(r === "TED") ted++;
+    });
+    area.innerHTML = `
+        <div class="card" style="text-align:center">
+            <h3>Estado General de Notas</h3>
+            <div class="stat-box TEA">TEA: ${tea}</div>
+            <div class="stat-box TEP">TEP: ${tep}</div>
+            <div class="stat-box TED">TED: ${ted}</div>
+        </div>`;
 }
 </script>
 </body>
