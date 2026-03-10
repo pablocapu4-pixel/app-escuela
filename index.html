@@ -2,109 +2,101 @@
 <html lang="es">
 <head>
     <meta charset="utf-8">
-    <title>SISTEMA INTEGRAL CENS 451 - 2026</title>
+    <title>CENS 451 - GESTIÓN 2026</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <style>
         :root { --primary: #2c3e50; --dir: #8e44ad; --doc: #2980b9; --est: #27ae60; --bg: #f4f7f6; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; min-height: 100vh; }
         .hidden { display: none !important; }
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
         
-        /* PANTALLA DE INICIO (3 PANELES) */
-        .welcome-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; gap: 20px; }
-        .panel-selector { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; width: 90%; max-width: 1000px; }
-        .access-card { padding: 40px; text-align: center; color: white; border-radius: 15px; cursor: pointer; transition: 0.3s; }
-        .access-card:hover { transform: translateY(-10px); filter: brightness(1.1); }
-        .bg-dir { background: var(--dir); } .bg-doc { background: var(--doc); } .bg-est { background: var(--est); }
+        /* PANTALLA INICIAL */
+        .welcome-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; }
+        .panel-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; width: 90%; max-width: 1000px; margin-top: 30px; }
+        .access-card { padding: 40px; border-radius: 15px; color: white; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .access-card:hover { transform: scale(1.05); }
 
-        /* INTERFAZ GENERAL */
-        .navbar { color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
+        /* FORMULARIO LOGIN */
+        #login-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 999; }
+        .login-box { background: white; padding: 30px; border-radius: 12px; width: 320px; text-align: center; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        
+        /* INTERFAZ DE TRABAJO */
+        .navbar { padding: 15px 30px; color: white; display: flex; justify-content: space-between; align-items: center; }
         .container { max-width: 1100px; margin: 20px auto; padding: 0 20px; }
-        table { width: 100%; border-collapse: collapse; background: white; margin-top: 15px; }
-        th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
-        input, select, button { padding: 10px; border: 1px solid #ccc; border-radius: 6px; }
-        .btn-action { width: 100%; font-weight: bold; cursor: pointer; border: none; padding: 12px; margin-top: 10px; border-radius: 6px; }
-
-        /* ESTADISTICAS */
-        .grid-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
-        .s-box { padding: 20px; color: white; border-radius: 10px; text-align: center; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        button { cursor: pointer; border: none; font-weight: bold; border-radius: 5px; }
+        .btn-main { background: var(--primary); color: white; width: 100%; padding: 12px; }
     </style>
 </head>
 <body>
 
 <div id="portal-inicio" class="welcome-screen">
-    <h1 style="color: var(--primary)">SISTEMA CENS 451</h1>
-    <div class="panel-selector">
-        <div class="access-card bg-dir" onclick="abrirLogin('director')"><h2>1. DIRECTIVOS</h2><p>Gestión e Informes</p></div>
-        <div class="access-card bg-doc" onclick="abrirLogin('docente')"><h2>2. DOCENTES</h2><p>Carga de Notas</p></div>
-        <div class="access-card bg-est" onclick="abrirLogin('estudiante')"><h2>3. ESTUDIANTES</h2><p>Mi Boletín</p></div>
+    <h1 style="color: var(--primary)">SISTEMA INTEGRAL CENS 451</h1>
+    <p>Seleccione su nivel de acceso para comenzar</p>
+    <div class="panel-grid">
+        <div class="access-card" style="background:var(--dir)" onclick="prepararLogin('director')"><h2>DIRECTIVOS</h2><p>Gestión Institucional</p></div>
+        <div class="access-card" style="background:var(--doc)" onclick="prepararLogin('docente')"><h2>DOCENTES</h2><p>Carga de Planillas</p></div>
+        <div class="access-card" style="background:var(--est)" onclick="prepararLogin('estudiante')"><h2>ESTUDIANTES</h2><p>Consulta de Notas</p></div>
     </div>
 </div>
 
-<div id="login-modal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; z-index:1000;">
-    <div class="card" style="width:320px; text-align:center;">
-        <h3 id="login-title">Acceso</h3>
-        <input id="user-dni" placeholder="DNI" style="width:90%; margin-bottom:10px;">
-        <input id="user-pass" type="password" value="123456" style="width:90%; margin-bottom:10px;">
-        <button class="btn-action" id="btn-entrar" onclick="procesarLogin()" style="background:var(--primary); color:white;">ENTRAR</button>
-        <button onclick="cerrarLogin()" style="background:none; border:none; color:grey; margin-top:10px; cursor:pointer;">Volver</button>
-        <p id="login-error" style="color:red; font-size:12px;"></p>
+<div id="login-modal" class="hidden">
+    <div class="login-box">
+        <h3 id="tipo-acceso">Acceso</h3>
+        <input id="user-dni" type="text" placeholder="Número de DNI">
+        <input id="user-pass" type="password" value="123456" placeholder="Contraseña">
+        <button class="btn-main" id="btn-entrar" onclick="ejecutarIngreso()">ENTRAR AL PANEL</button>
+        <button onclick="cerrarLogin()" style="background:none; color:grey; margin-top:15px;">← Volver</button>
+        <p id="error-msg" style="color:red; font-size: 13px; margin-top:10px;"></p>
     </div>
 </div>
 
-<div id="app-content" class="hidden">
-    <nav class="navbar" id="main-nav">
-        <div id="nav-info"><b>CENS 451</b> | <span id="user-name"></span></div>
-        <button onclick="location.reload()" style="background:white; color:black; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">Salir</button>
+<div id="app-main" class="hidden">
+    <nav class="navbar" id="nav-color">
+        <div><b>CENS 451</b> | <span id="nombre-usuario"></span></div>
+        <button onclick="location.reload()" style="background:rgba(255,255,255,0.2); color:white; border:1px solid white; padding:5px 10px;">Cerrar Sesión</button>
     </nav>
 
     <div class="container">
         <div id="panel-director" class="hidden">
-            <div class="grid-stats">
-                <div class="s-box" style="background:var(--dir)"><h3 id="st-alus">0</h3><p>Alumnos</p></div>
-                <div class="s-box" style="background:var(--success)"><h3 id="st-tea">0%</h3><p>TEA Institucional</p></div>
-                <div class="s-box" style="background:var(--primary)"><h3 id="st-doc">0</h3><p>Docentes</p></div>
-            </div>
-            <div class="card">
-                <h3>Administración de Usuarios</h3>
-                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <div class="card" style="border-left: 5px solid var(--dir)">
+                <h3>Alta de Usuarios</h3>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                     <input id="adm-dni" placeholder="DNI">
-                    <input id="adm-nom" placeholder="Nombre">
+                    <input id="adm-nom" placeholder="Nombre Apellido">
                     <select id="adm-rol">
                         <option value="estudiante">Estudiante</option>
                         <option value="docente">Docente</option>
                     </select>
-                    <input id="adm-anio" placeholder="Año">
-                    <button onclick="altaUsuario()" style="background:var(--dir); color:white; border:none; padding:10px; border-radius:5px; cursor:pointer;">+ ALTA</button>
+                    <input id="adm-anio" placeholder="Año (ej: 3)">
                 </div>
+                <button class="btn-main" onclick="altaFirebase()" style="background:var(--dir); margin-top:10px;">REGISTRAR</button>
             </div>
             <div class="card">
-                <table id="tabla-usuarios">
-                    <thead><tr><th>DNI</th><th>Nombre</th><th>Rol</th><th>Acción</th></tr></thead>
-                    <tbody></tbody>
-                </table>
+                <h3>Lista de Usuarios</h3>
+                <div id="lista-admin">Cargando...</div>
             </div>
         </div>
 
         <div id="panel-docente" class="hidden">
             <div class="card">
-                <h3>Carga de Planilla</h3>
-                <select id="sel-materia" onchange="cargarAlumnosDocente()" style="width:100%"></select>
+                <h3>Seleccione Materia</h3>
+                <select id="sel-materia" style="width:100%" onchange="mostrarPlanillaDocente()"></select>
             </div>
-            <div id="planilla-area" class="card hidden">
-                <h3 id="materia-nom"></h3>
-                <div id="lista-alumnos"></div>
-                <button class="btn-action" onclick="guardarNotas()" style="background:var(--doc); color:white;">GUARDAR CUATRIMESTRE</button>
+            <div id="planilla-docente" class="card hidden">
+                <h3 id="materia-titulo"></h3>
+                <div id="tabla-alumnos"></div>
+                <button class="btn-main" onclick="guardarNotasDocente()" style="background:var(--doc); margin-top:15px;">GUARDAR RITE</button>
             </div>
         </div>
 
         <div id="panel-estudiante" class="hidden">
             <div class="card" style="text-align:center;">
-                <h2>Mi Situación Académica 2026</h2>
-                <div id="boletin-estudiante"></div>
+                <h2>Mi Boletín 2026</h2>
+                <div id="boletin-data">Buscando notas...</div>
             </div>
         </div>
     </div>
@@ -121,62 +113,164 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-let rolSeleccionado = '';
-let usuarioActual = null;
+let ROL_PEDIDO = '';
+let USUARIO_DATA = null;
 
-// GESTIÓN DE ACCESO
-function abrirLogin(rol) {
-    rolSeleccionado = rol;
+// FLUJO DE LOGIN
+function prepararLogin(rol) {
+    ROL_PEDIDO = rol;
+    document.getElementById('tipo-acceso').innerText = "Acceso " + rol.toUpperCase();
     document.getElementById('login-modal').classList.remove('hidden');
-    document.getElementById('login-title').innerText = "Acceso " + rol.toUpperCase();
 }
 
 function cerrarLogin() { document.getElementById('login-modal').classList.add('hidden'); }
 
-async function procesarLogin() {
+async function ejecutarIngreso() {
     const dni = document.getElementById('user-dni').value.trim();
     const pass = document.getElementById('user-pass').value;
-    const err = document.getElementById('login-error');
+    const error = document.getElementById('error-msg');
+    const btn = document.getElementById('btn-entrar');
+
+    if(!dni) { error.innerText = "Ingrese su DNI"; return; }
     
+    btn.disabled = true; btn.innerText = "Verificando...";
+    error.innerText = "";
+
     try {
+        // 1. Login en Firebase Auth
         await auth.signInWithEmailAndPassword(dni + "@cens451.edu.ar", pass);
+        
+        // 2. Buscar datos en Firestore
         const doc = await db.collection("usuarios").doc(dni).get();
         
-        if (doc.exists && doc.data().rol === rolSeleccionado) {
-            usuarioActual = { id: dni, ...doc.data() };
-            iniciarSistema();
+        if (doc.exists) {
+            const data = doc.data();
+            // 3. Validar que el rol coincida con el panel elegido
+            if (data.rol === ROL_PEDIDO) {
+                USUARIO_DATA = { id: dni, ...data };
+                lanzarPanel();
+            } else {
+                auth.signOut();
+                error.innerText = "Su usuario no tiene rango de " + ROL_PEDIDO;
+                btn.disabled = false; btn.innerText = "ENTRAR AL PANEL";
+            }
         } else {
-            err.innerText = "DNI no habilitado para este panel.";
             auth.signOut();
+            error.innerText = "DNI no registrado en la base de datos.";
+            btn.disabled = false; btn.innerText = "ENTRAR AL PANEL";
         }
-    } catch (e) { err.innerText = "Error de credenciales."; }
-}
-
-function iniciarSistema() {
-    document.getElementById('portal-inicio').classList.add('hidden');
-    document.getElementById('login-modal').classList.add('hidden');
-    document.getElementById('app-content').classList.remove('hidden');
-    document.getElementById('user-name').innerText = usuarioActual.nombre;
-    
-    const nav = document.getElementById('main-nav');
-    if(rolSeleccionado === 'director') {
-        nav.style.background = 'var(--dir)';
-        document.getElementById('panel-director').classList.remove('hidden');
-        cargarAdmin();
-    } else if(rolSeleccionado === 'docente') {
-        nav.style.background = 'var(--doc)';
-        document.getElementById('panel-docente').classList.remove('hidden');
-        prepararMateriasDocente();
-    } else {
-        nav.style.background = 'var(--est)';
-        document.getElementById('panel-estudiante').classList.remove('hidden');
-        verBoletin();
+    } catch (e) {
+        error.innerText = "Error: DNI o Clave incorrectos.";
+        btn.disabled = false; btn.innerText = "ENTRAR AL PANEL";
     }
 }
 
-// --- LOGICA DIRECTOR ---
-async function altaUsuario() {
-    const dni = document.getElementById('adm-dni').value;
-    const nom = document.getElementById('adm-nom').value;
-    const rol = document.getElementById('adm-rol').value;
-    const an
+function lanzarPanel() {
+    document.getElementById('portal-inicio').classList.add('hidden');
+    document.getElementById('login-modal').classList.add('hidden');
+    document.getElementById('app-main').classList.remove('hidden');
+    document.getElementById('nombre-usuario').innerText = USUARIO_DATA.nombre;
+    
+    const nav = document.getElementById('nav-color');
+
+    if(ROL_PEDIDO === 'director') {
+        nav.style.background = 'var(--dir)';
+        document.getElementById('panel-director').classList.remove('hidden');
+        cargarListaUsuarios();
+    } else if(ROL_PEDIDO === 'docente') {
+        nav.style.background = 'var(--doc)';
+        document.getElementById('panel-docente').classList.remove('hidden');
+        poblarMaterias();
+    } else {
+        nav.style.background = 'var(--est)';
+        document.getElementById('panel-estudiante').classList.remove('hidden');
+        cargarBoletinEstudiante();
+    }
+}
+
+// FUNCIONES DIRECTOR
+async function altaFirebase() {
+    const d = document.getElementById('adm-dni').value.trim();
+    const n = document.getElementById('adm-nom').value.trim();
+    const r = document.getElementById('adm-rol').value;
+    const a = document.getElementById('adm-anio').value.trim();
+    await db.collection("usuarios").doc(d).set({ nombre: n, rol: r, año: a, anio: a });
+    alert("Usuario Creado"); cargarListaUsuarios();
+}
+
+async function cargarListaUsuarios() {
+    const snap = await db.collection("usuarios").get();
+    let html = "<table><tr><th>DNI</th><th>Nombre</th><th>Rol</th></tr>";
+    snap.forEach(doc => {
+        html += `<tr><td>${doc.id}</td><td>${doc.data().nombre}</td><td>${doc.data().rol}</td></tr>`;
+    });
+    document.getElementById('lista-admin').innerHTML = html + "</table>";
+}
+
+// FUNCIONES DOCENTE
+function poblarMaterias() {
+    const sel = document.getElementById('sel-materia');
+    const mats = USUARIO_DATA.MATERIAS || {};
+    sel.innerHTML = '<option value="">-- Elija una materia --</option>';
+    Object.keys(mats).forEach(anio => {
+        Object.keys(mats[anio]).forEach(cuat => {
+            mats[anio][cuat].forEach(m => {
+                let opt = document.createElement('option');
+                opt.value = `${m}|${anio.replace(/\D/g,"")}|${cuat.replace(/\D/g,"")}`;
+                opt.innerText = `${m} (${anio} - ${cuat})`;
+                sel.appendChild(opt);
+            });
+        });
+    });
+}
+
+async function mostrarPlanillaDocente() {
+    const val = document.getElementById('sel-materia').value;
+    if(!val) return;
+    const [m, a, c] = val.split('|');
+    document.getElementById('planilla-docente').classList.remove('hidden');
+    document.getElementById('materia-titulo').innerText = m + " (" + c + "° Cuat.)";
+    
+    const snap = await db.collection("usuarios").where("rol","==","estudiante").where("año","in",[a, `AÑO ${a}`, parseInt(a)]).get();
+    let res = "";
+    snap.forEach(doc => {
+        res += `<div style="display:grid; grid-template-columns: 2fr 1fr 1fr; margin-bottom:10px" data-dni="${doc.id}">
+            <span>${doc.data().nombre}</span>
+            <select id="rite-${doc.id}"><option value="">RITE</option><option value="TEA">TEA</option><option value="TEP">TEP</option><option value="TED">TED</option></select>
+            <input type="number" id="nota-${doc.id}" style="width:50px" placeholder="0">
+        </div>`;
+    });
+    document.getElementById('tabla-alumnos').innerHTML = res;
+}
+
+async function guardarNotasDocente() {
+    const [m, a, c] = document.getElementById('sel-materia').value.split('|');
+    const batch = db.batch();
+    document.querySelectorAll('[data-dni]').forEach(div => {
+        const dni = div.dataset.dni;
+        const rite = document.getElementById('rite-'+dni).value;
+        const nota = document.getElementById('nota-'+dni).value;
+        if(rite) {
+            const id = `${dni}_${m.replace(/\s+/g,'')}_C${c}`;
+            batch.set(db.collection("evaluaciones").doc(id), { alumnoDni: dni, materia: m, cuat: c, rite: rite, nota: nota });
+        }
+    });
+    await batch.commit(); alert("Notas guardadas correctamente.");
+}
+
+// FUNCIONES ESTUDIANTE
+async function cargarBoletinEstudiante() {
+    const snap = await db.collection("evaluaciones").where("alumnoDni","==",USUARIO_DATA.id).get();
+    let html = "<h3>Mis Notas</h3>";
+    if(snap.empty) html += "<p>No hay notas registradas.</p>";
+    snap.forEach(doc => {
+        const d = doc.data();
+        html += `<div style="border-bottom:1px solid #ccc; padding:10px; text-align:left;">
+            <b>${d.materia}</b> (${d.cuat}° Cuatrimestre) <br> RITE: ${d.rite} | Nota: ${d.nota || '-'}
+        </div>`;
+    });
+    document.getElementById('boletin-data').innerHTML = html;
+}
+</script>
+</body>
+</html>
