@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="utf-8">
-    <title>CENS 451 - GESTIÓN INTEGRAL</title>
+    <title>CENS 451 - GESTIÓN INTEGRAL 2026</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -13,67 +13,71 @@
         .hidden { display: none !important; }
         .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
         
-        /* LOGIN */
-        #login-screen { display: flex; align-items: center; justify-content: center; height: 100vh; }
-        .login-box { width: 350px; border-top: 5px solid var(--primary); text-align: center; }
+        /* DISEÑO PANEL DIRECTOR */
+        .sidebar-dir { background: var(--primary); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .tab-container { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
+        .tab-btn { padding: 10px 20px; cursor: pointer; border: none; background: #eee; border-radius: 5px; font-weight: bold; }
+        .tab-btn.active { background: var(--dir-color); color: white; }
 
-        /* NAV */
-        .navbar { background: var(--primary); color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
-        .container { max-width: 1100px; margin: 20px auto; padding: 0 20px; }
-        
-        /* TABLAS Y ELEMENTOS */
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
+        /* TABLAS Y BUSCADORES */
+        .search-box { width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid var(--dir-color); border-radius: 8px; font-size: 16px; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; }
         th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
-        input, select, button { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 15px; }
-        .btn-main { background: var(--success); color: white; width: 100%; cursor: pointer; border: none; font-weight: bold; }
-        .btn-del { background: var(--danger); color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; }
-
-        .grid-eval { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
-        .stat-card { padding: 20px; color: white; border-radius: 10px; text-align: center; }
+        th { background: #f8f9fa; color: var(--primary); }
+        
+        /* BOTONES */
+        .btn-main { background: var(--success); color: white; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; }
+        .btn-del { background: var(--danger); color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+        
+        .stat-box { text-align: center; color: white; padding: 20px; border-radius: 10px; flex: 1; }
+        .flex-row { display: flex; gap: 15px; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
 <div id="login-screen">
-    <div class="card login-box">
-        <h2 style="color: var(--primary)">🏢 CENS 451</h2>
-        <p>Gestión Institucional 2026</p>
-        <input id="user-dni" type="text" placeholder="DNI de Usuario" style="width:100%; margin-bottom:10px;">
-        <input id="user-pass" type="password" value="123456" style="width:100%; margin-bottom:10px;">
-        <button class="btn-main" id="btn-ingresar" onclick="login()">INGRESAR AL SISTEMA</button>
-        <p id="login-error" style="color:red; font-size: 13px; margin-top:10px;"></p>
+    <div class="card" style="width: 350px; margin: 100px auto; text-align: center; border-top: 5px solid var(--primary);">
+        <h2>CENS 451</h2>
+        <input id="user-dni" placeholder="DNI" style="width:90%; padding:10px; margin-bottom:10px;">
+        <input id="user-pass" type="password" value="123456" style="width:90%; padding:10px; margin-bottom:10px;">
+        <button class="btn-main" onclick="login()">INGRESAR</button>
+        <p id="login-error" style="color:red;"></p>
     </div>
 </div>
 
 <div id="main-app" class="hidden">
-    <nav class="navbar">
-        <div><b>CENS 451</b> | <span id="display-name"></span></div>
-        <button onclick="logout()" style="background:transparent; color:white; border:1px solid white; cursor:pointer; padding:5px 10px;">Cerrar Sesión</button>
-    </nav>
+    <div class="sidebar-dir">
+        <div><b>GESTIÓN DIRECTIVA CENS 451</b> | <span id="display-name"></span></div>
+        <button onclick="location.reload()" style="background:var(--danger); color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">Cerrar Sesión</button>
+    </div>
 
-    <div class="container">
-        <div id="view-director" class="hidden">
-            <div class="stats-grid">
-                <div class="stat-card" style="background:#3498db"><h4 id="stat-alumnos">0</h4><p>Alumnos</p></div>
-                <div class="stat-card" style="background:#27ae60"><h4 id="stat-tea">0%</h4><p>TEA Institucional</p></div>
-                <div class="stat-card" style="background:#8e44ad"><h4 id="stat-docentes">0</h4><p>Docentes</p></div>
-            </div>
-            <div class="card">
-                <h3>Altas y Bajas (Gestión Directiva)</h3>
-                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:10px;">
-                    <input id="adm-dni" placeholder="DNI">
-                    <input id="adm-nombre" placeholder="Nombre Completo">
-                    <select id="adm-rol">
+    <div style="padding: 20px; max-width: 1200px; margin: auto;">
+        
+        <div class="tab-container">
+            <div class="tab-btn active" id="tab1" onclick="switchTab('sec-gestion')">Gestión de Usuarios</div>
+            <div class="tab-btn" id="tab2" onclick="switchTab('sec-auditoria')">Auditoría de Notas</div>
+            <div class="tab-btn" id="tab3" onclick="switchTab('sec-stats')">Estadísticas e Informes</div>
+        </div>
+
+        <div id="sec-gestion" class="tab-content">
+            <div class="card" style="border-left: 5px solid var(--dir-color);">
+                <h3>Alta de Nuevo Usuario</h3>
+                <div class="flex-row">
+                    <input id="adm-dni" placeholder="DNI" style="flex:1">
+                    <input id="adm-nombre" placeholder="Nombre Completo" style="flex:2">
+                    <select id="adm-rol" style="flex:1">
                         <option value="estudiante">Estudiante</option>
                         <option value="docente">Docente</option>
                         <option value="director">Director/a</option>
                     </select>
-                    <input id="adm-anio" placeholder="Año (ej: 3)">
+                    <input id="adm-anio" placeholder="Año (ej: 3)" style="flex:1">
                 </div>
-                <button class="btn-main" onclick="altaUsuario()" style="background:var(--dir-color); margin-top:10px;">+ REGISTRAR USUARIO</button>
+                <button class="btn-main" onclick="altaUsuario()" style="background:var(--dir-color)">+ REGISTRAR EN EL SISTEMA</button>
             </div>
+
             <div class="card">
+                <h3>Listado General</h3>
+                <input type="text" class="search-box" id="search-user" onkeyup="filtrarUsuarios()" placeholder="🔍 Buscar por nombre o DNI...">
                 <table id="tabla-usuarios">
                     <thead><tr><th>DNI</th><th>Nombre</th><th>Rol</th><th>Año</th><th>Acción</th></tr></thead>
                     <tbody></tbody>
@@ -81,24 +85,36 @@
             </div>
         </div>
 
-        <div id="view-docente" class="hidden">
+        <div id="sec-auditoria" class="tab-content hidden">
             <div class="card">
-                <h3>Planilla de Calificaciones</h3>
-                <select id="select-materia" onchange="cargarAlumnosDocente()" style="width:100%">
-                    <option value="">-- Mis Materias --</option>
-                </select>
+                <h3>Buscador de Trayectorias</h3>
+                <input type="text" class="search-box" id="search-dni-nota" placeholder="Ingrese DNI del alumno para ver sus notas...">
+                <button class="btn-main" onclick="buscarNotasAlumno()" style="margin-bottom:20px;">VER CALIFICACIONES</button>
+                
+                <table id="tabla-notas-auditoria">
+                    <thead><tr><th>Materia</th><th>Cuat.</th><th>RITE</th><th>Nota</th><th>Acción</th></tr></thead>
+                    <tbody></tbody>
+                </table>
             </div>
-            <div id="planilla-docente-card" class="card hidden">
-                <h3 id="materia-titulo"></h3>
-                <div id="lista-estudiantes-docente"></div>
-                <button class="btn-main" onclick="guardarNotas()" style="margin-top:20px;">💾 GUARDAR PLANILLA</button>
+        </div>
+
+        <div id="sec-stats" class="tab-content hidden">
+            <div class="flex-row">
+                <div class="stat-box" style="background:#3498db"><h2 id="st-alus">0</h2><p>Estudiantes Totales</p></div>
+                <div class="stat-box" style="background:#27ae60"><h2 id="st-tea">0%</h2><p>Alumnos con TEA</p></div>
+                <div class="stat-box" style="background:#e67e22"><h2 id="st-ted">0%</h2><p>Alumnos con TED</p></div>
+            </div>
+            <div class="card">
+                <h3>Resumen de Gestión 2026</h3>
+                <p>Este panel muestra el estado actual de la carga de notas en el CENS 451.</p>
+                <div id="resumen-texto"></div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-// FIREBASE CONFIG
+// CONFIGURACIÓN FIREBASE
 const firebaseConfig = {
     apiKey: "AIzaSyAeezu1BHZch8eaNnVV-MJ6Rpdl1BzFHXY",
     authDomain: "app-escuela-cens451.firebaseapp.com",
@@ -108,74 +124,41 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-let userLogueado = null;
-
-// --- LOGIN CORREGIDO ---
 async function login() {
     const dni = document.getElementById("user-dni").value.trim();
     const pass = document.getElementById("user-pass").value;
-    const btn = document.getElementById("btn-ingresar");
-    const errorMsg = document.getElementById("login-error");
-
-    if(!dni) { errorMsg.innerText = "Debe ingresar un DNI"; return; }
-    
-    btn.disabled = true;
-    btn.innerText = "Verificando...";
-    errorMsg.innerText = "";
-
     try {
-        // 1. Autenticación
         await auth.signInWithEmailAndPassword(dni + "@cens451.edu.ar", pass);
-        
-        // 2. Obtener datos de Firestore
         const doc = await db.collection("usuarios").doc(dni).get();
-        
         if (doc.exists) {
-            userLogueado = { id: dni, ...doc.data() };
-            lanzarApp(userLogueado);
-        } else {
-            throw new Error("El usuario no existe en la base de datos.");
+            const user = doc.data();
+            document.getElementById("login-screen").classList.add("hidden");
+            document.getElementById("main-app").classList.remove("hidden");
+            document.getElementById("display-name").innerText = user.nombre;
+            cargarUsuariosAdmin();
+            actualizarEstadisticas();
         }
-    } catch (e) {
-        errorMsg.innerText = "Acceso denegado: Revise DNI y clave.";
-        console.error("Error Login:", e);
-        btn.disabled = false;
-        btn.innerText = "INGRESAR AL SISTEMA";
-    }
+    } catch (e) { document.getElementById("login-error").innerText = "Error de acceso."; }
 }
 
-function lanzarApp(user) {
-    document.getElementById("login-screen").classList.add("hidden");
-    document.getElementById("main-app").classList.remove("hidden");
-    document.getElementById("display-name").innerText = user.nombre;
-
-    if (user.rol === 'director') {
-        document.getElementById("view-director").classList.remove("hidden");
-        document.getElementById("view-docente").classList.add("hidden");
-        cargarUsuariosAdmin();
-        actualizarEstadisticas();
-    } else {
-        document.getElementById("view-docente").classList.remove("hidden");
-        document.getElementById("view-director").classList.add("hidden");
-        cargarMateriasDocente();
-    }
+function switchTab(secId) {
+    document.querySelectorAll('.tab-content').forEach(s => s.classList.add('hidden'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(secId).classList.remove('hidden');
+    event.currentTarget.classList.add('active');
 }
 
-// --- LÓGICA DIRECTOR ---
+// GESTIÓN DE USUARIOS
 async function altaUsuario() {
     const dni = document.getElementById("adm-dni").value.trim();
     const nombre = document.getElementById("adm-nombre").value.trim();
     const rol = document.getElementById("adm-rol").value;
     const anio = document.getElementById("adm-anio").value.trim();
-
-    if(!dni || !nombre) { alert("DNI y Nombre son obligatorios"); return; }
-
-    await db.collection("usuarios").doc(dni).set({ 
-        nombre, rol, año: anio, anio: anio 
-    });
+    if(!dni || !nombre) return alert("Faltan datos");
+    
+    await db.collection("usuarios").doc(dni).set({ nombre, rol, año: anio, anio: anio });
     alert("Usuario Creado");
     cargarUsuariosAdmin();
-    actualizarEstadisticas();
 }
 
 async function cargarUsuariosAdmin() {
@@ -191,6 +174,14 @@ async function cargarUsuariosAdmin() {
     });
 }
 
+function filtrarUsuarios() {
+    const input = document.getElementById("search-user").value.toLowerCase();
+    const rows = document.querySelectorAll("#tabla-usuarios tbody tr");
+    rows.forEach(r => {
+        r.style.display = r.innerText.toLowerCase().includes(input) ? "" : "none";
+    });
+}
+
 async function eliminarUser(id) {
     if(confirm("¿Eliminar usuario?")) {
         await db.collection("usuarios").doc(id).delete();
@@ -198,90 +189,45 @@ async function eliminarUser(id) {
     }
 }
 
+// AUDITORÍA DE NOTAS
+async function buscarNotasAlumno() {
+    const dni = document.getElementById("search-dni-nota").value.trim();
+    const snap = await db.collection("evaluaciones").where("alumnoDni", "==", dni).get();
+    const tbody = document.querySelector("#tabla-notas-auditoria tbody");
+    tbody.innerHTML = "";
+    if(snap.empty) return alert("No hay notas para este DNI");
+    
+    snap.forEach(doc => {
+        const n = doc.data();
+        tbody.innerHTML += `<tr>
+            <td>${n.materia}</td><td>${n.cuat}</td><td>${n.rite}</td><td>${n.nota}</td>
+            <td><button class="btn-del" onclick="borrarNota('${doc.id}')">Borrar</button></td>
+        </tr>`;
+    });
+}
+
+async function borrarNota(id) {
+    if(confirm("¿Borrar esta calificación?")) {
+        await db.collection("evaluaciones").doc(id).delete();
+        buscarNotasAlumno();
+    }
+}
+
+// ESTADÍSTICAS
 async function actualizarEstadisticas() {
     const alus = await db.collection("usuarios").where("rol","==","estudiante").get();
-    const docs = await db.collection("usuarios").where("rol","==","docente").get();
     const evals = await db.collection("evaluaciones").get();
+    document.getElementById("st-alus").innerText = alus.size;
     
-    document.getElementById("stat-alumnos").innerText = alus.size;
-    document.getElementById("stat-docentes").innerText = docs.size;
-    
-    let teaCount = 0;
-    evals.forEach(e => { if(e.data().rite === "TEA") teaCount++; });
-    const porcentaje = evals.size > 0 ? ((teaCount / evals.size) * 100).toFixed(1) : 0;
-    document.getElementById("stat-tea").innerText = porcentaje + "%";
-}
-
-// --- LÓGICA DOCENTE ---
-function cargarMateriasDocente() {
-    const select = document.getElementById("select-materia");
-    const mats = userLogueado.MATERIAS || {};
-    select.innerHTML = '<option value="">-- Mis Materias --</option>';
-    
-    Object.keys(mats).forEach(añoKey => {
-        const contenido = mats[añoKey];
-        if (typeof contenido === 'object' && !Array.isArray(contenido)) {
-            Object.keys(contenido).forEach(cuatKey => {
-                contenido[cuatKey].forEach(m => {
-                    const aNum = añoKey.replace(/\D/g, "");
-                    const cNum = cuatKey.replace(/\D/g, "");
-                    let opt = document.createElement("option");
-                    opt.value = `${m}|${aNum}|${cNum}`;
-                    opt.textContent = `${m} (${aNum}° - ${cNum}° Cuat.)`;
-                    select.appendChild(opt);
-                });
-            });
-        }
+    let tea = 0, ted = 0;
+    evals.forEach(e => {
+        if(e.data().rite === "TEA") tea++;
+        if(e.data().rite === "TED") ted++;
     });
-}
-
-async function cargarAlumnosDocente() {
-    const val = document.getElementById("select-materia").value;
-    if(!val) return;
-    const [materia, año, cuat] = val.split('|');
     
-    document.getElementById("materia-titulo").innerText = materia + " (" + cuat + "° Cuat.)";
-    document.getElementById("planilla-docente-card").classList.remove("hidden");
-    const container = document.getElementById("lista-estudiantes-docente");
-    container.innerHTML = "Cargando...";
-
-    const snap = await db.collection("usuarios")
-        .where("rol", "==", "estudiante")
-        .where("año", "in", [año, `AÑO ${año}`, parseInt(año)])
-        .get();
-
-    container.innerHTML = "";
-    snap.forEach(doc => {
-        container.innerHTML += `
-            <div class="grid-eval" data-dni="${doc.id}">
-                <div>${doc.data().nombre}</div>
-                <select id="rite-${doc.id}">
-                    <option value="">RITE</option><option value="TEA">TEA</option><option value="TEP">TEP</option><option value="TED">TED</option>
-                </select>
-                <input type="number" id="nota-${doc.id}" style="width:50px">
-            </div>`;
-    });
+    document.getElementById("st-tea").innerText = evals.size > 0 ? ((tea / evals.size) * 100).toFixed(1) + "%" : "0%";
+    document.getElementById("st-ted").innerText = evals.size > 0 ? ((ted / evals.size) * 100).toFixed(1) + "%" : "0%";
 }
-
-async function guardarNotas() {
-    const [materia, año, cuat] = document.getElementById("select-materia").value.split('|');
-    const batch = db.batch();
-    document.querySelectorAll("[data-dni]").forEach(fila => {
-        const dni = fila.dataset.dni;
-        const rite = document.getElementById(`rite-${dni}`).value;
-        const nota = document.getElementById(`nota-${dni}`).value;
-        if(rite || nota) {
-            const idDoc = `${dni}_${materia.replace(/\s+/g,'')}_C${cuat}`;
-            batch.set(db.collection("evaluaciones").doc(idDoc), {
-                alumnoDni: dni, materia, año, cuat, rite, nota, fecha: new Date().toISOString()
-            });
-        }
-    });
-    await batch.commit();
-    alert("Datos guardados.");
-}
-
-function logout() { auth.signOut().then(() => location.reload()); }
 </script>
 </body>
 </html>
