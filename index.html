@@ -68,34 +68,17 @@ async function login() {
     const dni = document.getElementById("user-dni").value.trim();
     const pass = document.getElementById("user-pass").value;
     const msg = document.getElementById("msg-error");
-    const btn = document.getElementById("btn-login");
-
-    if(!dni) return alert("Ingresa tu DNI");
-    
-    btn.disabled = true;
-    btn.innerText = "Entrando...";
 
     try {
         await auth.signInWithEmailAndPassword(dni + "@cens451.edu.ar", pass);
         const doc = await db.collection("usuarios").doc(dni).get();
-        
-        if(!doc.exists) {
-            msg.innerText = "DNI no registrado en Firestore.";
-            return;
-        }
-
         docenteActivo = { id: dni, ...doc.data() };
         document.getElementById("login-screen").classList.add("hidden");
         document.getElementById("teacher-screen").classList.remove("hidden");
         document.getElementById("nombre-docente").innerText = docenteActivo.nombre;
-        
         cargarMenuMaterias();
     } catch(e) {
-        msg.innerText = "Error: DNI o clave incorrectos.";
-        console.error(e);
-    } finally {
-        btn.disabled = false;
-        btn.innerText = "Ingresar al Sistema";
+        msg.innerText = "DNI o clave incorrectos.";
     }
 }
 
@@ -106,35 +89,22 @@ function cargarMenuMaterias() {
     
     Object.keys(materiasRaiz).forEach(añoKey => {
         const contenido = materiasRaiz[añoKey];
-        
-        // Si el contenido es un Mapa (tiene cuatrimestres adentro)
         if (typeof contenido === 'object' && !Array.isArray(contenido)) {
             Object.keys(contenido).forEach(cuatKey => {
-                const listaMaterias = contenido[cuatKey];
-                if (Array.isArray(listaMaterias)) {
-                    listaMaterias.forEach(materia => {
-                        agregarOpcion(select, materia, añoKey, cuatKey);
+                const lista = contenido[cuatKey];
+                if (Array.isArray(lista)) {
+                    lista.forEach(materia => {
+                        const numAño = añoKey.match(/\d+/) ? añoKey.match(/\d+/)[0] : "1";
+                        const numCuat = cuatKey.match(/\d+/) ? cuatKey.match(/\d+/)[0] : "1";
+                        let opt = document.createElement("option");
+                        opt.value = `${materia.trim()}|${numAño}|${numCuat}`;
+                        opt.textContent = `${materia.trim()} (${numAño}° Año - ${numCuat}° Cuat.)`;
+                        select.appendChild(opt);
                     });
                 }
             });
-        } 
-        // Si el contenido es un Array directo (estructura vieja)
-        else if (Array.isArray(contenido)) {
-            contenido.forEach(materia => {
-                agregarOpcion(select, materia, añoKey, "1er CUATRIMESTRE");
-            });
         }
     });
-}
-
-function agregarOpcion(select, nombre, añoTxt, cuatTxt) {
-    const opt = document.createElement("option");
-    const numAño = añoTxt.match(/\d+/) ? añoTxt.match(/\d+/)[0] : "1";
-    const numCuat = cuatTxt.match(/\d+/) ? cuatTxt.match(/\d+/)[0] : "1";
-    
-    opt.value = `${nombre.trim()}|${numAño}|${numCuat}`;
-    opt.textContent = `${nombre.trim()} (${numAño}° Año - ${numCuat}° Cuat.)`;
-    select.appendChild(opt);
 }
 
 async function mostrarAlumnos() {
@@ -146,15 +116,16 @@ async function mostrarAlumnos() {
     const container = document.getElementById("lista-alumnos");
     document.getElementById("planilla-card").classList.remove("hidden");
     
-    container.innerHTML = "Cargando alumnos...";
+    container.innerHTML = "Buscando alumnos...";
 
     try {
-        // Buscamos alumnos intentando 'año' y 'anio'
+        // Intento 1: Buscar por campo 'año'
         let snap = await db.collection("usuarios")
             .where("rol", "==", "estudiante")
             .where("año", "==", año) 
             .get();
 
+        // Intento 2: Buscar por campo 'anio' (por si acaso)
         if (snap.empty) {
             snap = await db.collection("usuarios")
                 .where("rol", "==", "estudiante")
@@ -163,15 +134,16 @@ async function mostrarAlumnos() {
         }
 
         if (snap.empty) {
-            container.innerHTML = `<p style="text-align:center;">No hay alumnos cargados en el año ${año}.</p>`;
+            container.innerHTML = `<p style="text-align:center; color:orange;">No hay alumnos registrados con el año "${año}".</p>`;
             return;
         }
 
         container.innerHTML = "";
         snap.forEach(doc => {
+            const alu = doc.data();
             container.innerHTML += `
                 <div class="student-row" data-dni="${doc.id}">
-                    <span>${doc.data().nombre}</span>
+                    <span>${alu.nombre}</span>
                     <select id="rite-${doc.id}">
                         <option value="">RITE</option>
                         <option value="TEA">TEA</option>
@@ -187,7 +159,8 @@ async function mostrarAlumnos() {
 }
 
 async function guardarNotas() {
-    const [materia, año, cuat] = document.getElementById("select-materia").value.split('|');
+    const val = document.getElementById("select-materia").value;
+    const [materia, año, cuat] = val.split('|');
     const batch = db.batch();
     const filas = document.querySelectorAll(".student-row");
 
