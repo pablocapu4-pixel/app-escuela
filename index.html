@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="utf-8">
-    <title>CENS 451 - Gestión Académica 2026</title>
+    <title>SISTEMA CENS 451 - Gestión 2026</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -13,7 +13,7 @@
         .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; border-top: 4px solid var(--primary); }
         .hidden { display: none; }
         select, input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; }
-        button { background: var(--success); color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button { background: var(--success); color: white; border: none; font-weight: bold; cursor: pointer; }
         .btn-logout { background: var(--danger); margin-top: 15px; }
         .grid-header { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; font-weight: bold; background: #eee; padding: 12px; border-radius: 8px; }
         .student-row { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
@@ -23,19 +23,18 @@
 
 <div id="app">
     <div id="login-screen" class="card">
-        <h2 style="text-align:center">🏢 Acceso CENS 451</h2>
+        <h2 style="text-align:center">🏢 Gestión CENS 451</h2>
         <input id="user-dni" placeholder="DNI del Usuario">
         <input id="user-pass" type="password" value="123456">
-        <button onclick="login()">Ingresar al Sistema</button>
+        <button onclick="login()">Ingresar</button>
         <p id="msg-error" style="color:red; text-align:center; font-weight:bold;"></p>
     </div>
 
     <div id="teacher-screen" class="hidden">
         <div class="card">
             <h2>Bienvenido/a: <span id="nombre-docente"></span></h2>
-            <label>Seleccionar materia:</label>
             <select id="select-materia" onchange="mostrarAlumnos()">
-                <option value="">-- Mis Materias --</option>
+                <option value="">-- Seleccionar Materia --</option>
             </select>
             <button class="btn-logout" onclick="salir()">Cerrar Sesión</button>
         </div>
@@ -48,7 +47,7 @@
                 <div>Nota</div>
             </div>
             <div id="lista-alumnos"></div>
-            <button onclick="guardarNotas()" style="margin-top:20px; font-size: 18px;">💾 Guardar Planilla Final</button>
+            <button onclick="guardarNotas()" style="margin-top:20px; font-size: 18px;">💾 Guardar Evaluaciones</button>
         </div>
     </div>
 </div>
@@ -77,7 +76,7 @@ async function login() {
         document.getElementById("nombre-docente").innerText = docenteActivo.nombre;
         cargarMenuMaterias();
     } catch(e) {
-        document.getElementById("msg-error").innerText = "DNI o clave incorrectos.";
+        document.getElementById("msg-error").innerText = "Error de acceso.";
     }
 }
 
@@ -88,29 +87,29 @@ function cargarMenuMaterias() {
     
     Object.keys(materiasRaiz).forEach(añoKey => {
         const contenido = materiasRaiz[añoKey];
-        // Estructura con Cuatrimestres (image_6a2ddc)
+        // Caso: Estructura por Cuatrimestres
         if (typeof contenido === 'object' && !Array.isArray(contenido)) {
             Object.keys(contenido).forEach(cuatKey => {
                 contenido[cuatKey].forEach(materia => {
-                    agregarOpcion(select, materia, añoKey, cuatKey);
+                    procesarOpcion(select, materia, añoKey, cuatKey);
                 });
             });
         } 
-        // Estructura simple (image_6db670)
+        // Caso: Estructura simple (Array)
         else if (Array.isArray(contenido)) {
             contenido.forEach(materia => {
-                agregarOpcion(select, materia, añoKey, "1er CUATRIMESTRE");
+                procesarOpcion(select, materia, añoKey, "1er CUATRIMESTRE");
             });
         }
     });
 }
 
-function agregarOpcion(select, nombre, añoTxt, cuatTxt) {
+function procesarOpcion(select, nombre, añoTxt, cuatTxt) {
     const numAño = añoTxt.replace(/\D/g, ""); 
     const numCuat = cuatTxt.replace(/\D/g, "");
     let opt = document.createElement("option");
     opt.value = `${nombre.trim()}|${numAño}|${numCuat}`;
-    opt.textContent = `${nombre.trim()} (${numAño}° Año - ${numCuat}° Cuat.)`;
+    opt.textContent = `${nombre.trim()} - ${numAño}° Año (${numCuat}° Cuat.)`;
     select.appendChild(opt);
 }
 
@@ -118,30 +117,32 @@ async function mostrarAlumnos() {
     const val = document.getElementById("select-materia").value;
     if(!val) return;
 
-    const [materia, año, cuat] = val.split('|');
-    document.getElementById("titulo-materia").innerText = `${materia} (${cuat}° Cuatrimestre)`;
+    const [materia, añoNum, cuat] = val.split('|');
+    document.getElementById("titulo-materia").innerText = `${materia} (${cuat}° Cuat.)`;
     const container = document.getElementById("lista-alumnos");
     document.getElementById("planilla-card").classList.remove("hidden");
-    
     container.innerHTML = "Buscando alumnos...";
 
     try {
-        // BÚSQUEDA FLEXIBLE PARA "AÑO 3" O "3"
+        // BUSQUEDA MULTIPLE: Buscamos "3", "AÑO 3", "anio 3", etc.
+        const variantesAño = [añoNum, `AÑO ${añoNum}`, `Año ${añoNum}`, parseInt(añoNum)];
+        
         const snap = await db.collection("usuarios")
             .where("rol", "==", "estudiante")
-            .where("año", "in", [año, `AÑO ${año}`, parseInt(año)])
+            .where("año", "in", variantesAño)
             .get();
 
         if (snap.empty) {
-            container.innerHTML = `<p style="color:orange; text-align:center;">No hay alumnos para el año ${año}.</p>`;
+            container.innerHTML = `<p style="text-align:center; color:orange;">No se hallaron alumnos para el año ${añoNum}.</p>`;
             return;
         }
 
         container.innerHTML = "";
         snap.forEach(doc => {
+            const alu = doc.data();
             container.innerHTML += `
                 <div class="student-row" data-dni="${doc.id}">
-                    <span>${doc.data().nombre}</span>
+                    <span>${alu.nombre}</span>
                     <select id="rite-${doc.id}">
                         <option value="">RITE</option>
                         <option value="TEA">TEA</option>
@@ -152,7 +153,7 @@ async function mostrarAlumnos() {
                 </div>`;
         });
     } catch (err) {
-        container.innerHTML = "Error al cargar alumnos.";
+        container.innerHTML = "Error al conectar con la base de datos.";
     }
 }
 
@@ -167,7 +168,7 @@ async function guardarNotas() {
         const nota = parseFloat(document.getElementById(`nota-${dni}`).value);
 
         if(rite || !isNaN(nota)) {
-            // El ID del documento incluye el cuatrimestre para que no se pisen
+            // ID Único por cuatrimestre para no sobreescribir
             const idDoc = `${dni}_${materia.replace(/\s+/g, '')}_C${cuat}`;
             const ref = db.collection("evaluaciones").doc(idDoc);
             batch.set(ref, {
@@ -178,7 +179,7 @@ async function guardarNotas() {
     });
 
     await batch.commit();
-    alert(`Planilla de ${materia} guardada correctamente.`);
+    alert("Planilla guardada con éxito.");
 }
 
 function salir() { auth.signOut().then(() => location.reload()); }
