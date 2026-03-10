@@ -15,6 +15,7 @@
         input, select, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; font-size: 15px; }
         button { background: var(--success); color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
         .btn-red { background: var(--danger); }
+        .btn-blue { background: #3498db; }
         .student-item { border-bottom: 1px solid #eee; padding: 15px 0; display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 10px; align-items: center; }
         .rite-tag { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em; }
         .TEA { background: #d4edda; color: #155724; } .TEP { background: #fff3cd; color: #856404; } .TED { background: #f8d7da; color: #721c24; }
@@ -22,17 +23,30 @@
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { padding: 12px; border: 1px solid #ddd; text-align: center; }
         th { background: var(--primary); color: white; }
+        .stat-card { text-align: center; padding: 15px; border-radius: 8px; background: #fff; border: 1px solid #eee; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div id="login-screen" class="card">
-        <h2 style="text-align:center">🏢 CENS 451 - Gestión Escolar</h2>
+        <h2 style="text-align:center">🏢 CENS 451 - Gestión</h2>
         <input id="user-id" placeholder="DNI o Usuario">
         <input id="user-pass" type="password" value="123456" placeholder="Contraseña">
-        <button onclick="intentarIngreso()">Ingresar al Sistema</button>
+        <button onclick="intentarIngreso()">Ingresar</button>
         <p id="login-err" style="color:red; text-align:center"></p>
+    </div>
+
+    <div id="admin-screen" class="hidden">
+        <div class="card">
+            <h2>📊 Panel Directivo</h2>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <button class="btn-blue" onclick="mostrarSeccionAdmin('usuarios')">👥 Gestionar Usuarios</button>
+                <button class="btn-blue" onclick="mostrarSeccionAdmin('estadisticas')">📈 Ver Estadísticas</button>
+            </div>
+            <button class="btn-red" onclick="cerrarSesion()" style="margin-top:10px">Cerrar Sesión</button>
+        </div>
+        <div id="admin-content"></div>
     </div>
 
     <div id="teacher-screen" class="hidden">
@@ -47,35 +61,19 @@
                     <option value="2">2° Cuatrimestre</option>
                 </select>
             </div>
-            <button class="btn-red" onclick="cerrarSesion()">Cerrar Sesión</button>
+            <button class="btn-red" onclick="cerrarSesion()" style="margin-top:10px">Cerrar Sesión</button>
         </div>
         <div id="alumnos-card" class="card hidden">
-            <div style="display:grid; grid-template-columns: 1.5fr 1fr 1fr; font-weight:bold; margin-bottom:10px;">
-                <span>Alumno</span><span>R.I.T.E. (Mitad)</span><span>Nota Final</span>
-            </div>
             <div id="alumnos-lista"></div>
-            <button onclick="guardarPlanilla()" style="margin-top:20px">💾 Guardar Calificaciones Finales</button>
+            <button onclick="guardarPlanilla()" style="margin-top:20px">💾 Guardar Calificaciones</button>
         </div>
     </div>
 
     <div id="student-screen" class="hidden">
         <div class="card">
             <h2>🎓 Boletín de: <span id="alu-nombre-display"></span></h2>
-            <table>
-                <thead>
-                    <tr><th>Materia</th><th>Cuat.</th><th>R.I.T.E.</th><th>Nota Final</th><th>Estado</th></tr>
-                </thead>
-                <tbody id="boletin-tabla"></tbody>
-            </table>
-            <button class="btn-logout" onclick="cerrarSesion()" style="margin-top:20px">Cerrar Sesión</button>
-        </div>
-    </div>
-
-    <div id="admin-screen" class="hidden">
-        <div class="card">
-            <h2>📊 Panel Directivo - Estadísticas Globales</h2>
-            <div id="stats-container"></div>
-            <button class="btn-red" onclick="cerrarSesion()">Cerrar Sesión</button>
+            <div id="boletin-container"></div>
+            <button class="btn-red" onclick="cerrarSesion()" style="margin-top:20px">Cerrar Sesión</button>
         </div>
     </div>
 </div>
@@ -93,7 +91,7 @@ const auth = firebase.auth();
 
 let usuarioActual = null;
 
-// --- SISTEMA DE LOGIN ---
+// --- LOGIN ---
 async function intentarIngreso() {
     const user = document.getElementById("user-id").value.trim();
     const pass = document.getElementById("user-pass").value;
@@ -104,24 +102,94 @@ async function intentarIngreso() {
         
         document.getElementById("login-screen").classList.add("hidden");
 
-        if(usuarioActual.rol === "docente") {
+        if(usuarioActual.rol === "admin" || usuarioActual.rol === "directivo") {
+            document.getElementById("admin-screen").classList.remove("hidden");
+            mostrarSeccionAdmin('usuarios'); // Carga por defecto
+        } else if(usuarioActual.rol === "docente") {
             document.getElementById("teacher-screen").classList.remove("hidden");
             document.getElementById("prof-nombre").innerText = usuarioActual.nombre;
             poblarMateriasRelacionadas();
-        } else if(usuarioActual.rol === "estudiante") {
+        } else {
             document.getElementById("student-screen").classList.remove("hidden");
             document.getElementById("alu-nombre-display").innerText = usuarioActual.nombre;
             cargarBoletinEstudiante();
-        } else {
-            document.getElementById("admin-screen").classList.remove("hidden");
-            cargarEstadisticasAdmin();
         }
-    } catch(e) { document.getElementById("login-err").innerText = "Credenciales inválidas"; }
+    } catch(e) { document.getElementById("login-err").innerText = "Error de acceso"; }
 }
 
 function cerrarSesion() { auth.signOut().then(() => location.reload()); }
 
-// --- LÓGICA DOCENTE (RITE + NOTA 7) ---
+// --- PANEL DIRECTIVO: LÓGICA ---
+async function mostrarSeccionAdmin(seccion) {
+    const area = document.getElementById("admin-content");
+    area.innerHTML = "Cargando...";
+
+    if(seccion === 'usuarios') {
+        area.innerHTML = `
+            <div class="card">
+                <h3>Añadir Nuevo Alumno/Docente</h3>
+                <input id="new-id" placeholder="DNI">
+                <input id="new-nombre" placeholder="Nombre Completo">
+                <select id="new-rol">
+                    <option value="estudiante">Estudiante</option>
+                    <option value="docente">Docente</option>
+                </select>
+                <input id="new-anio" placeholder="Año (1, 2 o 3)">
+                <button onclick="crearUsuarioFS()">Añadir a Base de Datos</button>
+            </div>
+            <div id="lista-usuarios-admin"></div>`;
+        cargarListaUsuariosAdmin();
+    } else {
+        const snapEval = await db.collection("evaluaciones").get();
+        let tea = 0, aprobados = 0;
+        snapEval.forEach(d => {
+            if(d.data().rite === "TEA") tea++;
+            if(d.data().nota >= 7) aprobados++;
+        });
+        area.innerHTML = `
+            <div class="card">
+                <h3>📈 Estadísticas Generales</h3>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div class="stat-card"><h2 style="color:var(--success)">${aprobados}</h2><p>Aprobados</p></div>
+                    <div class="stat-card"><h2 style="color:var(--warning)">${teaTotal = tea}</h2><p>TEA Total</p></div>
+                </div>
+                <p>Total de registros evaluados: ${snapEval.size}</p>
+            </div>`;
+    }
+}
+
+async function cargarListaUsuariosAdmin() {
+    const div = document.getElementById("lista-usuarios-admin");
+    const snap = await db.collection("usuarios").get();
+    div.innerHTML = "<h3>Lista de Personal y Alumnos</h3>";
+    snap.forEach(doc => {
+        const u = doc.data();
+        div.innerHTML += `
+            <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+                <span><b>${doc.id}</b> - ${u.nombre} (${u.rol})</span>
+                <button class="btn-red" style="width:auto" onclick="eliminarUsuarioFS('${doc.id}')">Borrar</button>
+            </div>`;
+    });
+}
+
+async function crearUsuarioFS() {
+    const id = document.getElementById("new-id").value;
+    const nombre = document.getElementById("new-nombre").value;
+    const rol = document.getElementById("new-rol").value;
+    const anio = document.getElementById("new-anio").value;
+    if(!id || !nombre) return alert("Completa DNI y Nombre");
+    await db.collection("usuarios").doc(id).set({ nombre, rol, anio, MATERIAS: {} });
+    mostrarSeccionAdmin('usuarios');
+}
+
+async function eliminarUsuarioFS(id) {
+    if(confirm("¿Borrar de la base de datos?")) {
+        await db.collection("usuarios").doc(id).delete();
+        mostrarSeccionAdmin('usuarios');
+    }
+}
+
+// --- PANEL DOCENTE: LÓGICA ---
 function poblarMateriasRelacionadas() {
     const sel = document.getElementById("sel-materia");
     const mats = usuarioActual.MATERIAS || {};
@@ -136,26 +204,21 @@ function poblarMateriasRelacionadas() {
 }
 
 async function cargarListaAlumnos() {
-    const materiaVal = document.getElementById("sel-materia").value;
-    if(!materiaVal) return;
-    const [materia, anio] = materiaVal.split('|');
+    const val = document.getElementById("sel-materia").value;
+    if(!val) return;
+    const [materia, anio] = val.split('|');
     const container = document.getElementById("alumnos-lista");
     document.getElementById("alumnos-card").classList.remove("hidden");
     container.innerHTML = "Cargando...";
 
-    // Relación automática: solo alumnos del año de la materia
     const snap = await db.collection("usuarios").where("rol","==","estudiante").where("anio","==",anio).get();
     container.innerHTML = "";
     snap.forEach(doc => {
-        const alu = doc.data();
         container.innerHTML += `
             <div class="student-item">
-                <span>${alu.nombre}</span>
-                <select id="rite-${doc.id}">
-                    <option value="">Evaluar RITE</option>
-                    <option value="TEA">TEA</option><option value="TEP">TEP</option><option value="TED">TED</option>
-                </select>
-                <input type="number" id="nota-${doc.id}" placeholder="Nota 1-10" min="1" max="10">
+                <span>${doc.data().nombre}</span>
+                <select id="rite-${doc.id}"><option value="">RITE</option><option value="TEA">TEA</option><option value="TEP">TEP</option><option value="TED">TED</option></select>
+                <input type="number" id="nota-${doc.id}" placeholder="Nota Final">
             </div>`;
     });
 }
@@ -164,65 +227,34 @@ async function guardarPlanilla() {
     const [materia] = document.getElementById("sel-materia").value.split('|');
     const cuat = document.getElementById("sel-cuatrimestre").value;
     const batch = db.batch();
-    const rows = document.querySelectorAll('[id^="rite-"]');
+    const selects = document.querySelectorAll('[id^="rite-"]');
 
-    rows.forEach(sel => {
+    selects.forEach(sel => {
         const dni = sel.id.replace('rite-', '');
         const rite = sel.value;
         const nota = parseFloat(document.getElementById(`nota-${dni}`).value);
-
         if(rite || !isNaN(nota)) {
             const ref = db.collection("evaluaciones").doc(`${dni}_${materia}_${cuat}`);
-            batch.set(ref, {
-                alumnoDni: dni, materia, cuat, rite, nota,
-                aprobado: nota >= 7,
-                fecha: new Date().toISOString()
-            });
+            batch.set(ref, { alumnoDni: dni, materia, cuat, rite, nota, fecha: new Date().toISOString() });
         }
     });
     await batch.commit();
-    alert("Notas finales del cuatrimestre guardadas.");
+    alert("Notas guardadas correctamente.");
 }
 
-// --- LÓGICA ESTUDIANTE (BOLETÍN CON ESTADO) ---
+// --- PANEL ESTUDIANTE: LÓGICA ---
 async function cargarBoletinEstudiante() {
     const snap = await db.collection("evaluaciones").where("alumnoDni","==",usuarioActual.id).get();
-    const tabla = document.getElementById("boletin-tabla");
-    tabla.innerHTML = "";
+    const container = document.getElementById("boletin-container");
+    if(snap.empty) { container.innerHTML = "<p>No hay notas cargadas aún.</p>"; return; }
+    
+    let html = `<table><thead><tr><th>Materia</th><th>Cuat.</th><th>RITE</th><th>Nota</th><th>Estado</th></tr></thead><tbody>`;
     snap.forEach(doc => {
         const e = doc.data();
-        const estadoClase = e.nota >= 7 ? "aprobado" : "desaprobado";
-        const estadoTexto = e.nota >= 7 ? "APROBADO" : "DESAPROBADO";
-        
-        tabla.innerHTML += `
-            <tr>
-                <td>${e.materia}</td><td>${e.cuat}°</td>
-                <td><span class="rite-tag ${e.rite}">${e.rite || '-'}</span></td>
-                <td class="${estadoClase}">${e.nota || '-'}</td>
-                <td class="${estadoClase}">${estadoTexto}</td>
-            </tr>`;
+        const estClass = e.nota >= 7 ? "aprobado" : "desaprobado";
+        html += `<tr><td>${e.materia}</td><td>${e.cuat}°</td><td><span class="rite-tag ${e.rite}">${e.rite || '-'}</span></td><td class="${estClass}">${e.nota || '-'}</td><td class="${estClass}">${e.nota >= 7 ? 'APROBADO' : 'DESAPROBADO'}</td></tr>`;
     });
-}
-
-// --- LÓGICA ADMIN (ESTADÍSTICAS) ---
-async function cargarEstadisticasAdmin() {
-    const snap = await db.collection("evaluaciones").get();
-    const cont = document.getElementById("stats-container");
-    let aprobados = 0;
-    let teaTotal = 0;
-
-    snap.forEach(doc => {
-        const d = doc.data();
-        if(d.nota >= 7) aprobados++;
-        if(d.rite === "TEA") teaTotal++;
-    });
-
-    cont.innerHTML = `
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-            <div class="card" style="text-align:center"><h3>${aprobados}</h3><p>Aprobados (Nota ≥ 7)</p></div>
-            <div class="card" style="text-align:center"><h3>${teaTotal}</h3><p>Alumnos TEA</p></div>
-        </div>
-    `;
+    container.innerHTML = html + `</tbody></table>`;
 }
 </script>
 </body>
