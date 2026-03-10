@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="utf-8">
-    <title>SISTEMA CENS 451 - Gestión 2026</title>
+    <title>CENS 451 - Gestión Académica 2026</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -13,45 +13,42 @@
         .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; border-top: 4px solid var(--primary); }
         .hidden { display: none; }
         select, input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; }
-        button { background: var(--success); color: white; border: none; font-weight: bold; cursor: pointer; }
+        button { background: var(--success); color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
         .btn-logout { background: var(--danger); margin-top: 15px; }
         .grid-header { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; font-weight: bold; background: #eee; padding: 12px; border-radius: 8px; }
         .student-row { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
-        .info-badge { background: #e8f4fd; color: #2980b9; padding: 5px 10px; border-radius: 5px; font-size: 0.9em; margin-bottom: 10px; display: inline-block; }
     </style>
 </head>
 <body>
 
 <div id="app">
     <div id="login-screen" class="card">
-        <h2 style="text-align:center">🏢 Gestión CENS 451</h2>
+        <h2 style="text-align:center">🏢 Acceso CENS 451</h2>
         <input id="user-dni" placeholder="DNI del Usuario">
         <input id="user-pass" type="password" value="123456">
-        <button onclick="login()">Ingresar</button>
+        <button onclick="login()">Ingresar al Sistema</button>
         <p id="msg-error" style="color:red; text-align:center; font-weight:bold;"></p>
     </div>
 
     <div id="teacher-screen" class="hidden">
         <div class="card">
             <h2>Bienvenido/a: <span id="nombre-docente"></span></h2>
-            <div class="info-badge">Ciclo Lectivo 2026</div>
+            <label>Seleccionar materia:</label>
             <select id="select-materia" onchange="mostrarAlumnos()">
-                <option value="">-- Seleccionar Materia --</option>
+                <option value="">-- Mis Materias --</option>
             </select>
             <button class="btn-logout" onclick="salir()">Cerrar Sesión</button>
         </div>
 
         <div id="planilla-card" class="card hidden">
-            <h3 id="titulo-materia" style="color: var(--primary); margin-bottom: 5px;"></h3>
-            <p id="subtitulo-cuat" style="font-weight: bold; color: #7f8c8d; margin-top: 0;"></p>
-            
+            <h3 id="titulo-materia" style="color: var(--primary);"></h3>
             <div class="grid-header">
-                <div>Alumno (Apellido y Nombre)</div>
+                <div>Alumno</div>
                 <div>R.I.T.E.</div>
                 <div>Nota</div>
             </div>
             <div id="lista-alumnos"></div>
-            <button onclick="guardarNotas()" style="margin-top:20px; font-size: 18px;">💾 Guardar Evaluaciones</button>
+            <button onclick="guardarNotas()" style="margin-top:20px; font-size: 18px;">💾 Guardar Planilla Final</button>
         </div>
     </div>
 </div>
@@ -80,7 +77,7 @@ async function login() {
         document.getElementById("nombre-docente").innerText = docenteActivo.nombre;
         cargarMenuMaterias();
     } catch(e) {
-        document.getElementById("msg-error").innerText = "Error de autenticación.";
+        document.getElementById("msg-error").innerText = "DNI o clave incorrectos.";
     }
 }
 
@@ -90,21 +87,31 @@ function cargarMenuMaterias() {
     select.innerHTML = '<option value="">-- Mis Materias --</option>';
     
     Object.keys(materiasRaiz).forEach(añoKey => {
-        const contenidoAño = materiasRaiz[añoKey];
-        Object.keys(contenidoAño).forEach(cuatKey => {
-            const lista = contenidoAño[cuatKey];
-            if (Array.isArray(lista)) {
-                lista.forEach(materia => {
-                    const numAño = añoKey.replace(/\D/g, ""); 
-                    const numCuat = cuatKey.replace(/\D/g, "");
-                    let opt = document.createElement("option");
-                    opt.value = `${materia.trim()}|${numAño}|${numCuat}`;
-                    opt.textContent = `${materia.trim()} - ${numAño}° Año (${numCuat}° Cuat.)`;
-                    select.appendChild(opt);
+        const contenido = materiasRaiz[añoKey];
+        // Estructura con Cuatrimestres (image_6a2ddc)
+        if (typeof contenido === 'object' && !Array.isArray(contenido)) {
+            Object.keys(contenido).forEach(cuatKey => {
+                contenido[cuatKey].forEach(materia => {
+                    agregarOpcion(select, materia, añoKey, cuatKey);
                 });
-            }
-        });
+            });
+        } 
+        // Estructura simple (image_6db670)
+        else if (Array.isArray(contenido)) {
+            contenido.forEach(materia => {
+                agregarOpcion(select, materia, añoKey, "1er CUATRIMESTRE");
+            });
+        }
     });
+}
+
+function agregarOpcion(select, nombre, añoTxt, cuatTxt) {
+    const numAño = añoTxt.replace(/\D/g, ""); 
+    const numCuat = cuatTxt.replace(/\D/g, "");
+    let opt = document.createElement("option");
+    opt.value = `${nombre.trim()}|${numAño}|${numCuat}`;
+    opt.textContent = `${nombre.trim()} (${numAño}° Año - ${numCuat}° Cuat.)`;
+    select.appendChild(opt);
 }
 
 async function mostrarAlumnos() {
@@ -112,61 +119,40 @@ async function mostrarAlumnos() {
     if(!val) return;
 
     const [materia, año, cuat] = val.split('|');
-    document.getElementById("titulo-materia").innerText = materia;
-    document.getElementById("subtitulo-cuat").innerText = `${cuat}° Cuatrimestre - ${año}° Año`;
-    
+    document.getElementById("titulo-materia").innerText = `${materia} (${cuat}° Cuatrimestre)`;
     const container = document.getElementById("lista-alumnos");
     document.getElementById("planilla-card").classList.remove("hidden");
-    container.innerHTML = "Buscando alumnos en la base de datos...";
+    
+    container.innerHTML = "Buscando alumnos...";
 
     try {
-        // BÚSQUEDA FLEXIBLE: Intentamos con String y con Número
-        const listaSnapshots = await Promise.all([
-            db.collection("usuarios").where("rol", "==", "estudiante").where("año", "==", año).get(),
-            db.collection("usuarios").where("rol", "==", "estudiante").where("año", "==", parseInt(año)).get(),
-            db.collection("usuarios").where("rol", "==", "estudiante").where("anio", "==", año).get()
-        ]);
+        // BÚSQUEDA FLEXIBLE PARA "AÑO 3" O "3"
+        const snap = await db.collection("usuarios")
+            .where("rol", "==", "estudiante")
+            .where("año", "in", [año, `AÑO ${año}`, parseInt(año)])
+            .get();
 
-        let todosAlumnos = [];
-        let idsVistos = new Set();
-
-        listaSnapshots.forEach(snap => {
-            snap.forEach(doc => {
-                if (!idsVistos.has(doc.id)) {
-                    todosAlumnos.push({ id: doc.id, ...doc.data() });
-                    idsVistos.add(doc.id);
-                }
-            });
-        });
-
-        if (todosAlumnos.length === 0) {
-            container.innerHTML = `<p style="color:orange; text-align:center;">
-                ⚠️ No se encontraron alumnos con el campo <b>año: "${año}"</b>.<br>
-                Verifica en Firestore que los alumnos tengan exactamente ese valor.
-            </p>`;
+        if (snap.empty) {
+            container.innerHTML = `<p style="color:orange; text-align:center;">No hay alumnos para el año ${año}.</p>`;
             return;
         }
 
-        // Ordenar alfabéticamente
-        todosAlumnos.sort((a, b) => a.nombre.localeCompare(b.nombre));
-
         container.innerHTML = "";
-        todosAlumnos.forEach(alu => {
+        snap.forEach(doc => {
             container.innerHTML += `
-                <div class="student-row" data-dni="${alu.id}">
-                    <span>${alu.nombre}</span>
-                    <select id="rite-${alu.id}">
+                <div class="student-row" data-dni="${doc.id}">
+                    <span>${doc.data().nombre}</span>
+                    <select id="rite-${doc.id}">
                         <option value="">RITE</option>
                         <option value="TEA">TEA</option>
                         <option value="TEP">TEP</option>
                         <option value="TED">TED</option>
                     </select>
-                    <input type="number" id="nota-${alu.id}" placeholder="Nota" min="1" max="10">
+                    <input type="number" id="nota-${doc.id}" placeholder="Nota" min="1" max="10">
                 </div>`;
         });
     } catch (err) {
-        container.innerHTML = "Error crítico al cargar lista.";
-        console.error(err);
+        container.innerHTML = "Error al cargar alumnos.";
     }
 }
 
@@ -181,23 +167,18 @@ async function guardarNotas() {
         const nota = parseFloat(document.getElementById(`nota-${dni}`).value);
 
         if(rite || !isNaN(nota)) {
-            // El ID del documento incluye el cuatrimestre para no sobreescribir
+            // El ID del documento incluye el cuatrimestre para que no se pisen
             const idDoc = `${dni}_${materia.replace(/\s+/g, '')}_C${cuat}`;
             const ref = db.collection("evaluaciones").doc(idDoc);
             batch.set(ref, {
-                alumnoDni: dni,
-                materia: materia,
-                año: año,
-                cuat: cuat,
-                rite: rite,
-                nota: nota,
+                alumnoDni: dni, materia, año, cuat, rite, nota,
                 fecha: new Date().toISOString()
             });
         }
     });
 
     await batch.commit();
-    alert("Notas de " + materia + " (" + cuat + "° Cuat.) guardadas exitosamente.");
+    alert(`Planilla de ${materia} guardada correctamente.`);
 }
 
 function salir() { auth.signOut().then(() => location.reload()); }
