@@ -15,9 +15,9 @@
         select, input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; }
         button { background: var(--success); color: white; border: none; font-weight: bold; cursor: pointer; }
         .btn-logout { background: var(--danger); }
+        .grid-header { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; font-weight: bold; background: #eee; padding: 10px; border-radius: 8px; margin-bottom: 5px; }
         .student-row { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
         .rite-tag { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em; }
-        .TEA { background: #d4edda; color: #155724; } .TEP { background: #fff3cd; color: #856404; } .TED { background: #f8d7da; color: #721c24; }
     </style>
 </head>
 <body>
@@ -34,7 +34,7 @@
     <div id="teacher-screen" class="hidden">
         <div class="card">
             <h2>Bienvenido/a, <span id="nombre-docente"></span></h2>
-            <label>Seleccione Materia y Cuatrimestre:</label>
+            <label>Seleccione Materia:</label>
             <select id="select-materia" onchange="mostrarAlumnos()">
                 <option value="">-- Mis Materias --</option>
             </select>
@@ -42,9 +42,17 @@
         </div>
 
         <div id="planilla-card" class="card hidden">
-            <h3 id="titulo-materia"></h3>
+            <h3 id="titulo-materia" style="color: var(--primary); border-bottom: 2px solid var(--primary); padding-bottom: 10px;"></h3>
+            
+            <div class="grid-header">
+                <div>Alumno</div>
+                <div>R.I.T.E.</div>
+                <div>Nota Final</div>
+            </div>
+            
             <div id="lista-alumnos"></div>
-            <button onclick="guardarNotas()">💾 Guardar Calificaciones</button>
+            
+            <button onclick="guardarNotas()" style="margin-top:20px; font-size: 18px;">💾 Guardar Calificaciones</button>
         </div>
     </div>
 </div>
@@ -68,23 +76,15 @@ async function login() {
     try {
         await auth.signInWithEmailAndPassword(dni + "@cens451.edu.ar", pass);
         const doc = await db.collection("usuarios").doc(dni).get();
-        
-        if(!doc.exists) throw new Error("No hay datos en Firestore para este DNI.");
-        
         docenteActivo = { id: dni, ...doc.data() };
         
-        if(docenteActivo.rol !== "docente") {
-            alert("Acceso solo para docentes");
-            return;
-        }
-
         document.getElementById("login-screen").classList.add("hidden");
         document.getElementById("teacher-screen").classList.remove("hidden");
         document.getElementById("nombre-docente").innerText = docenteActivo.nombre;
         
         cargarMenuMaterias();
     } catch(e) {
-        document.getElementById("msg-error").innerText = "DNI o clave incorrectos.";
+        document.getElementById("msg-error").innerText = "Error de acceso.";
     }
 }
 
@@ -92,17 +92,13 @@ function cargarMenuMaterias() {
     const select = document.getElementById("select-materia");
     const materiasMap = docenteActivo.MATERIAS || {};
     
-    // Recorremos los años (1, 2, 3...)
     for (let anio in materiasMap) {
         const lista = materiasMap[anio];
-        // Verificamos que sea un array y lo recorremos
         if (Array.isArray(lista)) {
             lista.forEach(materia => {
-                // Limpiamos espacios o saltos de línea raros
-                const nombreLimpio = materia.trim();
                 let opt = document.createElement("option");
-                opt.value = `${nombreLimpio}|${anio}`;
-                opt.textContent = `${nombreLimpio} (${anio}° Año)`;
+                opt.value = `${materia.trim()}|${anio}`;
+                opt.textContent = `${materia.trim()} (${anio}° Año)`;
                 select.appendChild(opt);
             });
         }
@@ -114,31 +110,46 @@ async function mostrarAlumnos() {
     if(!value) return;
 
     const [materia, anio] = value.split('|');
-    document.getElementById("titulo-materia").innerText = materia;
-    document.getElementById("planilla-card").classList.remove("hidden");
-
+    document.getElementById("titulo-materia").innerText = materia + " - " + anio + "° Año";
     const container = document.getElementById("lista-alumnos");
-    container.innerHTML = "Cargando estudiantes...";
+    
+    document.getElementById("planilla-card").classList.remove("hidden");
+    container.innerHTML = `<p style="text-align:center;">Buscando alumnos de ${anio}° año...</p>`;
 
-    const snap = await db.collection("usuarios")
-        .where("rol", "==", "estudiante")
-        .where("anio", "==", anio)
-        .get();
+    try {
+        // Buscamos alumnos cuyo campo 'anio' coincida con el año de la materia
+        const snap = await db.collection("usuarios")
+            .where("rol", "==", "estudiante")
+            .where("anio", "==", anio.toString())
+            .get();
 
-    container.innerHTML = "";
-    snap.forEach(doc => {
-        container.innerHTML += `
-            <div class="student-row" data-dni="${doc.id}">
-                <span>${doc.data().nombre}</span>
-                <select id="rite-${doc.id}">
-                    <option value="">RITE</option>
-                    <option value="TEA">TEA</option>
-                    <option value="TEP">TEP</option>
-                    <option value="TED">TED</option>
-                </select>
-                <input type="number" id="nota-${doc.id}" placeholder="Nota Final" min="1" max="10">
-            </div>`;
-    });
+        if (snap.empty) {
+            container.innerHTML = `<p style="color:var(--danger); font-weight:bold; text-align:center;">
+                ⚠️ No se encontraron alumnos registrados para el año "${anio}".<br>
+                <small>Verifica que tus alumnos tengan el campo "anio" correctamente cargado en Firestore.</small>
+            </p>`;
+            return;
+        }
+
+        container.innerHTML = "";
+        snap.forEach(doc => {
+            const alu = doc.data();
+            container.innerHTML += `
+                <div class="student-row" data-dni="${doc.id}">
+                    <span>${alu.nombre}</span>
+                    <select id="rite-${doc.id}">
+                        <option value="">Evaluar RITE</option>
+                        <option value="TEA">TEA</option>
+                        <option value="TEP">TEP</option>
+                        <option value="TED">TED</option>
+                    </select>
+                    <input type="number" id="nota-${doc.id}" placeholder="Nota 1-10" min="1" max="10">
+                </div>`;
+        });
+    } catch (err) {
+        console.error(err);
+        container.innerHTML = "Error al conectar con la base de datos.";
+    }
 }
 
 async function guardarNotas() {
@@ -146,8 +157,8 @@ async function guardarNotas() {
     const batch = db.batch();
     const filas = document.querySelectorAll(".student-row");
     
-    // Identificar cuatrimestre por el nombre de la materia (1 o 2)
-    const cuat = materia.includes("1") ? "1" : (materia.includes("2") ? "2" : "1");
+    // Matemática 1 -> Cuat 1 / Matemática 2 -> Cuat 2
+    const cuat = materia.includes("2") || materia.includes("4") || materia.includes("6") ? "2" : "1";
 
     filas.forEach(fila => {
         const dni = fila.dataset.dni;
@@ -169,7 +180,7 @@ async function guardarNotas() {
     });
 
     await batch.commit();
-    alert("Notas guardadas correctamente para " + materia);
+    alert("Planilla de " + materia + " guardada exitosamente.");
 }
 
 function salir() { auth.signOut().then(() => location.reload()); }
