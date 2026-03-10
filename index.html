@@ -2,229 +2,39 @@
 <html lang="es">
 <head>
     <meta charset="utf-8">
-    <title>CENS 451 - PANEL DE CONTROL DIRECTIVO</title>
+    <title>SISTEMA INTEGRAL CENS 451 - 2026</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --dir-primary: #8e44ad; --dir-dark: #2c3e50; --accent: #3498db; --bg: #f4f7f6; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; display: flex; }
+        :root { --primary: #2c3e50; --dir-color: #8e44ad; --success: #27ae60; --danger: #e74c3c; --bg: #f4f7f6; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 0; }
+        .hidden { display: none !important; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
         
-        /* Sidebar Estilo Directivo */
-        .sidebar { width: 250px; height: 100vh; background: var(--dir-dark); color: white; padding: 20px; position: fixed; }
-        .sidebar h2 { font-size: 1.2rem; border-bottom: 1px solid #555; padding-bottom: 10px; }
-        .nav-btn { width: 100%; padding: 12px; margin: 5px 0; background: transparent; color: #bdc3c7; border: none; text-align: left; cursor: pointer; border-radius: 5px; }
-        .nav-btn:hover, .nav-btn.active { background: var(--dir-primary); color: white; }
+        /* LOGIN */
+        #login-screen { display: flex; align-items: center; justify-content: center; height: 100vh; }
+        .login-box { width: 350px; border-top: 5px solid var(--primary); }
+
+        /* LAYOUT PRINCIPAL */
+        .container { max-width: 1100px; margin: 20px auto; padding: 0 20px; }
+        .navbar { background: var(--primary); color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
         
-        /* Contenido Principal */
-        .main-content { margin-left: 270px; padding: 30px; width: calc(100% - 270px); }
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .hidden { display: none; }
-        
-        /* Tablas y Formularios */
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        /* TABLAS Y FORMULARIOS */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
         th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
-        th { background: #f9f9f9; color: var(--dir-dark); }
-        .btn-action { padding: 6px 12px; border-radius: 4px; border: none; cursor: pointer; margin-right: 5px; }
-        .btn-del { background: #e74c3c; color: white; }
-        .btn-edit { background: #f39c12; color: white; }
-        .form-group { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-        input, select { padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
-        
-        /* Estadísticas */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
-        .stat-box { padding: 20px; border-radius: 10px; color: white; text-align: center; }
+        th { background: #f8f9fa; }
+        input, select, button { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 15px; }
+        button { cursor: pointer; border: none; font-weight: bold; }
+        .btn-main { background: var(--success); color: white; width: 100%; }
+        .btn-del { background: var(--danger); color: white; padding: 5px 10px; }
+
+        /* SECCIONES ESPECÍFICAS */
+        .grid-eval { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat-card { padding: 20px; color: white; border-radius: 10px; text-align: center; }
     </style>
 </head>
 <body>
-
-<div id="login-overlay" style="position:fixed; width:100%; height:100%; background:white; z-index:1000; display:flex; align-items:center; justify-content:center;">
-    <div class="card" style="width: 350px; border-top: 5px solid var(--dir-primary);">
-        <h2 style="text-align:center">Panel Directivo CENS 451</h2>
-        <input id="dni-admin" placeholder="DNI de Director">
-        <input id="pass-admin" type="password" value="123456">
-        <button onclick="loginAdmin()" style="width:100%; background:var(--dir-primary); color:white; padding:12px; border:none; border-radius:6px; font-weight:bold;">Acceder</button>
-        <p id="error-admin" style="color:red; font-size:0.8rem;"></p>
-    </div>
-</div>
-
-<div class="sidebar">
-    <h2>ADMINISTRACIÓN</h2>
-    <button class="nav-btn active" onclick="showSection('sec-usuarios')">👥 Usuarios (Doc/Est)</button>
-    <button class="nav-btn" onclick="showSection('sec-notas')">📝 Modificar Notas</button>
-    <button class="nav-btn" onclick="showSection('sec-stats')">📊 Análisis y Stats</button>
-    <hr>
-    <button class="nav-btn" onclick="location.reload()" style="color: #e74c3c;">Cerrar Sesión</button>
-</div>
-
-<div class="main-content">
-    <div id="sec-usuarios" class="section">
-        <div class="card">
-            <h3>Altas de Alumnos y Docentes</h3>
-            <div class="form-group">
-                <input id="new-dni" placeholder="DNI">
-                <input id="new-nombre" placeholder="Nombre Completo">
-                <select id="new-rol">
-                    <option value="estudiante">Rol: Estudiante</option>
-                    <option value="docente">Rol: Docente</option>
-                </select>
-                <input id="new-anio" placeholder="Año (ej: 3)">
-            </div>
-            <button onclick="crearUsuario()" style="background:var(--success); color:white; padding:10px 20px; border:none; border-radius:5px;">+ Registrar en Sistema</button>
-        </div>
-
-        <div class="card">
-            <h3>Listado General</h3>
-            <table id="tabla-usuarios">
-                <thead>
-                    <tr><th>DNI</th><th>Nombre</th><th>Rol</th><th>Año</th><th>Acciones</th></tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
-    </div>
-
-    <div id="sec-notas" class="section hidden">
-        <div class="card">
-            <h3>Buscador de Calificaciones</h3>
-            <div class="form-group">
-                <input id="search-dni" placeholder="DNI del Alumno">
-                <button onclick="buscarNotasAlumno()" style="background:var(--accent); color:white; border:none; border-radius:5px;">Buscar</button>
-            </div>
-            <table id="tabla-notas">
-                <thead>
-                    <tr><th>Materia</th><th>Cuat.</th><th>RITE</th><th>Nota</th><th>Acción</th></tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
-    </div>
-
-    <div id="sec-stats" class="section hidden">
-        <div class="stats-grid">
-            <div class="stat-box" style="background:#3498db">
-                <h4 id="count-alumnos">0</h4>
-                <p>Alumnos Totales</p>
-            </div>
-            <div class="stat-box" style="background:#27ae60">
-                <h4 id="count-aprobados">0%</h4>
-                <p>Promedio TEA</p>
-            </div>
-        </div>
-        <div class="card" style="margin-top:20px;">
-            <h3>Rendimiento Académico 2026</h3>
-            <canvas id="chartAnalisis"></canvas>
-        </div>
-    </div>
-</div>
-
-<script>
-// (Configuración de Firebase - Igual a la anterior)
-const firebaseConfig = {
-    apiKey: "AIzaSyAeezu1BHZch8eaNnVV-MJ6Rpdl1BzFHXY",
-    authDomain: "app-escuela-cens451.firebaseapp.com",
-    projectId: "app-escuela-cens451"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-// --- LÓGICA DE GESTIÓN ---
-
-async function loginAdmin() {
-    // Aquí podrías validar que el DNI pertenezca a un directivo
-    document.getElementById("login-overlay").style.display = "none";
-    cargarUsuarios();
-    generarEstadisticas();
-}
-
-function showSection(id) {
-    document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
-    document.getElementById(id).classList.remove('hidden');
-}
-
-// 1. ALTAS Y BAJAS
-async function crearUsuario() {
-    const dni = document.getElementById("new-dni").value;
-    const nombre = document.getElementById("new-nombre").value;
-    const rol = document.getElementById("new-rol").value;
-    const anio = document.getElementById("new-anio").value;
-
-    await db.collection("usuarios").doc(dni).set({
-        nombre, rol, año: anio, anio: anio // Doble compatibilidad
-    });
-    alert("Usuario creado");
-    cargarUsuarios();
-}
-
-async function cargarUsuarios() {
-    const snap = await db.collection("usuarios").get();
-    const tbody = document.querySelector("#tabla-usuarios tbody");
-    tbody.innerHTML = "";
-    snap.forEach(doc => {
-        const u = doc.data();
-        tbody.innerHTML += `<tr>
-            <td>${doc.id}</td>
-            <td>${u.nombre}</td>
-            <td>${u.rol}</td>
-            <td>${u.año || '-'}</td>
-            <td><button class="btn-action btn-del" onclick="eliminarUsuario('${doc.id}')">Eliminar</button></td>
-        </tr>`;
-    });
-}
-
-async function eliminarUsuario(id) {
-    if(confirm("¿Seguro que desea dar de baja este usuario?")) {
-        await db.collection("usuarios").doc(id).delete();
-        cargarUsuarios();
-    }
-}
-
-// 2. MODIFICAR NOTAS
-async function buscarNotasAlumno() {
-    const dni = document.getElementById("search-dni").value;
-    const snap = await db.collection("evaluaciones").where("alumnoDni", "==", dni).get();
-    const tbody = document.querySelector("#tabla-notas tbody");
-    tbody.innerHTML = "";
-    snap.forEach(doc => {
-        const n = doc.data();
-        tbody.innerHTML += `<tr>
-            <td>${n.materia}</td>
-            <td>${n.cuat}</td>
-            <td>${n.rite}</td>
-            <td><input type="number" value="${n.nota}" onchange="cambiarNota('${doc.id}', this.value)"></td>
-            <td><button class="btn-action btn-del" onclick="eliminarNota('${doc.id}')">Borrar</button></td>
-        </tr>`;
-    });
-}
-
-// 3. ESTADÍSTICA Y ANÁLISIS
-async function generarEstadisticas() {
-    const alumnos = await db.collection("usuarios").where("rol", "==", "estudiante").get();
-    const notas = await db.collection("evaluaciones").get();
-    
-    document.getElementById("count-alumnos").innerText = alumnos.size;
-    
-    let tea = 0;
-    notas.forEach(n => { if(n.data().rite === "TEA") tea++; });
-    const porcentaje = notas.size > 0 ? ((tea / notas.size) * 100).toFixed(1) : 0;
-    document.getElementById("count-aprobados").innerText = porcentaje + "%";
-
-    // Gráfico simple
-    const ctx = document.getElementById('chartAnalisis').getContext('2d');
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['TEA', 'TEP', 'TED'],
-            datasets: [{
-                label: 'Distribución R.I.T.E',
-                data: [tea, 2, 1], // Aquí irían contadores reales
-                backgroundColor: ['#27ae60', '#f1c40f', '#e74c3c']
-            }]
-        }
-    });
-}
-</script>
-</body>
-</html>
