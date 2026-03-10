@@ -2,72 +2,55 @@
 <html lang="es">
 <head>
     <meta charset="utf-8">
-    <title>SISTEMA CENS 451 - 2026</title>
+    <title>SISTEMA CENS 451 - Gestión 2026</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <style>
-        :root { --primary: #1a252f; --success: #27ae60; --danger: #c0392b; --bg: #f4f7f6; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 15px; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; border-top: 4px solid var(--primary); }
+        :root { --primary: #2c3e50; --success: #27ae60; --danger: #e74c3c; --bg: #f8f9fa; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
+        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .hidden { display: none; }
-        input, select, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; }
+        select, input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; }
         button { background: var(--success); color: white; border: none; font-weight: bold; cursor: pointer; }
-        .btn-red { background: var(--danger); }
-        .student-row { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; padding: 10px 0; border-bottom: 1px solid #eee; align-items: center; }
-        .rite-tag { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.8em; }
+        .btn-logout { background: var(--danger); }
+        .student-row { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
+        .rite-tag { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em; }
         .TEA { background: #d4edda; color: #155724; } .TEP { background: #fff3cd; color: #856404; } .TED { background: #f8d7da; color: #721c24; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { padding: 12px; border: 1px solid #ddd; text-align: center; }
-        th { background: var(--primary); color: white; }
     </style>
 </head>
 <body>
 
-<div class="container">
+<div id="app">
     <div id="login-screen" class="card">
-        <h2 style="text-align:center">🏢 CENS 451 - Gestión</h2>
-        <input id="user-id" placeholder="DNI del Usuario">
-        <input id="user-pass" type="password" value="123456" placeholder="Contraseña">
-        <button onclick="intentarIngreso()">Ingresar</button>
-        <p id="login-err" style="color:red; text-align:center"></p>
+        <h2 style="text-align:center">CENS 451 - Acceso</h2>
+        <input id="user-dni" placeholder="Ingrese su DNI">
+        <input id="user-pass" type="password" value="123456">
+        <button onclick="login()">Ingresar</button>
+        <p id="msg-error" style="color:red; text-align:center"></p>
     </div>
 
     <div id="teacher-screen" class="hidden">
         <div class="card">
-            <h2>👨‍🏫 Docente: <span id="prof-nombre"></span></h2>
-            <select id="sel-materia" onchange="cargarListaAlumnos()">
-                <option value="">Seleccione Materia (1° o 2° Cuat.)</option>
+            <h2>Bienvenido/a, <span id="nombre-docente"></span></h2>
+            <label>Seleccione Materia y Cuatrimestre:</label>
+            <select id="select-materia" onchange="mostrarAlumnos()">
+                <option value="">-- Mis Materias --</option>
             </select>
-            <button class="btn-red" onclick="cerrarSesion()" style="margin-top:10px">Cerrar Sesión</button>
+            <button class="btn-logout" onclick="salir()">Cerrar Sesión</button>
         </div>
-        <div id="alumnos-card" class="card hidden">
-            <h3 id="materia-titulo"></h3>
-            <div id="alumnos-lista"></div>
-            <button onclick="guardarNotas()" style="margin-top:20px">💾 Guardar Planilla Final</button>
-        </div>
-    </div>
 
-    <div id="student-screen" class="hidden">
-        <div class="card">
-            <h2>🎓 Boletín: <span id="alu-nombre-display"></span></h2>
-            <div id="boletin-container"></div>
-            <button class="btn-red" onclick="cerrarSesion()" style="margin-top:20px">Cerrar Sesión</button>
-        </div>
-    </div>
-
-    <div id="admin-screen" class="hidden">
-        <div class="card">
-            <h2>📊 Panel Directivo</h2>
-            <div id="stats-resumen"></div>
-            <button class="btn-red" onclick="cerrarSesion()">Cerrar Sesión</button>
+        <div id="planilla-card" class="card hidden">
+            <h3 id="titulo-materia"></h3>
+            <div id="lista-alumnos"></div>
+            <button onclick="guardarNotas()">💾 Guardar Calificaciones</button>
         </div>
     </div>
 </div>
 
 <script>
-// --- FIREBASE CONFIG (Asegúrate de que coincida con tu consola) ---
+// CONFIGURACIÓN DE FIREBASE
 const firebaseConfig = {
     apiKey: "AIzaSyAeezu1BHZch8eaNnVV-MJ6Rpdl1BzFHXY",
     authDomain: "app-escuela-cens451.firebaseapp.com",
@@ -77,64 +60,71 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-let usuarioActual = null;
+let docenteActivo = null;
 
-async function intentarIngreso() {
-    const user = document.getElementById("user-id").value.trim();
+async function login() {
+    const dni = document.getElementById("user-dni").value.trim();
     const pass = document.getElementById("user-pass").value;
-    const errEl = document.getElementById("login-err");
-    
     try {
-        await auth.signInWithEmailAndPassword(user + "@cens451.edu.ar", pass);
-        const doc = await db.collection("usuarios").doc(user).get();
+        await auth.signInWithEmailAndPassword(dni + "@cens451.edu.ar", pass);
+        const doc = await db.collection("usuarios").doc(dni).get();
         
-        if(!doc.exists) {
-            errEl.innerHTML = "Error: El DNI no está registrado en la base de datos.";
+        if(!doc.exists) throw new Error("No hay datos en Firestore para este DNI.");
+        
+        docenteActivo = { id: dni, ...doc.data() };
+        
+        if(docenteActivo.rol !== "docente") {
+            alert("Acceso solo para docentes");
             return;
         }
 
-        usuarioActual = { id: user, ...doc.data() };
         document.getElementById("login-screen").classList.add("hidden");
+        document.getElementById("teacher-screen").classList.remove("hidden");
+        document.getElementById("nombre-docente").innerText = docenteActivo.nombre;
+        
+        cargarMenuMaterias();
+    } catch(e) {
+        document.getElementById("msg-error").innerText = "DNI o clave incorrectos.";
+    }
+}
 
-        if(usuarioActual.rol === "docente") {
-            document.getElementById("teacher-screen").classList.remove("hidden");
-            document.getElementById("prof-nombre").innerText = usuarioActual.nombre;
-            poblarMaterias();
-        } else if(usuarioActual.rol === "estudiante") {
-            document.getElementById("student-screen").classList.remove("hidden");
-            document.getElementById("alu-nombre-display").innerText = usuarioActual.nombre;
-            cargarBoletin();
-        } else {
-            document.getElementById("admin-screen").classList.remove("hidden");
+function cargarMenuMaterias() {
+    const select = document.getElementById("select-materia");
+    const materiasMap = docenteActivo.MATERIAS || {};
+    
+    // Recorremos los años (1, 2, 3...)
+    for (let anio in materiasMap) {
+        const lista = materiasMap[anio];
+        // Verificamos que sea un array y lo recorremos
+        if (Array.isArray(lista)) {
+            lista.forEach(materia => {
+                // Limpiamos espacios o saltos de línea raros
+                const nombreLimpio = materia.trim();
+                let opt = document.createElement("option");
+                opt.value = `${nombreLimpio}|${anio}`;
+                opt.textContent = `${nombreLimpio} (${anio}° Año)`;
+                select.appendChild(opt);
+            });
         }
-    } catch(e) { 
-        errEl.innerText = "DNI o clave incorrectos en Firebase Auth.";
     }
 }
 
-function poblarMaterias() {
-    const sel = document.getElementById("sel-materia");
-    const mats = usuarioActual.MATERIAS || {};
-    for(let anio in mats) {
-        mats[anio].forEach(m => {
-            let opt = document.createElement("option");
-            opt.value = `${m}|${anio}`;
-            opt.textContent = `${m} (${anio}° Año)`;
-            sel.appendChild(opt);
-        });
-    }
-}
+async function mostrarAlumnos() {
+    const value = document.getElementById("select-materia").value;
+    if(!value) return;
 
-async function cargarListaAlumnos() {
-    const val = document.getElementById("sel-materia").value;
-    if(!val) return;
-    const [materia, anio] = val.split('|');
-    document.getElementById("materia-titulo").innerText = materia;
-    const container = document.getElementById("alumnos-lista");
-    document.getElementById("alumnos-card").classList.remove("hidden");
-    container.innerHTML = "Cargando alumnos de " + anio + "° año...";
+    const [materia, anio] = value.split('|');
+    document.getElementById("titulo-materia").innerText = materia;
+    document.getElementById("planilla-card").classList.remove("hidden");
 
-    const snap = await db.collection("usuarios").where("rol","==","estudiante").where("anio","==",anio).get();
+    const container = document.getElementById("lista-alumnos");
+    container.innerHTML = "Cargando estudiantes...";
+
+    const snap = await db.collection("usuarios")
+        .where("rol", "==", "estudiante")
+        .where("anio", "==", anio)
+        .get();
+
     container.innerHTML = "";
     snap.forEach(doc => {
         container.innerHTML += `
@@ -152,12 +142,12 @@ async function cargarListaAlumnos() {
 }
 
 async function guardarNotas() {
-    const [materiaNombre] = document.getElementById("sel-materia").value.split('|');
-    // Si el nombre de la materia tiene un "2", es 2° cuatrimestre, sino 1°
-    const cuatCalculado = materiaNombre.includes("2") ? "2" : "1";
-    
+    const [materia] = document.getElementById("select-materia").value.split('|');
     const batch = db.batch();
-    const filas = document.querySelectorAll('.student-row');
+    const filas = document.querySelectorAll(".student-row");
+    
+    // Identificar cuatrimestre por el nombre de la materia (1 o 2)
+    const cuat = materia.includes("1") ? "1" : (materia.includes("2") ? "2" : "1");
 
     filas.forEach(fila => {
         const dni = fila.dataset.dni;
@@ -165,12 +155,11 @@ async function guardarNotas() {
         const nota = parseFloat(document.getElementById(`nota-${dni}`).value);
 
         if(rite || !isNaN(nota)) {
-            // Guardamos con un ID que incluye la materia para que Matemática 1 y 2 sean registros distintos
-            const ref = db.collection("evaluaciones").doc(`${dni}_${materiaNombre.replace(/\s+/g, '')}`);
+            const ref = db.collection("evaluaciones").doc(`${dni}_${materia.replace(/\s+/g, '')}`);
             batch.set(ref, {
                 alumnoDni: dni,
-                materia: materiaNombre,
-                cuat: cuatCalculado,
+                materia: materia,
+                cuat: cuat,
                 rite: rite,
                 nota: nota,
                 aprobado: nota >= 7,
@@ -180,27 +169,10 @@ async function guardarNotas() {
     });
 
     await batch.commit();
-    alert("Planilla de " + materiaNombre + " guardada exitosamente.");
+    alert("Notas guardadas correctamente para " + materia);
 }
 
-async function cargarBoletin() {
-    const snap = await db.collection("evaluaciones").where("alumnoDni","==",usuarioActual.id).get();
-    const container = document.getElementById("boletin-container");
-    let html = `<table><thead><tr><th>Materia</th><th>Cuat.</th><th>RITE</th><th>Nota</th><th>Estado</th></tr></thead><tbody>`;
-    snap.forEach(doc => {
-        const e = doc.data();
-        const cl = e.nota >= 7 ? 'style="color:green; font-weight:bold;"' : 'style="color:red;"';
-        html += `<tr>
-            <td>${e.materia}</td><td>${e.cuat}</td>
-            <td><span class="rite-tag ${e.rite}">${e.rite || '-'}</span></td>
-            <td ${cl}>${e.nota || '-'}</td>
-            <td ${cl}>${e.nota >= 7 ? 'APROBADO' : 'RECUPERA'}</td>
-        </tr>`;
-    });
-    container.innerHTML = html + "</tbody></table>";
-}
-
-function cerrarSesion() { auth.signOut().then(() => location.reload()); }
+function salir() { auth.signOut().then(() => location.reload()); }
 </script>
 </body>
 </html>
