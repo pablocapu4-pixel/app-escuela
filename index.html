@@ -250,8 +250,13 @@ async function renderAdmin() {
             const rol = (u.rol || "").toLowerCase();
             if(rol === 'estudiante') cAlu++;
             if(rol === 'docente') cDoc++;
-            tUsuarios += `<tr><td><b>${d.id}</b></td><td>${u.nombre || 'Sin nombre'}</td><td>${u.rol || '-'}</td><td>${u.año || u.anio || '-'}</td></tr>`;
-        });
+            tUsuarios += `<tr>
+    <td><b>${d.id}</b></td>
+    <td>${u.nombre || 'Sin nombre'}</td>
+    <td>${u.rol || '-'}</td>
+    <td>${u.año || u.anio || '-'}</td>
+    <td><button onclick="abrirLegajo('${d.id}')" style="background:var(--dir); color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">📂 Ver Legajo</button></td>
+</tr>`;
         listaDiv.innerHTML = tUsuarios + "</tbody></table>";
 
         // 2. PROCESAR ESTADÍSTICAS Y NOTAS GLOBALES
