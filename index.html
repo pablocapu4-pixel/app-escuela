@@ -81,6 +81,19 @@
             
             <div class="card">
                 <h3>Gestión de Usuarios</h3>
+                <div class="card" style="border-top: 5px solid var(--primary);">
+    <h3>📊 Monitor Académico Global</h3>
+    <div id="stats-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px;">
+        </div>
+    
+    <div style="margin-bottom: 15px;">
+        <input type="text" id="buscador-notas" onkeyup="filtrarNotasGlobal()" placeholder="🔍 Buscar nota por DNI o Materia..." style="padding: 10px; width: 100%; border-radius: 8px; border: 1px solid #ccc;">
+    </div>
+
+    <div id="tabla-notas-global" style="overflow-x:auto; max-height: 400px;">
+        Cargando registros académicos...
+    </div>
+</div>
                 <div style="margin-bottom: 15px;">
                     <input type="text" id="buscador-u" onkeyup="filtrarUsuarios()" placeholder="🔍 Buscar por Nombre o DNI..." style="border: 2px solid var(--dir); font-weight: bold; padding: 12px; width: 100%; border-radius: 8px;">
                 </div>
