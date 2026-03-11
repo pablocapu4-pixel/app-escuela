@@ -86,13 +86,13 @@
                 <button class="btn-action" onclick="crearUsuario()" style="background:var(--dir); margin-top:10px;">REGISTRAR EN BASE DE DATOS</button>
             </div>
             <div class="card">
-                <h3>Lista de Personal y Alumnos</h3>
-                <div id="lista-adm" style="overflow-x:auto;">Cargando...</div>
-            </div>
-        </div>
-
-        <div id="view-docente" class="hidden">
-            <div class="card">
+                <div class="card">
+    <h3>Gestión de Usuarios</h3>
+    <div style="margin-bottom: 15px;">
+        <input type="text" id="buscador-u" onkeyup="filtrarUsuarios()" placeholder="🔍 Buscar por Nombre o DNI..." style="border: 2px solid var(--dir); font-weight: bold;">
+    </div>
+    <div id="lista-adm" style="overflow-x:auto;">Cargando lista...</div>
+</div>
                 <h3>Planillas de Calificación</h3>
                 <select id="sel-mats" onchange="verAlumnos()"><option value="">Buscando materias...</option></select>
             </div>
