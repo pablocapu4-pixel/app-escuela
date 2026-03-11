@@ -573,32 +573,28 @@ async function renderBoletin() {
         boletinDiv.innerHTML = "Error al calcular promedios.";
     }
 }
- // FUNCIÓN PARA BUSCAR Y MOSTRAR EL LEGAJO
 async function abrirLegajo(dni) {
     try {
         const doc = await db.collection("usuarios").doc(dni).get();
         if (doc.exists) {
             const u = doc.data();
-            // Llenamos los campos de la ficha
-            document.getElementById('leg-nom').innerText = u.nombre || "-";
-            document.getElementById('leg-dni').innerText = dni;
-            document.getElementById('leg-fec').innerText = u.fechaNacimiento || "-";
-            document.getElementById('leg-lug').innerText = u.lugarNacimiento || "-";
-            document.getElementById('leg-ing').innerText = u.anioIngreso || "-";
-            document.getElementById('leg-cert').innerText = u.certificado || "Pendiente";
-            document.getElementById('leg-tel').innerText = u.telefono || "-";
-            document.getElementById('leg-dir').innerText = u.direccion || "-";
+            // Llenamos los INPUTS para editar
+            document.getElementById('leg-nom').value = u.nombre || "";
+            document.getElementById('leg-dni').value = dni;
+            document.getElementById('leg-fec').value = u.fechaNacimiento || "";
+            document.getElementById('leg-lug').value = u.lugarNacimiento || "";
+            document.getElementById('leg-ing').value = u.anioIngreso || "";
+            document.getElementById('leg-cert').value = u.certificado || "";
+            document.getElementById('leg-tel').value = u.telefono || "";
+            document.getElementById('leg-dir').value = u.direccion || "";
 
-            // Mostramos la ficha y hacemos scroll hacia ella
             const ficha = document.getElementById('ficha-legajo');
             ficha.classList.remove('hidden');
             ficha.scrollIntoView({ behavior: 'smooth' });
-        } else {
-            alert("No se encontraron datos adicionales para este usuario.");
         }
     } catch (e) {
-        console.error("Error al cargar legajo:", e);
-        alert("Error al conectar con la base de datos.");
+        console.error(e);
+        alert("Error al cargar legajo.");
     }
-}   
+}
 </script>
