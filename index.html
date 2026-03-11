@@ -110,7 +110,7 @@
 </div>
 
 <script>
-// CONFIGURACIÓN FIREBASE
+// 1. CONFIGURACIÓN FIREBASE
 const firebaseConfig = {
     apiKey: "AIzaSyAeezu1BHZch8eaNnVV-MJ6Rpdl1BzFHXY",
     authDomain: "app-escuela-cens451.firebaseapp.com",
@@ -123,10 +123,12 @@ const auth = firebase.auth();
 let ROL_LOGIN = "";
 let USER_DATA = null;
 
+// 2. FUNCIONES DE ACCESO (LOGIN)
 function preLogin(r) {
     ROL_LOGIN = r;
     document.getElementById('txt-login').innerText = "Acceso " + r.toUpperCase();
     document.getElementById('modal-login').classList.remove('hidden');
+    document.getElementById('l-error').innerText = "";
 }
 
 function cerrarLogin() { document.getElementById('modal-login').classList.add('hidden'); }
@@ -135,23 +137,28 @@ async function login() {
     const d = document.getElementById('f-dni').value.trim();
     const p = document.getElementById('f-pass').value;
     const err = document.getElementById('l-error');
+    
+    if (!d || !p) { err.innerText = "Completa DNI y Clave"; return; }
     err.innerText = "Verificando...";
+
     try {
         await auth.signInWithEmailAndPassword(d + "@cens451.edu.ar", p);
         const doc = await db.collection("usuarios").doc(d).get();
         const data = doc.data();
         const rDb = data.rol.toLowerCase();
+        
         const matchDir = (ROL_LOGIN === 'director' && (rDb === 'director' || rDb === 'directivo'));
         const matchDoc = (ROL_LOGIN === 'docente' && rDb === 'docente');
         const matchEst = (ROL_LOGIN === 'estudiante' && rDb === 'estudiante');
+
         if (matchDir || matchDoc || matchEst) {
             USER_DATA = { id: d, ...data };
             abrirApp();
         } else {
-            err.innerText = "Error de Rol";
+            err.innerText = "Error: El rol no coincide.";
             auth.signOut();
         }
-    } catch (e) { err.innerText = "Error de acceso"; }
+    } catch (e) { err.innerText = "DNI o Clave incorrectos"; }
 }
 
 function abrirApp() {
@@ -159,6 +166,12 @@ function abrirApp() {
     document.getElementById('modal-login').classList.add('hidden');
     document.getElementById('main-app').classList.remove('hidden');
     document.getElementById('nav-user').innerHTML = `<b>CENS 451</b> | ${USER_DATA.nombre}`;
+    
+    // Reset de vistas
+    document.getElementById('view-director').classList.add('hidden');
+    document.getElementById('view-docente').classList.add('hidden');
+    document.getElementById('view-estudiante').classList.add('hidden');
+
     const nav = document.getElementById('nav-bg');
     if(ROL_LOGIN === 'director') {
         nav.style.background = 'var(--dir)';
@@ -175,13 +188,34 @@ function abrirApp() {
     }
 }
 
-// BUSCADOR EN TIEMPO REAL
+// 3. LÓGICA DIRECTOR Y BUSCADOR
 function filtrarUsuarios() {
     const texto = document.getElementById('buscador-u').value.toLowerCase();
     const filas = document.querySelectorAll("#tabla-usuarios-db tbody tr");
     filas.forEach(f => {
         f.style.display = f.innerText.toLowerCase().includes(texto) ? "" : "none";
     });
+}
+
+async function renderAdmin() {
+    const listaDiv = document.getElementById('lista-adm');
+    try {
+        const snap = await db.collection("usuarios").get();
+        const nots = await db.collection("evaluaciones").get();
+        let cAlu = 0, cDoc = 0;
+        let t = "<table id='tabla-usuarios-db'><thead><tr><th>DNI</th><th>Nombre</th><th>Rol</th><th>Año</th></tr></thead><tbody>";
+        snap.forEach(d => {
+            const u = d.data();
+            const rol = (u.rol || "").toLowerCase();
+            if(rol === 'estudiante') cAlu++;
+            if(rol === 'docente') cDoc++;
+            t += `<tr><td><b>${d.id}</b></td><td>${u.nombre}</td><td>${u.rol}</td><td>${u.año || u.anio || '-'}</td></tr>`;
+        });
+        listaDiv.innerHTML = t + "</tbody></table>";
+        document.getElementById('s-alu').innerText = cAlu;
+        document.getElementById('s-doc').innerText = cDoc;
+        document.getElementById('s-not').innerText = nots.size;
+    } catch (e) { listaDiv.innerHTML = "Error de carga"; }
 }
 
 async function crearUsuario() {
@@ -195,26 +229,7 @@ async function crearUsuario() {
     renderAdmin();
 }
 
-async function renderAdmin() {
-    const listaDiv = document.getElementById('lista-adm');
-    try {
-        const snap = await db.collection("usuarios").get();
-        const nots = await db.collection("evaluaciones").get();
-        let cAlu = 0, cDoc = 0;
-        let t = "<table id='tabla-usuarios-db'><thead><tr><th>DNI</th><th>Nombre</th><th>Rol</th><th>Año</th></tr></thead><tbody>";
-        snap.forEach(d => {
-            const u = d.data();
-            if(u.rol === 'estudiante') cAlu++;
-            if(u.rol === 'docente') cDoc++;
-            t += `<tr><td><b>${d.id}</b></td><td>${u.nombre}</td><td>${u.rol}</td><td>${u.año || u.anio || '-'}</td></tr>`;
-        });
-        listaDiv.innerHTML = t + "</tbody></table>";
-        document.getElementById('s-alu').innerText = cAlu;
-        document.getElementById('s-doc').innerText = cDoc;
-        document.getElementById('s-not').innerText = nots.size;
-    } catch (e) { listaDiv.innerHTML = "Error de carga"; }
-}
-
+// 4. LÓGICA DOCENTE
 function cargarMatsDocente() {
     const sel = document.getElementById('sel-mats');
     const key = Object.keys(USER_DATA).find(k => k.toUpperCase() === 'MATERIAS');
@@ -248,4 +263,42 @@ async function verAlumnos() {
         const u = doc.data();
         const uAnio = (u.año || u.anio || "").toString().replace(/\D/g, "");
         if(uAnio === anioNum) {
-            html += `<div style="display:flex; justify-content:space-between
+            html += `<div style="display:flex; justify-content:space-between; margin:10px 0;" data-dni="${doc.id}">
+                <span>${u.nombre}</span>
+                <div>
+                    <select id="r-${doc.id}" style="width:80px; margin:0"><option value="">RITE</option><option value="TEA">TEA</option><option value="TEP">TEP</option><option value="TED">TED</option></select>
+                    <input id="n-${doc.id}" type="number" style="width:60px; margin:0" placeholder="Nota">
+                </div>
+            </div>`;
+        }
+    });
+    document.getElementById('tabla-carga').innerHTML = html || "Sin alumnos";
+}
+
+async function guardarNotas() {
+    const val = document.getElementById('sel-mats').value;
+    if(!val) return;
+    const [m, a, c] = val.split('|');
+    const batch = db.batch();
+    document.querySelectorAll('[data-dni]').forEach(div => {
+        const dni = div.dataset.dni;
+        const rite = document.getElementById('r-'+dni).value;
+        const nota = document.getElementById('n-'+dni).value;
+        if(rite) {
+            const id = `${dni}_${m.replace(/\s+/g,'')}_${c.replace(/\s+/g,'')}`;
+            batch.set(db.collection("evaluaciones").doc(id), { alumnoDni: dni, materia: m, cuat: c, rite: rite, nota: nota });
+        }
+    });
+    await batch.commit(); alert("Guardado");
+}
+
+async function renderBoletin() {
+    const snap = await db.collection("evaluaciones").where("alumnoDni","==",USER_DATA.id).get();
+    let res = "";
+    snap.forEach(d => {
+        const data = d.data();
+        res += `<div class="card"><b>${data.materia}</b>: ${data.rite} (${data.nota || '-'})</div>`;
+    });
+    document.getElementById('boletin-res').innerHTML = res || "Sin notas";
+}
+</script>
