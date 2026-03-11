@@ -313,21 +313,49 @@ function filtrarNotasGlobal() {
 
 function cargarMatsDocente() {
     const sel = document.getElementById('sel-mats');
-    const key = Object.keys(USER_DATA).find(k => k.toUpperCase() === 'MATERIAS');
-    const m = USER_DATA[key];
-    if(!m) return sel.innerHTML = '<option>Sin materias</option>';
+    if (!sel) return;
+
+    // Buscamos el campo 'MATERIA' exactamente como está en tu Firebase
+    const m = USER_DATA["MATERIA"];
+
+    if (!m || typeof m !== 'object') {
+        console.log("No se encontró el campo MATERIA o no es un objeto", USER_DATA);
+        sel.innerHTML = '<option>Sin materias asignadas</option>';
+        return;
+    }
+
     sel.innerHTML = '<option value="">-- Seleccionar Materia --</option>';
-    for (let anio in m) {
-        for (let cuat in m[anio]) {
-            let mats = m[anio][cuat];
-            if(!Array.isArray(mats)) mats = [mats];
-            mats.forEach(nom => {
+    
+    // Recorremos los Años ("AÑO 1", "AÑO 2"...)
+    for (let anioKey in m) {
+        const cuatrimestres = m[anioKey];
+        
+        // Recorremos los Cuatrimestres ("1er CUATRIMESTRE", "2do CUATRIMESTRE"...)
+        for (let cuatKey in cuatrimestres) {
+            let listaDeMaterias = cuatrimestres[cuatKey];
+            
+            // Si es un array (como se ve en la foto con el índice 0)
+            if (Array.isArray(listaDeMaterias)) {
+                listaDeMaterias.forEach(nom => {
+                    let opt = document.createElement('option');
+                    // Guardamos el nombre, el año y el cuatrimestre para filtrar después
+                    opt.value = `${nom}|${anioKey}|${cuatKey}`;
+                    opt.innerText = `${nom} (${anioKey} - ${cuatKey})`;
+                    sel.appendChild(opt);
+                });
+            } 
+            // Por si acaso alguna materia está como texto simple
+            else if (typeof listaDeMaterias === 'string') {
                 let opt = document.createElement('option');
-                opt.value = `${nom}|${anio}|${cuat}`;
-                opt.innerText = `${nom} (${anio} - ${cuat})`;
+                opt.value = `${listaDeMaterias}|${anioKey}|${cuatKey}`;
+                opt.innerText = `${listaDeMaterias} (${anioKey} - ${cuatKey})`;
                 sel.appendChild(opt);
-            });
+            }
         }
+    }
+
+    if (sel.options.length <= 1) {
+        sel.innerHTML = '<option>No se encontraron materias en el formato correcto</option>';
     }
 }
 
