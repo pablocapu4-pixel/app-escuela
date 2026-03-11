@@ -597,4 +597,37 @@ async function abrirLegajo(dni) {
         alert("Error al cargar legajo.");
     }
 }
+    async function actualizarLegajo() {
+    const dni = document.getElementById('leg-dni').value;
+    const btn = event.target;
+    
+    // Obtenemos los valores de los inputs
+    const nuevosDatos = {
+        nombre: document.getElementById('leg-nom').value,
+        fechaNacimiento: document.getElementById('leg-fec').value,
+        lugarNacimiento: document.getElementById('leg-lug').value,
+        anioIngreso: document.getElementById('leg-ing').value,
+        certificado: document.getElementById('leg-cert').value,
+        telefono: document.getElementById('leg-tel').value,
+        direccion: document.getElementById('leg-dir').value,
+        ultimoCambioDirectivo: new Date().toISOString()
+    };
+
+    btn.innerText = "Guardando...";
+    btn.disabled = true;
+
+    try {
+        // Guardamos en Firebase con update
+        await db.collection("usuarios").doc(dni).update(nuevosDatos);
+        alert("✅ Legajo actualizado exitosamente.");
+        document.getElementById('ficha-legajo').classList.add('hidden');
+        renderAdmin(); // Refresca la tabla
+    } catch (e) {
+        console.error(e);
+        alert("Hubo un error al guardar los datos.");
+    } finally {
+        btn.innerText = "💾 GUARDAR CAMBIOS EN LEGAJO";
+        btn.disabled = false;
+    }
+}
 </script>
