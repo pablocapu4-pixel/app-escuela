@@ -76,8 +76,6 @@ justify-content:space-between;
 
 <body>
 
-<!-- PORTAL -->
-
 <div id="portal">
 
 <h1>SISTEMA ESCOLAR CENS 451</h1>
@@ -93,8 +91,6 @@ justify-content:space-between;
 </div>
 
 
-<!-- LOGIN -->
-
 <div id="login" class="hidden">
 
 <div class="container">
@@ -105,7 +101,7 @@ justify-content:space-between;
 
 <input id="dni" placeholder="DNI"><br><br>
 
-<input id="pass" type="password" value="123456"><br><br>
+<input id="pass" type="password" placeholder="Contraseña"><br><br>
 
 <button onclick="login()">Ingresar</button>
 
@@ -118,13 +114,11 @@ justify-content:space-between;
 </div>
 
 
-<!-- SISTEMA -->
-
 <div id="sistema" class="hidden">
 
 <header>
 
-<div id="usuario">Usuario</div>
+<div id="usuario"></div>
 
 <button onclick="logout()">Salir</button>
 
@@ -145,9 +139,9 @@ justify-content:space-between;
 
 const firebaseConfig = {
 
-apiKey:"TU_API_KEY",
-authDomain:"TU_DOMINIO.firebaseapp.com",
-projectId:"TU_PROJECT_ID"
+apiKey: "PEGAR_APIKEY",
+authDomain: "PEGAR_AUTHDOMAIN",
+projectId: "PEGAR_PROJECTID"
 
 };
 
@@ -185,6 +179,13 @@ pass
 
 const doc=await db.collection("usuarios").doc(dni).get();
 
+if(!doc.exists){
+
+document.getElementById("error").innerText="Usuario no existe";
+return;
+
+}
+
 usuarioActual={
 id:dni,
 ...doc.data()
@@ -217,7 +218,7 @@ if(usuarioActual.rol==="director"){
 
 cont.innerHTML=`
 <div class="card">
-<h3>Panel Directivo</h3>
+<h2>Panel Directivo</h2>
 Sistema funcionando correctamente
 </div>
 `;
@@ -228,7 +229,7 @@ if(usuarioActual.rol==="docente"){
 
 cont.innerHTML=`
 <div class="card">
-<h3>Panel Docente</h3>
+<h2>Panel Docente</h2>
 Bienvenido ${usuarioActual.nombre}
 </div>
 `;
@@ -239,7 +240,7 @@ if(usuarioActual.rol==="estudiante"){
 
 cont.innerHTML=`
 <div class="card">
-<h3>Panel Estudiante</h3>
+<h2>Panel Estudiante</h2>
 Bienvenido ${usuarioActual.nombre}
 </div>
 `;
