@@ -98,6 +98,19 @@
                     <input type="text" id="buscador-u" onkeyup="filtrarUsuarios()" placeholder="🔍 Buscar por Nombre o DNI..." style="border: 2px solid var(--dir); font-weight: bold; padding: 12px; width: 100%; border-radius: 8px;">
                 </div>
                 <div id="lista-adm" style="overflow-x:auto;">Cargando lista...</div>
+                <div class="card" style="border-top: 5px solid var(--primary); margin-top:20px;">
+    <h3>📊 Monitor Académico Global (CENS 451)</h3>
+    <div id="stats-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px;">
+        </div>
+    
+    <div style="margin-bottom: 15px;">
+        <input type="text" id="buscador-notas" onkeyup="filtrarNotasGlobal()" placeholder="🔍 Buscar nota por Alumno o Materia..." style="padding: 12px; width: 100%; border-radius: 8px; border: 2px solid #ccc;">
+    </div>
+
+    <div id="tabla-notas-global" style="overflow-x:auto; max-height: 400px; background: #fff;">
+        Cargando registros académicos...
+    </div>
+</div>
             </div>
         </div>
 
