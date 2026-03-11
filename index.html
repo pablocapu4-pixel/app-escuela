@@ -315,36 +315,38 @@ function cargarMatsDocente() {
     const sel = document.getElementById('sel-mats');
     if (!sel) return;
 
-    // Buscamos el campo 'MATERIA' exactamente como está en tu Firebase
-    const m = USER_DATA["MATERIA"];
+    // Buscamos si existe "MATERIA" o "MATERIAS" (en cualquier combinación de mayúsculas/minúsculas)
+    const key = Object.keys(USER_DATA).find(k => 
+        k.toUpperCase() === 'MATERIA' || k.toUpperCase() === 'MATERIAS'
+    );
+    
+    const m = USER_DATA[key];
 
     if (!m || typeof m !== 'object') {
-        console.log("No se encontró el campo MATERIA o no es un objeto", USER_DATA);
+        console.log("No se encontraron campos de materia válidos", USER_DATA);
         sel.innerHTML = '<option>Sin materias asignadas</option>';
         return;
     }
 
     sel.innerHTML = '<option value="">-- Seleccionar Materia --</option>';
     
-    // Recorremos los Años ("AÑO 1", "AÑO 2"...)
+    // Recorremos la estructura que vimos en tu imagen
     for (let anioKey in m) {
         const cuatrimestres = m[anioKey];
         
-        // Recorremos los Cuatrimestres ("1er CUATRIMESTRE", "2do CUATRIMESTRE"...)
         for (let cuatKey in cuatrimestres) {
             let listaDeMaterias = cuatrimestres[cuatKey];
             
-            // Si es un array (como se ve en la foto con el índice 0)
+            // Si es un array (como el índice 0 que vimos en tu foto)
             if (Array.isArray(listaDeMaterias)) {
                 listaDeMaterias.forEach(nom => {
                     let opt = document.createElement('option');
-                    // Guardamos el nombre, el año y el cuatrimestre para filtrar después
                     opt.value = `${nom}|${anioKey}|${cuatKey}`;
                     opt.innerText = `${nom} (${anioKey} - ${cuatKey})`;
                     sel.appendChild(opt);
                 });
             } 
-            // Por si acaso alguna materia está como texto simple
+            // Por si alguna materia quedó como texto simple (String)
             else if (typeof listaDeMaterias === 'string') {
                 let opt = document.createElement('option');
                 opt.value = `${listaDeMaterias}|${anioKey}|${cuatKey}`;
@@ -355,10 +357,9 @@ function cargarMatsDocente() {
     }
 
     if (sel.options.length <= 1) {
-        sel.innerHTML = '<option>No se encontraron materias en el formato correcto</option>';
+        sel.innerHTML = '<option>Formato de materias no reconocido</option>';
     }
 }
-
 async function verAlumnos() {
     const val = document.getElementById('sel-mats').value;
     if(!val) return;
