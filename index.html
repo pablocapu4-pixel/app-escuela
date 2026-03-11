@@ -215,12 +215,43 @@ document.getElementById("usuario").innerText=usuarioActual.nombre;
 
 const cont=document.getElementById("contenido");
 
-if(usuarioActual.rol==="director"){
+if(usuarioActual.rol==="docente"){
+
+let materiasHTML = "";
+
+if(usuarioActual.MATERIAS){
+
+for(const anio in usuarioActual.MATERIAS){
+
+materiasHTML += `<h3>Año ${anio}</h3>`;
+
+const cuatris = usuarioActual.MATERIAS[anio];
+
+for(const cuatri in cuatris){
+
+materiasHTML += `<b>${cuatri}</b><ul>`;
+
+cuatris[cuatri].forEach(materia=>{
+materiasHTML += `<li>${materia}</li>`;
+});
+
+materiasHTML += `</ul>`;
+
+}
+
+}
+
+}
 
 cont.innerHTML=`
 <div class="card">
-<h2>Panel Directivo</h2>
-Sistema funcionando correctamente
+<h2>Panel Docente</h2>
+Bienvenido ${usuarioActual.nombre}
+
+<h3>Materias</h3>
+
+${materiasHTML}
+
 </div>
 `;
 
