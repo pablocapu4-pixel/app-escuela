@@ -231,17 +231,19 @@ function abrirApp() {
 
 // --- LÓGICA DIRECTOR (ESTADÍSTICAS Y GESTIÓN) ---
 
+// --- LÓGICA DIRECTOR (ESTADÍSTICAS Y GESTIÓN) ---
+
 async function renderAdmin() {
     const listaDiv = document.getElementById('lista-adm');
     const tablaNotasDiv = document.getElementById('tabla-notas-global');
     const statsDiv = document.getElementById('stats-container');
 
     try {
-        // Traemos todos los datos necesarios de Firebase
+        // 1. Traer datos de Firebase
         const snapUsuarios = await db.collection("usuarios").get();
         const snapNotas = await db.collection("evaluaciones").get();
         
-        // 1. PROCESAR USUARIOS
+        // 2. PROCESAR LISTA DE USUARIOS
         let cAlu = 0, cDoc = 0;
         let tUsuarios = "<table id='tabla-usuarios-db'><thead><tr><th>DNI</th><th>Nombre</th><th>Rol</th><th>Año</th><th style='text-align:right'>Acción</th></tr></thead><tbody>";
         
@@ -258,23 +260,22 @@ async function renderAdmin() {
                 <td>${u.año || u.anio || '-'}</td>
                 <td style="text-align:right;"><button onclick="abrirLegajo('${d.id}')" style="background:var(--dir); color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:bold;">📂 Ver Legajo</button></td>
             </tr>`;
-        }); // <-- ESTA LLAVE ES CLAVE: Cierra el bucle de usuarios
+        }); 
 
-        // Esta línea va AFUERA del bucle para que se dibuje una sola vez al final
-        listaDiv.innerHTML = tUsuarios + "</tbody></table>";
-        // 2. PROCESAR ESTADÍSTICAS Y NOTAS GLOBALES
+        // Inyectamos la tabla de usuarios
+        if (listaDiv) listaDiv.innerHTML = tUsuarios + "</tbody></table>";
+
+        // 3. PROCESAR NOTAS GLOBALES Y ESTADÍSTICAS
         let tNotas = "<table id='tabla-todas-notas'><thead><tr><th>Alumno</th><th>Materia</th><th>Cuat.</th><th>RITE</th><th>Nota</th></tr></thead><tbody>";
         let stats = { TEA: 0, TEP: 0, TED: 0, total: 0 };
 
         snapNotas.forEach(doc => {
             const n = doc.data();
-            // Contamos para las estadísticas
             if (n.rite) {
                 stats[n.rite] = (stats[n.rite] || 0) + 1;
                 stats.total++;
             }
 
-            // Buscamos el nombre del alumno en el snapshot de usuarios que ya tenemos
             const aluDoc = snapUsuarios.docs.find(u => u.id === n.alumnoDni);
             const nombreAlu = aluDoc ? aluDoc.data().nombre : n.alumnoDni;
 
@@ -287,42 +288,35 @@ async function renderAdmin() {
             </tr>`;
         });
 
-        if (tablaNotasDiv) tablaNotasDiv.innerHTML = snapNotas.empty ? "No hay notas cargadas todavía." : tNotas + "</tbody></table>";
+        if (tablaNotasDiv) tablaNotasDiv.innerHTML = snapNotas.empty ? "No hay notas cargadas." : tNotas + "</tbody></table>";
 
-        // 3. DIBUJAR LAS TARJETAS DE ESTADÍSTICAS
+        // 4. DIBUJAR TARJETAS DE ESTADÍSTICAS (TEA/TEP/TED)
         if (statsDiv) {
             const calcularPorc = (tipo) => stats.total > 0 ? ((stats[tipo] / stats.total) * 100).toFixed(1) : 0;
-            
             statsDiv.innerHTML = `
                 <div style="background:#e8f5e9; padding:15px; border-radius:10px; text-align:center; border-bottom: 4px solid #2e7d32;">
                     <h4 style="margin:0; color:#2e7d32;">TEA</h4>
                     <b style="font-size:1.8em;">${calcularPorc('TEA')}%</b>
-                    <p style="margin:0; font-size:0.8em;">${stats.TEA || 0} registros</p>
                 </div>
                 <div style="background:#fff3e0; padding:15px; border-radius:10px; text-align:center; border-bottom: 4px solid #ef6c00;">
                     <h4 style="margin:0; color:#ef6c00;">TEP</h4>
                     <b style="font-size:1.8em;">${calcularPorc('TEP')}%</b>
-                    <p style="margin:0; font-size:0.8em;">${stats.TEP || 0} registros</p>
                 </div>
                 <div style="background:#ffebee; padding:15px; border-radius:10px; text-align:center; border-bottom: 4px solid #c62828;">
                     <h4 style="margin:0; color:#c62828;">TED</h4>
                     <b style="font-size:1.8em;">${calcularPorc('TED')}%</b>
-                    <p style="margin:0; font-size:0.8em;">${stats.TED || 0} registros</p>
-                </div>
-            `;
+                </div>`;
         }
 
-        // Actualizamos los contadores de las cajas de arriba
+        // Actualizamos contadores superiores
         document.getElementById('s-alu').innerText = cAlu;
         document.getElementById('s-doc').innerText = cDoc;
         document.getElementById('s-not').innerText = snapNotas.size;
 
     } catch (e) {
         console.error("Error en renderAdmin:", e);
-        if(listaDiv) listaDiv.innerHTML = "Error al cargar datos.";
     }
 }
-
 // BUSCADOR PARA LA TABLA DE NOTAS GLOBAL
 function filtrarNotasGlobal() {
     const texto = document.getElementById('buscador-notas').value.toLowerCase();
