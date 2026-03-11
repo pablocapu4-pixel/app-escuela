@@ -98,6 +98,21 @@
                     <input type="text" id="buscador-u" onkeyup="filtrarUsuarios()" placeholder="🔍 Buscar por Nombre o DNI..." style="border: 2px solid var(--dir); font-weight: bold; padding: 12px; width: 100%; border-radius: 8px;">
                 </div>
                 <div id="lista-adm" style="overflow-x:auto;">Cargando lista...</div>
+
+<div id="ficha-legajo" class="hidden" style="background: #fdfdfd; padding: 20px; border: 1px dashed #ccc; border-radius: 10px; margin-top: 20px;">
+    <h3 style="margin-top:0; color:var(--dir)">🗂️ Detalle del Legajo</h3>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+        <div><b>Nombre y Apellido:</b> <span id="leg-nom">-</span></div>
+        <div><b>DNI:</b> <span id="leg-dni">-</span></div>
+        <div><b>Fecha de Nacimiento:</b> <span id="leg-fec">-</span></div>
+        <div><b>Lugar de Nacimiento:</b> <span id="leg-lug">-</span></div>
+        <div><b>Año de Ingreso:</b> <span id="leg-ing">-</span></div>
+        <div><b>Certificado Anterior:</b> <span id="leg-cert">-</span></div>
+        <div><b>Teléfono:</b> <span id="leg-tel">-</span></div>
+        <div><b>Dirección:</b> <span id="leg-dir">-</span></div>
+    </div>
+    <button onclick="document.getElementById('ficha-legajo').classList.add('hidden')" style="margin-top:15px; background:gray; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">Cerrar Ficha</button>
+</div>
                 <div class="card" style="border-top: 5px solid var(--primary); margin-top:20px;">
     <h3>📊 Monitor Académico Global (CENS 451)</h3>
     <div id="stats-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px;">
