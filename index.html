@@ -243,22 +243,25 @@ async function renderAdmin() {
         
         // 1. PROCESAR USUARIOS
         let cAlu = 0, cDoc = 0;
-        let tUsuarios = "<table id='tabla-usuarios-db'><thead><tr><th>DNI</th><th>Nombre</th><th>Rol</th><th>Año</th></tr></thead><tbody>";
+        let tUsuarios = "<table id='tabla-usuarios-db'><thead><tr><th>DNI</th><th>Nombre</th><th>Rol</th><th>Año</th><th style='text-align:right'>Acción</th></tr></thead><tbody>";
         
         snapUsuarios.forEach(d => {
             const u = d.data();
             const rol = (u.rol || "").toLowerCase();
             if(rol === 'estudiante') cAlu++;
             if(rol === 'docente') cDoc++;
-            tUsuarios += `<tr>
-    <td><b>${d.id}</b></td>
-    <td>${u.nombre || 'Sin nombre'}</td>
-    <td>${u.rol || '-'}</td>
-    <td>${u.año || u.anio || '-'}</td>
-    <td><button onclick="abrirLegajo('${d.id}')" style="background:var(--dir); color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">📂 Ver Legajo</button></td>
-</tr>`;
-        listaDiv.innerHTML = tUsuarios + "</tbody></table>";
 
+            tUsuarios += `<tr>
+                <td><b>${d.id}</b></td>
+                <td>${u.nombre || 'Sin nombre'}</td>
+                <td>${u.rol || '-'}</td>
+                <td>${u.año || u.anio || '-'}</td>
+                <td style="text-align:right;"><button onclick="abrirLegajo('${d.id}')" style="background:var(--dir); color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:bold;">📂 Ver Legajo</button></td>
+            </tr>`;
+        }); // <-- ESTA LLAVE ES CLAVE: Cierra el bucle de usuarios
+
+        // Esta línea va AFUERA del bucle para que se dibuje una sola vez al final
+        listaDiv.innerHTML = tUsuarios + "</tbody></table>";
         // 2. PROCESAR ESTADÍSTICAS Y NOTAS GLOBALES
         let tNotas = "<table id='tabla-todas-notas'><thead><tr><th>Alumno</th><th>Materia</th><th>Cuat.</th><th>RITE</th><th>Nota</th></tr></thead><tbody>";
         let stats = { TEA: 0, TEP: 0, TED: 0, total: 0 };
