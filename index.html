@@ -1,7 +1,9 @@
+<script>
+
 /* FIREBASE */
 
 const firebaseConfig = {
-apiKey: "AIzaSyArC9gKYYvvbS4PdHNkSql0t521jEd3GQ",
+apiKey: "AIzaSyArC9gKYYvvbS4PdJHNkSql0t521jEd3GQ",
 authDomain: "app-escuela-cens451.firebaseapp.com",
 projectId: "app-escuela-cens451",
 storageBucket: "app-escuela-cens451.firebasestorage.app",
@@ -14,7 +16,7 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-let usuarioActual=null;
+let usuarioActual = null;
 
 
 /* LOGIN */
@@ -23,17 +25,17 @@ async function login(){
 
 try{
 
-const dni=document.getElementById("dni").value;
-const pass=document.getElementById("pass").value;
+const dni = document.getElementById("dni").value;
+const pass = document.getElementById("pass").value;
 
 await auth.signInWithEmailAndPassword(
-dni+"@cens451.edu.ar",
+dni + "@cens451.edu.ar",
 pass
 );
 
-const doc=await db.collection("usuarios").doc(dni).get();
+const doc = await db.collection("usuarios").doc(dni).get();
 
-usuarioActual={
+usuarioActual = {
 id:dni,
 ...doc.data()
 };
@@ -43,6 +45,7 @@ abrirSistema();
 }catch(e){
 
 document.getElementById("error").innerText="Error de acceso";
+console.log(e);
 
 }
 
@@ -56,7 +59,7 @@ function abrirSistema(){
 document.getElementById("login").classList.add("hidden");
 document.getElementById("sistema").classList.remove("hidden");
 
-document.getElementById("usuario").innerText=usuarioActual.nombre;
+document.getElementById("usuario").innerText = usuarioActual.nombre;
 
 if(usuarioActual.rol==="director") panelDirector();
 if(usuarioActual.rol==="docente") panelDocente();
@@ -67,15 +70,17 @@ if(usuarioActual.rol==="estudiante") panelEstudiante();
 
 /* PANEL DIRECTOR */
 
-async function panelDirector(){
+function panelDirector(){
 
 const cont=document.getElementById("contenido");
 
-let html=`<div class="card">
+let html=`
+<div class="card">
 <h2>Panel Directivo</h2>
 <button onclick="listarUsuarios()">Ver usuarios</button>
 <button onclick="listarMaterias()">Ver materias</button>
-</div>`;
+</div>
+`;
 
 cont.innerHTML=html;
 
@@ -88,15 +93,17 @@ async function panelDocente(){
 
 const cont=document.getElementById("contenido");
 
-let html=`<div class="card">
+let html=`
+<div class="card">
 <h2>Panel Docente</h2>
 <h3>Mis materias</h3>
 <div id="listaMaterias"></div>
-</div>`;
+</div>
+`;
 
 cont.innerHTML=html;
 
-const materias=await db.collection("materias")
+const materias = await db.collection("materias")
 .where("docente","==",usuarioActual.id)
 .get();
 
@@ -104,19 +111,18 @@ let lista="";
 
 materias.forEach(doc=>{
 
-const m=doc.data();
+const m = doc.data();
 
-lista+=`
+lista += `
 <div class="card">
-<b>${m.nombre}</b>
-<br>
+<b>${m.nombre}</b><br>
 Curso: ${m.curso}
 </div>
 `;
 
 });
 
-document.getElementById("listaMaterias").innerHTML=lista;
+document.getElementById("listaMaterias").innerHTML = lista;
 
 }
 
@@ -127,15 +133,17 @@ async function panelEstudiante(){
 
 const cont=document.getElementById("contenido");
 
-let html=`<div class="card">
+let html=`
+<div class="card">
 <h2>Panel Estudiante</h2>
 <h3>Mis notas</h3>
 <div id="notas"></div>
-</div>`;
+</div>
+`;
 
 cont.innerHTML=html;
 
-const notas=await db.collection("notas")
+const notas = await db.collection("notas")
 .where("estudiante","==",usuarioActual.id)
 .get();
 
@@ -143,9 +151,9 @@ let lista="";
 
 notas.forEach(doc=>{
 
-const n=doc.data();
+const n = doc.data();
 
-lista+=`
+lista += `
 <div>
 Materia: ${n.materia} — Nota: ${n.nota}
 </div>
@@ -153,7 +161,7 @@ Materia: ${n.materia} — Nota: ${n.nota}
 
 });
 
-document.getElementById("notas").innerHTML=lista;
+document.getElementById("notas").innerHTML = lista;
 
 }
 
@@ -166,3 +174,5 @@ auth.signOut();
 location.reload();
 
 }
+
+</script>
