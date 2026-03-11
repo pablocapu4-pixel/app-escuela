@@ -11,24 +11,17 @@
         :root { --primary: #2c3e50; --dir: #8e44ad; --doc: #2980b9; --est: #27ae60; --bg: #f4f7f6; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; min-height: 100vh; }
         .hidden { display: none !important; }
-        
-        /* PANTALLA INICIAL */
         .welcome { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; }
         .grid-access { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; width: 90%; max-width: 1000px; margin-top: 30px; }
         .card-btn { padding: 40px; border-radius: 15px; color: white; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.2); border: none; }
         .card-btn:hover { transform: translateY(-5px); filter: brightness(1.1); }
-
-        /* MODAL LOGIN */
         #modal-login { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; }
         .login-box { background: white; padding: 30px; border-radius: 12px; width: 320px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
         input, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
-        
-        /* APP INTERFAZ */
         .navbar { padding: 15px 30px; color: white; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
         .container { max-width: 1100px; margin: 20px auto; padding: 0 20px; }
         .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
         .btn-action { background: var(--primary); color: white; border: none; padding: 14px; width: 100%; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; }
-        
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
         .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
@@ -85,14 +78,18 @@
                 </div>
                 <button class="btn-action" onclick="crearUsuario()" style="background:var(--dir); margin-top:10px;">REGISTRAR EN BASE DE DATOS</button>
             </div>
+            
             <div class="card">
-                <div class="card">
-    <h3>Gestión de Usuarios</h3>
-    <div style="margin-bottom: 15px;">
-        <input type="text" id="buscador-u" onkeyup="filtrarUsuarios()" placeholder="🔍 Buscar por Nombre o DNI..." style="border: 2px solid var(--dir); font-weight: bold;">
-    </div>
-    <div id="lista-adm" style="overflow-x:auto;">Cargando lista...</div>
-</div>
+                <h3>Gestión de Usuarios</h3>
+                <div style="margin-bottom: 15px;">
+                    <input type="text" id="buscador-u" onkeyup="filtrarUsuarios()" placeholder="🔍 Buscar por Nombre o DNI..." style="border: 2px solid var(--dir); font-weight: bold; padding: 12px; width: 100%; border-radius: 8px;">
+                </div>
+                <div id="lista-adm" style="overflow-x:auto;">Cargando lista...</div>
+            </div>
+        </div>
+
+        <div id="view-docente" class="hidden">
+            <div class="card">
                 <h3>Planillas de Calificación</h3>
                 <select id="sel-mats" onchange="verAlumnos()"><option value="">Buscando materias...</option></select>
             </div>
@@ -139,26 +136,22 @@ async function login() {
     const p = document.getElementById('f-pass').value;
     const err = document.getElementById('l-error');
     err.innerText = "Verificando...";
-
     try {
         await auth.signInWithEmailAndPassword(d + "@cens451.edu.ar", p);
         const doc = await db.collection("usuarios").doc(d).get();
         const data = doc.data();
         const rDb = data.rol.toLowerCase();
-        
-        // Validación flexible de rango: permite 'director' o 'directivo'
         const matchDir = (ROL_LOGIN === 'director' && (rDb === 'director' || rDb === 'directivo'));
         const matchDoc = (ROL_LOGIN === 'docente' && rDb === 'docente');
         const matchEst = (ROL_LOGIN === 'estudiante' && rDb === 'estudiante');
-
         if (matchDir || matchDoc || matchEst) {
             USER_DATA = { id: d, ...data };
             abrirApp();
         } else {
-            err.innerText = "Error: Intentas entrar como " + ROL_LOGIN + " pero eres " + rDb;
+            err.innerText = "Error de Rol";
             auth.signOut();
         }
-    } catch (e) { err.innerText = "DNI o Clave incorrectos"; }
+    } catch (e) { err.innerText = "Error de acceso"; }
 }
 
 function abrirApp() {
@@ -166,9 +159,7 @@ function abrirApp() {
     document.getElementById('modal-login').classList.add('hidden');
     document.getElementById('main-app').classList.remove('hidden');
     document.getElementById('nav-user').innerHTML = `<b>CENS 451</b> | ${USER_DATA.nombre}`;
-    
     const nav = document.getElementById('nav-bg');
-
     if(ROL_LOGIN === 'director') {
         nav.style.background = 'var(--dir)';
         document.getElementById('view-director').classList.remove('hidden');
@@ -184,130 +175,64 @@ function abrirApp() {
     }
 }
 
-// --- LÓGICA DIRECTOR ---
+// BUSCADOR EN TIEMPO REAL
+function filtrarUsuarios() {
+    const texto = document.getElementById('buscador-u').value.toLowerCase();
+    const filas = document.querySelectorAll("#tabla-usuarios-db tbody tr");
+    filas.forEach(f => {
+        f.style.display = f.innerText.toLowerCase().includes(texto) ? "" : "none";
+    });
+}
+
 async function crearUsuario() {
     const d = document.getElementById('ad-dni').value.trim();
     const n = document.getElementById('ad-nom').value.trim();
     const r = document.getElementById('ad-rol').value;
     const a = document.getElementById('ad-anio').value.trim();
-    
-    if(!d || !n) { alert("DNI y Nombre son obligatorios"); return; }
-
-    try {
-        await db.collection("usuarios").doc(d).set({ 
-            nombre: n, 
-            rol: r, 
-            año: a, 
-            anio: a 
-        });
-        alert("Usuario " + n + " registrado con éxito.");
-        // Limpiar campos
-        document.getElementById('ad-dni').value = "";
-        document.getElementById('ad-nom').value = "";
-        renderAdmin(); // Recargar lista
-    } catch (e) {
-        console.error("Error al crear:", e);
-        alert("Error al guardar: " + e.message);
-    }
+    if(!d || !n) return alert("Faltan datos");
+    await db.collection("usuarios").doc(d).set({ nombre: n, rol: r, año: a, anio: a });
+    alert("Usuario creado");
+    renderAdmin();
 }
 
 async function renderAdmin() {
     const listaDiv = document.getElementById('lista-adm');
-    listaDiv.innerHTML = "Actualizando lista...";
-
     try {
         const snap = await db.collection("usuarios").get();
         const nots = await db.collection("evaluaciones").get();
-        
-        if (snap.empty) {
-            listaDiv.innerHTML = "<p style='color:orange;'>No hay usuarios registrados en la base de datos.</p>";
-            return;
-        }
-
-        let t = "<table><thead><tr><th>DNI</th><th>Nombre</th><th>Rol</th><th>Año</th></tr></thead><tbody>";
         let cAlu = 0, cDoc = 0;
-
+        let t = "<table id='tabla-usuarios-db'><thead><tr><th>DNI</th><th>Nombre</th><th>Rol</th><th>Año</th></tr></thead><tbody>";
         snap.forEach(d => {
             const u = d.data();
-            const rolNormalizado = (u.rol || "").toLowerCase();
-            
-            if(rolNormalizado === 'estudiante') cAlu++;
-            if(rolNormalizado === 'docente') cDoc++;
-            
-            t += `<tr>
-                    <td><b>${d.id}</b></td>
-                    <td>${u.nombre || 'Sin nombre'}</td>
-                    <td>${u.rol || '-'}</td>
-                    <td>${u.año || u.anio || '-'}</td>
-                  </tr>`;
+            if(u.rol === 'estudiante') cAlu++;
+            if(u.rol === 'docente') cDoc++;
+            t += `<tr><td><b>${d.id}</b></td><td>${u.nombre}</td><td>${u.rol}</td><td>${u.año || u.anio || '-'}</td></tr>`;
         });
-
         listaDiv.innerHTML = t + "</tbody></table>";
-        
-        // Actualizar contadores de las cajas superiores
         document.getElementById('s-alu').innerText = cAlu;
         document.getElementById('s-doc').innerText = cDoc;
         document.getElementById('s-not').innerText = nots.size;
-
-    } catch (error) {
-        console.error("Error en renderAdmin:", error);
-        listaDiv.innerHTML = `<p style="color:red;">Error de conexión: ${error.message}<br>
-        Verificá los permisos de Firestore (Rules).</p>`;
-    }
+    } catch (e) { listaDiv.innerHTML = "Error de carga"; }
 }
 
-// --- LÓGICA DOCENTE (MATERIAS FLEXIBLES) ---
 function cargarMatsDocente() {
-
-const sel = document.getElementById('sel-mats');
-
-sel.innerHTML = '<option value="">-- Seleccionar Materia --</option>';
-
-const key = Object.keys(USER_DATA).find(k => k.toUpperCase() === 'MATERIAS');
-
-const m = USER_DATA[key];
-
-if(!m){
-sel.innerHTML = '<option>No tienes materias asignadas</option>';
-return;
-}
-
-for (let anio in m){
-
-for (let cuat in m[anio]){
-
-let materias = m[anio][cuat];
-
-if(typeof materias === "string"){
-
-materias = materias.replace(/[\[\]"]/g,"").split(",");
-
-}
-
-if(!Array.isArray(materias)) materias = [materias];
-
-materias.forEach(nombre=>{
-
-nombre = nombre.trim();
-
-if(nombre){
-
-let opt = document.createElement('option');
-
-opt.value = `${nombre}|${anio}|${cuat}`;
-
-opt.innerText = `${nombre} (${anio} - ${cuat})`;
-
-sel.appendChild(opt);
-
-}
-
-});
-
-}
-
-}
-
+    const sel = document.getElementById('sel-mats');
+    const key = Object.keys(USER_DATA).find(k => k.toUpperCase() === 'MATERIAS');
+    const m = USER_DATA[key];
+    if(!m) return sel.innerHTML = '<option>Sin materias</option>';
+    sel.innerHTML = '<option value="">-- Materias --</option>';
+    for (let anio in m) {
+        for (let cuat in m[anio]) {
+            let mats = m[anio][cuat];
+            if(!Array.isArray(mats)) mats = [mats];
+            mats.forEach(nom => {
+                let opt = document.createElement('option');
+                opt.value = `${nom}|${anio}|${cuat}`;
+                opt.innerText = `${nom} (${anio} - ${cuat})`;
+                sel.appendChild(opt);
+            });
+        }
+    }
 }
 
 async function verAlumnos() {
@@ -317,50 +242,10 @@ async function verAlumnos() {
     const anioNum = a.replace(/\D/g, "");
     document.getElementById('area-planilla').classList.remove('hidden');
     document.getElementById('txt-materia').innerText = m;
-    
-    const snap = await db.collection("usuarios").where("rol","==","estudiante").where("año","in",[anioNum, `AÑO ${anioNum}`, parseInt(anioNum)]).get();
+    const snap = await db.collection("usuarios").where("rol","==","estudiante").get();
     let html = "";
     snap.forEach(doc => {
-        html += `<div style="display:flex; justify-content:space-between; margin:15px 0; border-bottom:1px solid #eee; padding-bottom:5px;" data-dni="${doc.id}">
-            <span>${doc.data().nombre}</span>
-            <div>
-                <select id="r-${doc.id}" style="width:85px; margin:0"><option value="">RITE</option><option value="TEA">TEA</option><option value="TEP">TEP</option><option value="TED">TED</option></select>
-                <input id="n-${doc.id}" type="number" style="width:55px; margin:0" placeholder="Nota">
-            </div>
-        </div>`;
-    });
-    document.getElementById('tabla-carga').innerHTML = html || "No hay alumnos en " + a;
-}
-
-async function guardarNotas() {
-    const [m, a, c] = document.getElementById('sel-mats').value.split('|');
-    const batch = db.batch();
-    document.querySelectorAll('[data-dni]').forEach(div => {
-        const dni = div.dataset.dni;
-        const rite = document.getElementById('r-'+dni).value;
-        const nota = document.getElementById('n-'+dni).value;
-        if(rite) {
-            const id = `${dni}_${m.replace(/\s+/g,'')}_C${c.replace(/\D/g,'')}`;
-            batch.set(db.collection("evaluaciones").doc(id), { alumnoDni: dni, materia: m, cuat: c, rite: rite, nota: nota, fecha: new Date().toISOString() });
-        }
-    });
-    await batch.commit(); alert("Notas guardadas.");
-}
-
-// --- LÓGICA ESTUDIANTE ---
-async function renderBoletin() {
-    const snap = await db.collection("evaluaciones").where("alumnoDni","==",USER_DATA.id).get();
-    let res = "";
-    if(snap.empty) res = "<p>Aún no hay notas cargadas.</p>";
-    snap.forEach(d => {
-        const data = d.data();
-        res += `<div class="card" style="text-align:left; border-left:5px solid var(--est)">
-            <b>${data.materia}</b> (${data.cuat})<br>
-            RITE: ${data.rite} | Nota: ${data.nota || '-'}
-        </div>`;
-    });
-    document.getElementById('boletin-res').innerHTML = res;
-}
-</script>
-</body>
-</html>
+        const u = doc.data();
+        const uAnio = (u.año || u.anio || "").toString().replace(/\D/g, "");
+        if(uAnio === anioNum) {
+            html += `<div style="display:flex; justify-content:space-between
