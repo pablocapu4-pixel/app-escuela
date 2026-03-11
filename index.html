@@ -214,45 +214,99 @@ function abrirApp() {
     }
 }
 
-// 3. LÓGICA DIRECTOR Y BUSCADOR
-function filtrarUsuarios() {
-    const texto = document.getElementById('buscador-u').value.toLowerCase();
-    const filas = document.querySelectorAll("#tabla-usuarios-db tbody tr");
-    filas.forEach(f => {
-        f.style.display = f.innerText.toLowerCase().includes(texto) ? "" : "none";
-    });
-}
+// --- LÓGICA DIRECTOR (ESTADÍSTICAS Y GESTIÓN) ---
 
 async function renderAdmin() {
     const listaDiv = document.getElementById('lista-adm');
+    const tablaNotasDiv = document.getElementById('tabla-notas-global');
+    const statsDiv = document.getElementById('stats-container');
+
     try {
-        const snap = await db.collection("usuarios").get();
-        const nots = await db.collection("evaluaciones").get();
+        // Traemos todos los datos necesarios de Firebase
+        const snapUsuarios = await db.collection("usuarios").get();
+        const snapNotas = await db.collection("evaluaciones").get();
+        
+        // 1. PROCESAR USUARIOS
         let cAlu = 0, cDoc = 0;
-        let t = "<table id='tabla-usuarios-db'><thead><tr><th>DNI</th><th>Nombre</th><th>Rol</th><th>Año</th></tr></thead><tbody>";
-        snap.forEach(d => {
+        let tUsuarios = "<table id='tabla-usuarios-db'><thead><tr><th>DNI</th><th>Nombre</th><th>Rol</th><th>Año</th></tr></thead><tbody>";
+        
+        snapUsuarios.forEach(d => {
             const u = d.data();
             const rol = (u.rol || "").toLowerCase();
             if(rol === 'estudiante') cAlu++;
             if(rol === 'docente') cDoc++;
-            t += `<tr><td><b>${d.id}</b></td><td>${u.nombre}</td><td>${u.rol}</td><td>${u.año || u.anio || '-'}</td></tr>`;
+            tUsuarios += `<tr><td><b>${d.id}</b></td><td>${u.nombre || 'Sin nombre'}</td><td>${u.rol || '-'}</td><td>${u.año || u.anio || '-'}</td></tr>`;
         });
-        listaDiv.innerHTML = t + "</tbody></table>";
+        listaDiv.innerHTML = tUsuarios + "</tbody></table>";
+
+        // 2. PROCESAR ESTADÍSTICAS Y NOTAS GLOBALES
+        let tNotas = "<table id='tabla-todas-notas'><thead><tr><th>Alumno</th><th>Materia</th><th>Cuat.</th><th>RITE</th><th>Nota</th></tr></thead><tbody>";
+        let stats = { TEA: 0, TEP: 0, TED: 0, total: 0 };
+
+        snapNotas.forEach(doc => {
+            const n = doc.data();
+            // Contamos para las estadísticas
+            if (n.rite) {
+                stats[n.rite] = (stats[n.rite] || 0) + 1;
+                stats.total++;
+            }
+
+            // Buscamos el nombre del alumno en el snapshot de usuarios que ya tenemos
+            const aluDoc = snapUsuarios.docs.find(u => u.id === n.alumnoDni);
+            const nombreAlu = aluDoc ? aluDoc.data().nombre : n.alumnoDni;
+
+            tNotas += `<tr>
+                <td>${nombreAlu}</td>
+                <td>${n.materia}</td>
+                <td>${n.cuat}</td>
+                <td style="font-weight:bold; color:${n.rite==='TEA'?'#27ae60':n.rite==='TEP'?'#f39c12':'#e74c3c'}">${n.rite}</td>
+                <td>${n.nota || '-'}</td>
+            </tr>`;
+        });
+
+        if (tablaNotasDiv) tablaNotasDiv.innerHTML = snapNotas.empty ? "No hay notas cargadas todavía." : tNotas + "</tbody></table>";
+
+        // 3. DIBUJAR LAS TARJETAS DE ESTADÍSTICAS
+        if (statsDiv) {
+            const calcularPorc = (tipo) => stats.total > 0 ? ((stats[tipo] / stats.total) * 100).toFixed(1) : 0;
+            
+            statsDiv.innerHTML = `
+                <div style="background:#e8f5e9; padding:15px; border-radius:10px; text-align:center; border-bottom: 4px solid #2e7d32;">
+                    <h4 style="margin:0; color:#2e7d32;">TEA</h4>
+                    <b style="font-size:1.8em;">${calcularPorc('TEA')}%</b>
+                    <p style="margin:0; font-size:0.8em;">${stats.TEA || 0} registros</p>
+                </div>
+                <div style="background:#fff3e0; padding:15px; border-radius:10px; text-align:center; border-bottom: 4px solid #ef6c00;">
+                    <h4 style="margin:0; color:#ef6c00;">TEP</h4>
+                    <b style="font-size:1.8em;">${calcularPorc('TEP')}%</b>
+                    <p style="margin:0; font-size:0.8em;">${stats.TEP || 0} registros</p>
+                </div>
+                <div style="background:#ffebee; padding:15px; border-radius:10px; text-align:center; border-bottom: 4px solid #c62828;">
+                    <h4 style="margin:0; color:#c62828;">TED</h4>
+                    <b style="font-size:1.8em;">${calcularPorc('TED')}%</b>
+                    <p style="margin:0; font-size:0.8em;">${stats.TED || 0} registros</p>
+                </div>
+            `;
+        }
+
+        // Actualizamos los contadores de las cajas de arriba
         document.getElementById('s-alu').innerText = cAlu;
         document.getElementById('s-doc').innerText = cDoc;
-        document.getElementById('s-not').innerText = nots.size;
-    } catch (e) { listaDiv.innerHTML = "Error de carga"; }
+        document.getElementById('s-not').innerText = snapNotas.size;
+
+    } catch (e) {
+        console.error("Error en renderAdmin:", e);
+        if(listaDiv) listaDiv.innerHTML = "Error al cargar datos.";
+    }
 }
 
-async function crearUsuario() {
-    const d = document.getElementById('ad-dni').value.trim();
-    const n = document.getElementById('ad-nom').value.trim();
-    const r = document.getElementById('ad-rol').value;
-    const a = document.getElementById('ad-anio').value.trim();
-    if(!d || !n) return alert("Faltan datos");
-    await db.collection("usuarios").doc(d).set({ nombre: n, rol: r, año: a, anio: a });
-    alert("Usuario creado");
-    renderAdmin();
+// BUSCADOR PARA LA TABLA DE NOTAS GLOBAL
+function filtrarNotasGlobal() {
+    const texto = document.getElementById('buscador-notas').value.toLowerCase();
+    const filas = document.querySelectorAll("#tabla-todas-notas tbody tr");
+    filas.forEach(f => {
+        f.style.display = f.innerText.toLowerCase().includes(texto) ? "" : "none";
+    });
 }
 
 // --- 4. LÓGICA DOCENTE (REPARADA PARA VER Y EDITAR) ---
