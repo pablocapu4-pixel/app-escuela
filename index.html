@@ -229,13 +229,14 @@ async function crearUsuario() {
     renderAdmin();
 }
 
-// 4. LÓGICA DOCENTE
+// --- 4. LÓGICA DOCENTE (REPARADA PARA VER Y EDITAR) ---
+
 function cargarMatsDocente() {
     const sel = document.getElementById('sel-mats');
     const key = Object.keys(USER_DATA).find(k => k.toUpperCase() === 'MATERIAS');
     const m = USER_DATA[key];
     if(!m) return sel.innerHTML = '<option>Sin materias</option>';
-    sel.innerHTML = '<option value="">-- Materias --</option>';
+    sel.innerHTML = '<option value="">-- Seleccionar Materia --</option>';
     for (let anio in m) {
         for (let cuat in m[anio]) {
             let mats = m[anio][cuat];
@@ -253,26 +254,58 @@ function cargarMatsDocente() {
 async function verAlumnos() {
     const val = document.getElementById('sel-mats').value;
     if(!val) return;
-    const [m, a, c] = val.split('|');
-    const anioNum = a.replace(/\D/g, "");
+    const [materiaSel, anioSel, cuatSel] = val.split('|');
+    const anioNum = anioSel.replace(/\D/g, "");
+    
     document.getElementById('area-planilla').classList.remove('hidden');
-    document.getElementById('txt-materia').innerText = m;
-    const snap = await db.collection("usuarios").where("rol","==","estudiante").get();
-    let html = "";
-    snap.forEach(doc => {
-        const u = doc.data();
-        const uAnio = (u.año || u.anio || "").toString().replace(/\D/g, "");
-        if(uAnio === anioNum) {
-            html += `<div style="display:flex; justify-content:space-between; margin:10px 0;" data-dni="${doc.id}">
-                <span>${u.nombre}</span>
-                <div>
-                    <select id="r-${doc.id}" style="width:80px; margin:0"><option value="">RITE</option><option value="TEA">TEA</option><option value="TEP">TEP</option><option value="TED">TED</option></select>
-                    <input id="n-${doc.id}" type="number" style="width:60px; margin:0" placeholder="Nota">
-                </div>
-            </div>`;
-        }
-    });
-    document.getElementById('tabla-carga').innerHTML = html || "Sin alumnos";
+    document.getElementById('txt-materia').innerText = materiaSel + " (" + cuatSel + ")";
+    document.getElementById('tabla-carga').innerHTML = "Cargando alumnos y calificaciones...";
+
+    try {
+        // Traer alumnos del año correspondiente
+        const snapAlu = await db.collection("usuarios").where("rol","==","estudiante").get();
+        // Traer notas ya cargadas para esta materia y cuatrimestre
+        const snapNotas = await db.collection("evaluaciones")
+                            .where("materia", "==", materiaSel)
+                            .where("cuat", "==", cuatSel)
+                            .get();
+
+        // Mapeamos las notas para encontrarlas rápido por DNI
+        const notasCargadas = {};
+        snapNotas.forEach(doc => {
+            notasCargadas[doc.data().alumnoDni] = doc.data();
+        });
+
+        let html = "";
+        let contador = 0;
+
+        snapAlu.forEach(doc => {
+            const u = doc.data();
+            const uAnio = (u.año || u.anio || "").toString().replace(/\D/g, "");
+            
+            if(uAnio === anioNum) {
+                contador++;
+                const previa = notasCargadas[doc.id] || { rite: "", nota: "" };
+                
+                html += `<div style="display:flex; justify-content:space-between; align-items:center; margin:10px 0; border-bottom:1px solid #eee; padding-bottom:5px;" data-dni="${doc.id}">
+                    <span style="flex:1"><b>${u.nombre}</b></span>
+                    <div style="display:flex; gap:10px;">
+                        <select id="r-${doc.id}" style="width:85px; margin:0; border:${previa.rite ? '2px solid #27ae60' : '1px solid #ccc'}">
+                            <option value="">RITE</option>
+                            <option value="TEA" ${previa.rite === 'TEA' ? 'selected' : ''}>TEA</option>
+                            <option value="TEP" ${previa.rite === 'TEP' ? 'selected' : ''}>TEP</option>
+                            <option value="TED" ${previa.rite === 'TED' ? 'selected' : ''}>TED</option>
+                        </select>
+                        <input id="n-${doc.id}" type="number" value="${previa.nota}" style="width:60px; margin:0" placeholder="Nota">
+                    </div>
+                </div>`;
+            }
+        });
+
+        document.getElementById('tabla-carga').innerHTML = html || "No hay alumnos en " + anioSel;
+    } catch (e) {
+        document.getElementById('tabla-carga').innerHTML = "Error al cargar planilla.";
+    }
 }
 
 async function guardarNotas() {
@@ -280,25 +313,53 @@ async function guardarNotas() {
     if(!val) return;
     const [m, a, c] = val.split('|');
     const batch = db.batch();
+    const btn = event.target;
+    
+    btn.innerText = "Guardando...";
+    btn.disabled = true;
+
     document.querySelectorAll('[data-dni]').forEach(div => {
         const dni = div.dataset.dni;
         const rite = document.getElementById('r-'+dni).value;
         const nota = document.getElementById('n-'+dni).value;
+        
         if(rite) {
-            const id = `${dni}_${m.replace(/\s+/g,'')}_${c.replace(/\s+/g,'')}`;
-            batch.set(db.collection("evaluaciones").doc(id), { alumnoDni: dni, materia: m, cuat: c, rite: rite, nota: nota });
+            // Generamos el ID único (DNI + Materia + Cuatrimestre) para sobreescribir si ya existe
+            const idDoc = `${dni}_${m.replace(/\s+/g,'')}_${c.replace(/\s+/g,'')}`;
+            batch.set(db.collection("evaluaciones").doc(idDoc), { 
+                alumnoDni: dni, 
+                materia: m, 
+                cuat: c, 
+                rite: rite, 
+                nota: nota,
+                fechaUpdate: new Date().toISOString()
+            }, { merge: true });
         }
     });
-    await batch.commit(); alert("Guardado");
+
+    try {
+        await batch.commit();
+        alert("Planilla de " + m + " actualizada.");
+        verAlumnos(); // Refresca para mostrar bordes verdes
+    } catch (e) {
+        alert("Error al guardar.");
+    } finally {
+        btn.innerText = "💾 GUARDAR CUATRIMESTRE";
+        btn.disabled = false;
+    }
 }
 
 async function renderBoletin() {
     const snap = await db.collection("evaluaciones").where("alumnoDni","==",USER_DATA.id).get();
     let res = "";
+    if(snap.empty) res = "Aún no tienes notas cargadas.";
     snap.forEach(d => {
         const data = d.data();
-        res += `<div class="card"><b>${data.materia}</b>: ${data.rite} (${data.nota || '-'})</div>`;
+        res += `<div class="card" style="text-align:left; border-left:5px solid var(--est)">
+            <b>${data.materia}</b> (${data.cuat})<br>
+            RITE: ${data.rite} | Nota: ${data.nota || '-'}
+        </div>`;
     });
-    document.getElementById('boletin-res').innerHTML = res || "Sin notas";
+    document.getElementById('boletin-res').innerHTML = res;
 }
 </script>
