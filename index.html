@@ -462,91 +462,90 @@ async function renderBoletin() {
     const boletinDiv = document.getElementById('boletin-res');
     if (!boletinDiv) return;
 
-    boletinDiv.innerHTML = "Generando boletín académico...";
+    boletinDiv.innerHTML = "Generando promedios por cuatrimestre...";
 
     try {
-        // 1. Buscamos todas las evaluaciones del alumno por su DNI
         const snap = await db.collection("evaluaciones")
                             .where("alumnoDni", "==", USER_DATA.id)
                             .get();
 
         if (snap.empty) {
-            boletinDiv.innerHTML = "<div class='card'>Aún no hay calificaciones registradas para este ciclo lectivo.</div>";
+            boletinDiv.innerHTML = "<div class='card'>No hay notas cargadas.</div>";
             return;
         }
 
-        // 2. Encabezado con datos del alumno
         let html = `
             <div class="card" style="border-left: 8px solid var(--est); background: #f9f9f9;">
-                <h2 style="margin:0; color: var(--est);">BOLETÍN DE CALIFICACIONES</h2>
+                <h2 style="margin:0; color: var(--est);">INFORME ACADÉMICO</h2>
                 <p style="margin:5px 0;"><b>Estudiante:</b> ${USER_DATA.nombre}</p>
                 <p style="margin:5px 0;"><b>DNI:</b> ${USER_DATA.id}</p>
-                <p style="margin:5px 0;"><b>Año:</b> ${USER_DATA.año || USER_DATA.anio || '-'}</p>
             </div>
         `;
 
-        // 3. Agrupar notas por cuatrimestre
+        // Agrupamos notas por cuatrimestre
         const periodos = {};
-        let sumaTotal = 0;
-        let cantidadNotas = 0;
-
         snap.forEach(d => {
             const data = d.data();
             const cuat = data.cuat || "Sin Periodo";
             if (!periodos[cuat]) periodos[cuat] = [];
             periodos[cuat].push(data);
-            
-            // Si hay nota numérica, la sumamos para el promedio
-            if (data.nota && !isNaN(data.nota)) {
-                sumaTotal += parseFloat(data.nota);
-                cantidadNotas++;
-            }
         });
 
-        // 4. Dibujar las tablas por cada cuatrimestre
+        // Ordenamos y dibujamos cada cuatrimestre con su propio promedio
         for (const cuat in periodos) {
+            let sumaCuat = 0;
+            let cantCuat = 0;
+
             html += `
-                <div class="card">
-                    <h3 style="border-bottom: 2px solid #ddd; padding-bottom: 5px;">${cuat}</h3>
+                <div class="card" style="margin-top:20px;">
+                    <h3 style="border-bottom: 2px solid var(--est); padding-bottom: 5px;">${cuat}</h3>
                     <table style="width:100%; border-collapse: collapse; margin-top:10px;">
                         <thead>
-                            <tr style="background:#eee; text-align:left;">
-                                <th style="padding:8px;">Materia</th>
-                                <th style="padding:8px;">RITE</th>
-                                <th style="padding:8px;">Nota</th>
+                            <tr style="background:#f2f2f2; text-align:left;">
+                                <th style="padding:10px;">Materia</th>
+                                <th style="padding:10px;">RITE</th>
+                                <th style="padding:10px;">Nota</th>
                             </tr>
                         </thead>
                         <tbody>
             `;
 
             periodos[cuat].forEach(n => {
+                // Cálculo de promedio solo para este cuatrimestre
+                if (n.nota && !isNaN(n.nota) && n.nota !== "") {
+                    sumaCuat += parseFloat(n.nota);
+                    cantCuat++;
+                }
+
                 html += `
                     <tr style="border-bottom:1px solid #eee;">
-                        <td style="padding:8px;">${n.materia}</td>
-                        <td style="padding:8px;"><b>${n.rite}</b></td>
-                        <td style="padding:8px;">${n.nota || '-'}</td>
+                        <td style="padding:10px;">${n.materia}</td>
+                        <td style="padding:10px;"><b>${n.rite}</b></td>
+                        <td style="padding:10px;">${n.nota || '-'}</td>
                     </tr>
                 `;
             });
 
-            html += `</tbody></table></div>`;
-        }
+            html += `</tbody></table>`;
 
-        // 5. Cálculo y visualización de promedio general
-        if (cantidadNotas > 0) {
-            const promedio = (sumaTotal / cantidadNotas).toFixed(2);
-            html += `
-                <div class="card" style="text-align:right; background: var(--est); color: white;">
-                    <h3 style="margin:0;">PROMEDIO GENERAL: ${promedio}</h3>
-                </div>
-            `;
+            // Si hay notas numéricas en este cuatrimestre, mostramos su promedio
+            if (cantCuat > 0) {
+                const promedioCuat = (sumaCuat / cantCuat).toFixed(2);
+                html += `
+                    <div style="margin-top:15px; padding:10px; background:#f0f7ff; text-align:right; border-radius:5px;">
+                        <b style="color:#0056b3;">Promedio ${cuat}: ${promedioCuat}</b>
+                    </div>
+                `;
+            }
+
+            html += `</div>`;
         }
 
         boletinDiv.innerHTML = html;
 
     } catch (e) {
-        console.error("Error al generar boletín:", e);
-        boletinDiv.innerHTML = "Error al cargar el boletín. Por favor, reintenta.";
+        console.error(e);
+        boletinDiv.innerHTML = "Error al calcular promedios.";
     }
 }
 </script>
