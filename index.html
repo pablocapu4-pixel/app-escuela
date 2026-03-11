@@ -190,25 +190,70 @@ async function crearUsuario() {
     const n = document.getElementById('ad-nom').value.trim();
     const r = document.getElementById('ad-rol').value;
     const a = document.getElementById('ad-anio').value.trim();
-    await db.collection("usuarios").doc(d).set({ nombre: n, rol: r, año: a, anio: a });
-    alert("Usuario Creado"); renderAdmin();
+    
+    if(!d || !n) { alert("DNI y Nombre son obligatorios"); return; }
+
+    try {
+        await db.collection("usuarios").doc(d).set({ 
+            nombre: n, 
+            rol: r, 
+            año: a, 
+            anio: a 
+        });
+        alert("Usuario " + n + " registrado con éxito.");
+        // Limpiar campos
+        document.getElementById('ad-dni').value = "";
+        document.getElementById('ad-nom').value = "";
+        renderAdmin(); // Recargar lista
+    } catch (e) {
+        console.error("Error al crear:", e);
+        alert("Error al guardar: " + e.message);
+    }
 }
 
 async function renderAdmin() {
-    const snap = await db.collection("usuarios").get();
-    const nots = await db.collection("evaluaciones").get();
-    let t = "<table><tr><th>DNI</th><th>Nombre</th><th>Rol</th><th>Año</th></tr>";
-    let cAlu = 0, cDoc = 0;
-    snap.forEach(d => {
-        const u = d.data();
-        if(u.rol === 'estudiante') cAlu++;
-        if(u.rol === 'docente') cDoc++;
-        t += `<tr><td>${d.id}</td><td>${u.nombre}</td><td>${u.rol}</td><td>${u.año || '-'}</td></tr>`;
-    });
-    document.getElementById('lista-adm').innerHTML = t + "</table>";
-    document.getElementById('s-alu').innerText = cAlu;
-    document.getElementById('s-doc').innerText = cDoc;
-    document.getElementById('s-not').innerText = nots.size;
+    const listaDiv = document.getElementById('lista-adm');
+    listaDiv.innerHTML = "Actualizando lista...";
+
+    try {
+        const snap = await db.collection("usuarios").get();
+        const nots = await db.collection("evaluaciones").get();
+        
+        if (snap.empty) {
+            listaDiv.innerHTML = "<p style='color:orange;'>No hay usuarios registrados en la base de datos.</p>";
+            return;
+        }
+
+        let t = "<table><thead><tr><th>DNI</th><th>Nombre</th><th>Rol</th><th>Año</th></tr></thead><tbody>";
+        let cAlu = 0, cDoc = 0;
+
+        snap.forEach(d => {
+            const u = d.data();
+            const rolNormalizado = (u.rol || "").toLowerCase();
+            
+            if(rolNormalizado === 'estudiante') cAlu++;
+            if(rolNormalizado === 'docente') cDoc++;
+            
+            t += `<tr>
+                    <td><b>${d.id}</b></td>
+                    <td>${u.nombre || 'Sin nombre'}</td>
+                    <td>${u.rol || '-'}</td>
+                    <td>${u.año || u.anio || '-'}</td>
+                  </tr>`;
+        });
+
+        listaDiv.innerHTML = t + "</tbody></table>";
+        
+        // Actualizar contadores de las cajas superiores
+        document.getElementById('s-alu').innerText = cAlu;
+        document.getElementById('s-doc').innerText = cDoc;
+        document.getElementById('s-not').innerText = nots.size;
+
+    } catch (error) {
+        console.error("Error en renderAdmin:", error);
+        listaDiv.innerHTML = `<p style="color:red;">Error de conexión: ${error.message}<br>
+        Verificá los permisos de Firestore (Rules).</p>`;
+    }
 }
 
 // --- LÓGICA DOCENTE (MATERIAS FLEXIBLES) ---
