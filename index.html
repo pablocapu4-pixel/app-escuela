@@ -213,27 +213,56 @@ async function renderAdmin() {
 
 // --- LÓGICA DOCENTE (MATERIAS FLEXIBLES) ---
 function cargarMatsDocente() {
-    const sel = document.getElementById('sel-mats');
-    sel.innerHTML = '<option value="">-- Seleccionar Materia --</option>';
-    
-    // Busca el campo de materias sin importar mayúsculas
-    const key = Object.keys(USER_DATA).find(k => k.toUpperCase() === 'MATERIAS');
-    const m = USER_DATA[key];
 
-    if(!m) { sel.innerHTML = '<option>No tienes materias asignadas</option>'; return; }
+const sel = document.getElementById('sel-mats');
 
-    for (let anio in m) {
-        for (let cuat in m[anio]) {
-            if (Array.isArray(m[anio][cuat])) {
-                m[anio][cuat].forEach(nombre => {
-                    let opt = document.createElement('option');
-                    opt.value = `${nombre}|${anio}|${cuat}`;
-                    opt.innerText = `${nombre} (${anio} - ${cuat})`;
-                    sel.appendChild(opt);
-                });
-            }
-        }
-    }
+sel.innerHTML = '<option value="">-- Seleccionar Materia --</option>';
+
+const key = Object.keys(USER_DATA).find(k => k.toUpperCase() === 'MATERIAS');
+
+const m = USER_DATA[key];
+
+if(!m){
+sel.innerHTML = '<option>No tienes materias asignadas</option>';
+return;
+}
+
+for (let anio in m){
+
+for (let cuat in m[anio]){
+
+let materias = m[anio][cuat];
+
+if(typeof materias === "string"){
+
+materias = materias.replace(/[\[\]"]/g,"").split(",");
+
+}
+
+if(!Array.isArray(materias)) materias = [materias];
+
+materias.forEach(nombre=>{
+
+nombre = nombre.trim();
+
+if(nombre){
+
+let opt = document.createElement('option');
+
+opt.value = `${nombre}|${anio}|${cuat}`;
+
+opt.innerText = `${nombre} (${anio} - ${cuat})`;
+
+sel.appendChild(opt);
+
+}
+
+});
+
+}
+
+}
+
 }
 
 async function verAlumnos() {
