@@ -59,11 +59,67 @@
 
     <div class="container">
         <div id="view-director" class="hidden">
-            <div class="stat-grid">
-                <div class="stat-item" style="background:var(--dir)"><h2 id="s-alu">0</h2><p>Alumnos</p></div>
-                <div class="stat-item" style="background:var(--doc)"><h2 id="s-doc">0</h2><p>Docentes</p></div>
-                <div class="stat-item" style="background:var(--primary)"><h2 id="s-not">0</h2><p>Evaluaciones</p></div>
+    <div class="stat-grid">
+        <div class="stat-item" style="background:var(--dir)"><h2 id="s-alu">0</h2><p>Alumnos</p></div>
+        <div class="stat-item" style="background:var(--doc)"><h2 id="s-doc">0</h2><p>Docentes</p></div>
+        <div class="stat-item" style="background:var(--primary)"><h2 id="s-not">0</h2><p>Evaluaciones</p></div>
+    </div>
+
+    <div class="card">
+        <h3>Alta de Usuario</h3>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <input id="ad-dni" placeholder="DNI">
+            <input id="ad-nom" placeholder="Nombre Apellido">
+            <select id="ad-rol">
+                <option value="estudiante">Estudiante</option>
+                <option value="docente">Docente</option>
+                <option value="director">Directivo</option>
+            </select>
+            <input id="ad-anio" placeholder="Año (1, 2, 3)">
+        </div>
+        <button class="btn-action" onclick="crearUsuario()" style="background:var(--dir); margin-top:10px;">REGISTRAR EN BASE DE DATOS</button>
+    </div>
+
+    <div class="card" style="border-top: 5px solid var(--primary);">
+        <h3>📊 Monitor Académico Global</h3>
+        <div id="stats-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px;">
             </div>
+        <div style="margin-bottom: 15px;">
+            <input type="text" id="buscador-notas" onkeyup="filtrarNotasGlobal()" placeholder="🔍 Buscar nota por Alumno o Materia..." style="padding: 12px; width: 100%; border-radius: 8px; border: 2px solid #ccc;">
+        </div>
+        <div id="tabla-notas-global" style="overflow-x:auto; max-height: 400px; background: #fff;">
+            Cargando registros académicos...
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>👥 Gestión de Usuarios</h3>
+        <div style="margin-bottom: 15px;">
+            <input type="text" id="buscador-u" onkeyup="filtrarUsuarios()" placeholder="🔍 Buscar usuario por Nombre o DNI..." style="border: 2px solid var(--dir); font-weight: bold; padding: 12px; width: 100%; border-radius: 8px;">
+        </div>
+        <div id="lista-adm" style="overflow-x:auto;">Cargando lista...</div>
+
+        <div id="ficha-legajo" class="hidden" style="background: #fff; padding: 25px; border: 2px solid var(--dir); border-radius: 15px; margin-top: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+            <h3 style="margin-top:0; color:var(--dir); display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 1.5em;">🗂️</span> Edición de Legajo Digital
+            </h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                <div><label style="font-size: 0.8em; color: #666;">Nombre y Apellido</label><input id="leg-nom" type="text"></div>
+                <div><label style="font-size: 0.8em; color: #666;">DNI (No editable)</label><input id="leg-dni" type="text" disabled style="background:#eee"></div>
+                <div><label style="font-size: 0.8em; color: #666;">Fecha de Nacimiento</label><input id="leg-fec" type="date"></div>
+                <div><label style="font-size: 0.8em; color: #666;">Lugar de Nacimiento</label><input id="leg-lug" type="text"></div>
+                <div><label style="font-size: 0.8em; color: #666;">Año de Ingreso</label><input id="leg-ing" type="number"></div>
+                <div><label style="font-size: 0.8em; color: #666;">Certificado Anterior</label><input id="leg-cert" type="text"></div>
+                <div><label style="font-size: 0.8em; color: #666;">Teléfono</label><input id="leg-tel" type="text"></div>
+                <div><label style="font-size: 0.8em; color: #666;">Dirección</label><input id="leg-dir" type="text"></div>
+            </div>
+            <div style="margin-top: 20px; display: flex; gap: 10px;">
+                <button onclick="actualizarLegajo()" style="flex: 2; background: var(--est); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold;">💾 GUARDAR CAMBIOS</button>
+                <button onclick="document.getElementById('ficha-legajo').classList.add('hidden')" style="flex: 1; background: #95a5a6; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer;">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
             <div class="card">
                 <h3>Alta de Usuario</h3>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
