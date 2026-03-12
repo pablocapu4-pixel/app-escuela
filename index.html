@@ -11,12 +11,18 @@
         :root { --primary: #2c3e50; --dir: #8e44ad; --doc: #2980b9; --est: #27ae60; --bg: #f4f7f6; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; min-height: 100vh; }
         .hidden { display: none !important; }
+        
+        /* PORTAL DE BIENVENIDA */
         .welcome { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; }
         .grid-access { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; width: 90%; max-width: 1000px; margin-top: 30px; }
         .card-btn { padding: 40px; border-radius: 15px; color: white; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.2); border: none; }
         .card-btn:hover { transform: translateY(-5px); filter: brightness(1.1); }
+
+        /* MODAL LOGIN */
         #modal-login { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; }
         .login-box { background: white; padding: 30px; border-radius: 12px; width: 320px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        
+        /* ESTILOS GENERALES */
         input, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
         .navbar { padding: 15px 30px; color: white; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
         .container { max-width: 1100px; margin: 20px auto; padding: 0 20px; }
@@ -24,12 +30,15 @@
         .btn-action { background: var(--primary); color: white; border: none; padding: 14px; width: 100%; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
+        
+        /* DASHBOARD */
         .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
         .stat-item { padding: 20px; color: white; border-radius: 10px; text-align: center; }
     </style>
 </head>
 <body>
 
+<!-- PORTAL INICIAL -->
 <div id="portal" class="welcome">
     <h1 style="color: var(--primary); font-size: 2.5em; margin-bottom: 10px;">SISTEMA CENS 451</h1>
     <p style="color: #666;">Seleccione su portal de acceso 2026</p>
@@ -40,6 +49,7 @@
     </div>
 </div>
 
+<!-- MODAL DE LOGIN -->
 <div id="modal-login" class="hidden">
     <div class="login-box">
         <h3 id="txt-login">Acceso</h3>
@@ -51,6 +61,7 @@
     </div>
 </div>
 
+<!-- APLICACIÓN PRINCIPAL -->
 <div id="main-app" class="hidden">
     <nav class="navbar" id="nav-bg">
         <div id="nav-user">CENS 451</div>
@@ -58,68 +69,16 @@
     </nav>
 
     <div class="container">
+        
+        <!-- VISTA DIRECTOR -->
         <div id="view-director" class="hidden">
-    <div class="stat-grid">
-        <div class="stat-item" style="background:var(--dir)"><h2 id="s-alu">0</h2><p>Alumnos</p></div>
-        <div class="stat-item" style="background:var(--doc)"><h2 id="s-doc">0</h2><p>Docentes</p></div>
-        <div class="stat-item" style="background:var(--primary)"><h2 id="s-not">0</h2><p>Evaluaciones</p></div>
-    </div>
-
-    <div class="card">
-        <h3>Alta de Usuario</h3>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-            <input id="ad-dni" placeholder="DNI">
-            <input id="ad-nom" placeholder="Nombre Apellido">
-            <select id="ad-rol">
-                <option value="estudiante">Estudiante</option>
-                <option value="docente">Docente</option>
-                <option value="director">Directivo</option>
-            </select>
-            <input id="ad-anio" placeholder="Año (1, 2, 3)">
-        </div>
-        <button class="btn-action" onclick="crearUsuario()" style="background:var(--dir); margin-top:10px;">REGISTRAR EN BASE DE DATOS</button>
-    </div>
-
-    <div class="card" style="border-top: 5px solid var(--primary);">
-        <h3>📊 Monitor Académico Global</h3>
-        <div id="stats-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px;">
+            <div class="stat-grid">
+                <div class="stat-item" style="background:var(--dir)"><h2 id="s-alu">0</h2><p>Alumnos</p></div>
+                <div class="stat-item" style="background:var(--doc)"><h2 id="s-doc">0</h2><p>Docentes</p></div>
+                <div class="stat-item" style="background:var(--primary)"><h2 id="s-not">0</h2><p>Evaluaciones</p></div>
             </div>
-        <div style="margin-bottom: 15px;">
-            <input type="text" id="buscador-notas" onkeyup="filtrarNotasGlobal()" placeholder="🔍 Buscar nota por Alumno o Materia..." style="padding: 12px; width: 100%; border-radius: 8px; border: 2px solid #ccc;">
-        </div>
-        <div id="tabla-notas-global" style="overflow-x:auto; max-height: 400px; background: #fff;">
-            Cargando registros académicos...
-        </div>
-    </div>
 
-    <div class="card">
-        <h3>👥 Gestión de Usuarios</h3>
-        <div style="margin-bottom: 15px;">
-            <input type="text" id="buscador-u" onkeyup="filtrarUsuarios()" placeholder="🔍 Buscar usuario por Nombre o DNI..." style="border: 2px solid var(--dir); font-weight: bold; padding: 12px; width: 100%; border-radius: 8px;">
-        </div>
-        <div id="lista-adm" style="overflow-x:auto;">Cargando lista...</div>
-
-        <div id="ficha-legajo" class="hidden" style="background: #fff; padding: 25px; border: 2px solid var(--dir); border-radius: 15px; margin-top: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
-            <h3 style="margin-top:0; color:var(--dir); display: flex; align-items: center; gap: 10px;">
-                <span style="font-size: 1.5em;">🗂️</span> Edición de Legajo Digital
-            </h3>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-                <div><label style="font-size: 0.8em; color: #666;">Nombre y Apellido</label><input id="leg-nom" type="text"></div>
-                <div><label style="font-size: 0.8em; color: #666;">DNI (No editable)</label><input id="leg-dni" type="text" disabled style="background:#eee"></div>
-                <div><label style="font-size: 0.8em; color: #666;">Fecha de Nacimiento</label><input id="leg-fec" type="date"></div>
-                <div><label style="font-size: 0.8em; color: #666;">Lugar de Nacimiento</label><input id="leg-lug" type="text"></div>
-                <div><label style="font-size: 0.8em; color: #666;">Año de Ingreso</label><input id="leg-ing" type="number"></div>
-                <div><label style="font-size: 0.8em; color: #666;">Certificado Anterior</label><input id="leg-cert" type="text"></div>
-                <div><label style="font-size: 0.8em; color: #666;">Teléfono</label><input id="leg-tel" type="text"></div>
-                <div><label style="font-size: 0.8em; color: #666;">Dirección</label><input id="leg-dir" type="text"></div>
-            </div>
-            <div style="margin-top: 20px; display: flex; gap: 10px;">
-                <button onclick="actualizarLegajo()" style="flex: 2; background: var(--est); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold;">💾 GUARDAR CAMBIOS</button>
-                <button onclick="document.getElementById('ficha-legajo').classList.add('hidden')" style="flex: 1; background: #95a5a6; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer;">Cancelar</button>
-            </div>
-        </div>
-    </div>
-</div>
+            <!-- Alta de Usuario -->
             <div class="card">
                 <h3>Alta de Usuario</h3>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
@@ -134,65 +93,49 @@
                 </div>
                 <button class="btn-action" onclick="crearUsuario()" style="background:var(--dir); margin-top:10px;">REGISTRAR EN BASE DE DATOS</button>
             </div>
-            
-            <div class="card">
-                <h3>Gestión de Usuarios</h3>
-                <div class="card" style="border-top: 5px solid var(--primary);">
-    <h3>📊 Monitor Académico Global</h3>
-    <div id="stats-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px;">
-        </div>
-    
-    <div style="margin-bottom: 15px;">
-        <input type="text" id="buscador-notas" onkeyup="filtrarNotasGlobal()" placeholder="🔍 Buscar nota por DNI o Materia..." style="padding: 10px; width: 100%; border-radius: 8px; border: 1px solid #ccc;">
-    </div>
 
-    <div id="tabla-notas-global" style="overflow-x:auto; max-height: 400px;">
-        Cargando registros académicos...
-    </div>
-</div>
+            <!-- Monitor Académico -->
+            <div class="card" style="border-top: 5px solid var(--primary);">
+                <h3>📊 Monitor Académico Global</h3>
+                <div id="stats-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px;"></div>
                 <div style="margin-bottom: 15px;">
-                    <input type="text" id="buscador-u" onkeyup="filtrarUsuarios()" placeholder="🔍 Buscar por Nombre o DNI..." style="border: 2px solid var(--dir); font-weight: bold; padding: 12px; width: 100%; border-radius: 8px;">
+                    <input type="text" id="buscador-notas" onkeyup="filtrarNotasGlobal()" placeholder="🔍 Buscar nota por Alumno o Materia..." style="padding: 12px; width: 100%; border-radius: 8px; border: 2px solid #ccc;">
+                </div>
+                <div id="tabla-notas-global" style="overflow-x:auto; max-height: 400px; background: #fff;">Cargando registros...</div>
+            </div>
+
+            <!-- Gestión de Usuarios -->
+            <div class="card">
+                <h3>👥 Gestión de Usuarios</h3>
+                <div style="margin-bottom: 15px;">
+                    <input type="text" id="buscador-u" onkeyup="filtrarUsuarios()" placeholder="🔍 Buscar usuario por Nombre o DNI..." style="border: 2px solid var(--dir); font-weight: bold; padding: 12px; width: 100%; border-radius: 8px;">
                 </div>
                 <div id="lista-adm" style="overflow-x:auto;">Cargando lista...</div>
 
-<div id="ficha-legajo" class="hidden" style="background: #fff; padding: 25px; border: 2px solid var(--dir); border-radius: 15px; margin-top: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
-    <h3 style="margin-top:0; color:var(--dir); display: flex; align-items: center; gap: 10px;">
-        <span style="font-size: 1.5em;">🗂️</span> Edición de Legajo Digital
-    </h3>
-    
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-        <div><label style="font-size: 0.8em; color: #666;">Nombre y Apellido</label><input id="leg-nom" type="text" style="width:100%; padding:8px; border-radius:5px; border:1px solid #ccc;"></div>
-        <div><label style="font-size: 0.8em; color: #666;">DNI (No editable)</label><input id="leg-dni" type="text" disabled style="width:100%; padding:8px; border-radius:5px; border:1px solid #ccc; background:#eee"></div>
-        <div><label style="font-size: 0.8em; color: #666;">Fecha de Nacimiento</label><input id="leg-fec" type="date" style="width:100%; padding:8px; border-radius:5px; border:1px solid #ccc;"></div>
-        <div><label style="font-size: 0.8em; color: #666;">Lugar de Nacimiento</label><input id="leg-lug" type="text" style="width:100%; padding:8px; border-radius:5px; border:1px solid #ccc;"></div>
-        <div><label style="font-size: 0.8em; color: #666;">Año de Ingreso</label><input id="leg-ing" type="number" style="width:100%; padding:8px; border-radius:5px; border:1px solid #ccc;"></div>
-        <div><label style="font-size: 0.8em; color: #666;">Certificado Anterior</label><input id="leg-cert" type="text" style="width:100%; padding:8px; border-radius:5px; border:1px solid #ccc;"></div>
-        <div><label style="font-size: 0.8em; color: #666;">Teléfono</label><input id="leg-tel" type="text" style="width:100%; padding:8px; border-radius:5px; border:1px solid #ccc;"></div>
-        <div><label style="font-size: 0.8em; color: #666;">Dirección</label><input id="leg-dir" type="text" style="width:100%; padding:8px; border-radius:5px; border:1px solid #ccc;"></div>
-    </div>
-
-    <div style="margin-top: 20px; display: flex; gap: 10px;">
-        <button onclick="actualizarLegajo()" style="flex: 2; background: var(--est); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold;">💾 GUARDAR CAMBIOS EN LEGAJO</button>
-        <button onclick="document.getElementById('ficha-legajo').classList.add('hidden')" style="flex: 1; background: #95a5a6; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer;">Cancelar</button>
-    </div>
-</div>
-</div>
-                <div class="card" style="border-top: 5px solid var(--primary); margin-top:20px;">
-    <h3>📊 Monitor Académico Global (CENS 451)</h3>
-    <div id="stats-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px;">
-        </div>
-    
-    <div style="margin-bottom: 15px;">
-        <input type="text" id="buscador-notas" onkeyup="filtrarNotasGlobal()" placeholder="🔍 Buscar nota por Alumno o Materia..." style="padding: 12px; width: 100%; border-radius: 8px; border: 2px solid #ccc;">
-    </div>
-
-    <div id="tabla-notas-global" style="overflow-x:auto; max-height: 400px; background: #fff;">
-        Cargando registros académicos...
-    </div>
-</div>
+                <!-- Ficha Legajo (Oculta) -->
+                <div id="ficha-legajo" class="hidden" style="background: #fff; padding: 25px; border: 2px solid var(--dir); border-radius: 15px; margin-top: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+                    <h3 style="margin-top:0; color:var(--dir); display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 1.5em;">🗂️</span> Edición de Legajo Digital
+                    </h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div><label style="font-size: 0.8em; color: #666;">Nombre y Apellido</label><input id="leg-nom" type="text"></div>
+                        <div><label style="font-size: 0.8em; color: #666;">DNI (No editable)</label><input id="leg-dni" type="text" disabled style="background:#eee"></div>
+                        <div><label style="font-size: 0.8em; color: #666;">Fecha de Nacimiento</label><input id="leg-fec" type="date"></div>
+                        <div><label style="font-size: 0.8em; color: #666;">Lugar de Nacimiento</label><input id="leg-lug" type="text"></div>
+                        <div><label style="font-size: 0.8em; color: #666;">Año de Ingreso</label><input id="leg-ing" type="number"></div>
+                        <div><label style="font-size: 0.8em; color: #666;">Certificado Anterior</label><input id="leg-cert" type="text"></div>
+                        <div><label style="font-size: 0.8em; color: #666;">Teléfono</label><input id="leg-tel" type="text"></div>
+                        <div><label style="font-size: 0.8em; color: #666;">Dirección</label><input id="leg-dir" type="text"></div>
+                    </div>
+                    <div style="margin-top: 20px; display: flex; gap: 10px;">
+                        <button onclick="actualizarLegajo()" style="flex: 2; background: var(--est); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold;">💾 GUARDAR CAMBIOS</button>
+                        <button onclick="document.getElementById('ficha-legajo').classList.add('hidden')" style="flex: 1; background: #95a5a6; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer;">Cancelar</button>
+                    </div>
+                </div>
             </div>
         </div>
 
+        <!-- VISTA DOCENTE -->
         <div id="view-docente" class="hidden">
             <div class="card">
                 <h3>Planillas de Calificación</h3>
@@ -205,12 +148,14 @@
             </div>
         </div>
 
+        <!-- VISTA ESTUDIANTE -->
         <div id="view-estudiante" class="hidden">
             <div class="card" style="text-align:center;">
                 <h2 style="color:var(--est)">Estado Académico 2026</h2>
                 <div id="boletin-res">Buscando tus notas...</div>
             </div>
         </div>
+
     </div>
 </div>
 
@@ -228,7 +173,7 @@ const auth = firebase.auth();
 let ROL_LOGIN = "";
 let USER_DATA = null;
 
-// 2. FUNCIONES DE ACCESO (LOGIN)
+// 2. FUNCIONES DE ACCESO
 function preLogin(r) {
     ROL_LOGIN = r;
     document.getElementById('txt-login').innerText = "Acceso " + r.toUpperCase();
@@ -272,7 +217,6 @@ function abrirApp() {
     document.getElementById('main-app').classList.remove('hidden');
     document.getElementById('nav-user').innerHTML = `<b>CENS 451</b> | ${USER_DATA.nombre}`;
     
-    // Reset de vistas
     document.getElementById('view-director').classList.add('hidden');
     document.getElementById('view-docente').classList.add('hidden');
     document.getElementById('view-estudiante').classList.add('hidden');
@@ -293,21 +237,16 @@ function abrirApp() {
     }
 }
 
-// --- LÓGICA DIRECTOR (ESTADÍSTICAS Y GESTIÓN) ---
-
-// --- LÓGICA DIRECTOR (ESTADÍSTICAS Y GESTIÓN) ---
-
+// 3. LÓGICA DIRECTOR
 async function renderAdmin() {
     const listaDiv = document.getElementById('lista-adm');
     const tablaNotasDiv = document.getElementById('tabla-notas-global');
     const statsDiv = document.getElementById('stats-container');
 
     try {
-        // 1. Traer datos de Firebase
         const snapUsuarios = await db.collection("usuarios").get();
         const snapNotas = await db.collection("evaluaciones").get();
         
-        // 2. PROCESAR LISTA DE USUARIOS
         let cAlu = 0, cDoc = 0;
         let tUsuarios = "<table id='tabla-usuarios-db'><thead><tr><th>DNI</th><th>Nombre</th><th>Rol</th><th>Año</th><th style='text-align:right'>Acción</th></tr></thead><tbody>";
         
@@ -326,10 +265,8 @@ async function renderAdmin() {
             </tr>`;
         }); 
 
-        // Inyectamos la tabla de usuarios
         if (listaDiv) listaDiv.innerHTML = tUsuarios + "</tbody></table>";
 
-        // 3. PROCESAR NOTAS GLOBALES Y ESTADÍSTICAS
         let tNotas = "<table id='tabla-todas-notas'><thead><tr><th>Alumno</th><th>Materia</th><th>Cuat.</th><th>RITE</th><th>Nota</th></tr></thead><tbody>";
         let stats = { TEA: 0, TEP: 0, TED: 0, total: 0 };
 
@@ -354,7 +291,6 @@ async function renderAdmin() {
 
         if (tablaNotasDiv) tablaNotasDiv.innerHTML = snapNotas.empty ? "No hay notas cargadas." : tNotas + "</tbody></table>";
 
-        // 4. DIBUJAR TARJETAS DE ESTADÍSTICAS (TEA/TEP/TED)
         if (statsDiv) {
             const calcularPorc = (tipo) => stats.total > 0 ? ((stats[tipo] / stats.total) * 100).toFixed(1) : 0;
             statsDiv.innerHTML = `
@@ -372,7 +308,6 @@ async function renderAdmin() {
                 </div>`;
         }
 
-        // Actualizamos contadores superiores
         document.getElementById('s-alu').innerText = cAlu;
         document.getElementById('s-doc').innerText = cDoc;
         document.getElementById('s-not').innerText = snapNotas.size;
@@ -381,7 +316,7 @@ async function renderAdmin() {
         console.error("Error en renderAdmin:", e);
     }
 }
-// BUSCADOR PARA LA TABLA DE NOTAS GLOBAL
+
 function filtrarNotasGlobal() {
     const texto = document.getElementById('buscador-notas').value.toLowerCase();
     const filas = document.querySelectorAll("#tabla-todas-notas tbody tr");
@@ -390,13 +325,20 @@ function filtrarNotasGlobal() {
     });
 }
 
-// --- 4. LÓGICA DOCENTE (REPARADA PARA VER Y EDITAR) ---
+// Función faltante agregada
+function filtrarUsuarios() {
+    const texto = document.getElementById('buscador-u').value.toLowerCase();
+    const filas = document.querySelectorAll("#tabla-usuarios-db tbody tr");
+    filas.forEach(f => {
+        f.style.display = f.innerText.toLowerCase().includes(texto) ? "" : "none";
+    });
+}
 
+// 4. LÓGICA DOCENTE
 function cargarMatsDocente() {
     const sel = document.getElementById('sel-mats');
     if (!sel) return;
 
-    // Buscamos si existe "MATERIA" o "MATERIAS" (en cualquier combinación de mayúsculas/minúsculas)
     const key = Object.keys(USER_DATA).find(k => 
         k.toUpperCase() === 'MATERIA' || k.toUpperCase() === 'MATERIAS'
     );
@@ -404,21 +346,17 @@ function cargarMatsDocente() {
     const m = USER_DATA[key];
 
     if (!m || typeof m !== 'object') {
-        console.log("No se encontraron campos de materia válidos", USER_DATA);
         sel.innerHTML = '<option>Sin materias asignadas</option>';
         return;
     }
 
     sel.innerHTML = '<option value="">-- Seleccionar Materia --</option>';
     
-    // Recorremos la estructura que vimos en tu imagen
     for (let anioKey in m) {
         const cuatrimestres = m[anioKey];
-        
         for (let cuatKey in cuatrimestres) {
             let listaDeMaterias = cuatrimestres[cuatKey];
             
-            // Si es un array (como el índice 0 que vimos en tu foto)
             if (Array.isArray(listaDeMaterias)) {
                 listaDeMaterias.forEach(nom => {
                     let opt = document.createElement('option');
@@ -426,9 +364,7 @@ function cargarMatsDocente() {
                     opt.innerText = `${nom} (${anioKey} - ${cuatKey})`;
                     sel.appendChild(opt);
                 });
-            } 
-            // Por si alguna materia quedó como texto simple (String)
-            else if (typeof listaDeMaterias === 'string') {
+            } else if (typeof listaDeMaterias === 'string') {
                 let opt = document.createElement('option');
                 opt.value = `${listaDeMaterias}|${anioKey}|${cuatKey}`;
                 opt.innerText = `${listaDeMaterias} (${anioKey} - ${cuatKey})`;
@@ -436,11 +372,8 @@ function cargarMatsDocente() {
             }
         }
     }
-
-    if (sel.options.length <= 1) {
-        sel.innerHTML = '<option>Formato de materias no reconocido</option>';
-    }
 }
+
 async function verAlumnos() {
     const val = document.getElementById('sel-mats').value;
     if(!val) return;
@@ -449,32 +382,26 @@ async function verAlumnos() {
     
     document.getElementById('area-planilla').classList.remove('hidden');
     document.getElementById('txt-materia').innerText = materiaSel + " (" + cuatSel + ")";
-    document.getElementById('tabla-carga').innerHTML = "Cargando alumnos y calificaciones...";
+    document.getElementById('tabla-carga').innerHTML = "Cargando alumnos...";
 
     try {
-        // Traer alumnos del año correspondiente
         const snapAlu = await db.collection("usuarios").where("rol","==","estudiante").get();
-        // Traer notas ya cargadas para esta materia y cuatrimestre
         const snapNotas = await db.collection("evaluaciones")
                             .where("materia", "==", materiaSel)
                             .where("cuat", "==", cuatSel)
                             .get();
 
-        // Mapeamos las notas para encontrarlas rápido por DNI
         const notasCargadas = {};
         snapNotas.forEach(doc => {
             notasCargadas[doc.data().alumnoDni] = doc.data();
         });
 
         let html = "";
-        let contador = 0;
-
         snapAlu.forEach(doc => {
             const u = doc.data();
             const uAnio = (u.año || u.anio || "").toString().replace(/\D/g, "");
             
             if(uAnio === anioNum) {
-                contador++;
                 const previa = notasCargadas[doc.id] || { rite: "", nota: "" };
                 
                 html += `<div style="display:flex; justify-content:space-between; align-items:center; margin:10px 0; border-bottom:1px solid #eee; padding-bottom:5px;" data-dni="${doc.id}">
@@ -491,7 +418,6 @@ async function verAlumnos() {
                 </div>`;
             }
         });
-
         document.getElementById('tabla-carga').innerHTML = html || "No hay alumnos en " + anioSel;
     } catch (e) {
         document.getElementById('tabla-carga').innerHTML = "Error al cargar planilla.";
@@ -514,7 +440,6 @@ async function guardarNotas() {
         const nota = document.getElementById('n-'+dni).value;
         
         if(rite) {
-            // Generamos el ID único (DNI + Materia + Cuatrimestre) para sobreescribir si ya existe
             const idDoc = `${dni}_${m.replace(/\s+/g,'')}_${c.replace(/\s+/g,'')}`;
             batch.set(db.collection("evaluaciones").doc(idDoc), { 
                 alumnoDni: dni, 
@@ -530,7 +455,7 @@ async function guardarNotas() {
     try {
         await batch.commit();
         alert("Planilla de " + m + " actualizada.");
-        verAlumnos(); // Refresca para mostrar bordes verdes
+        verAlumnos();
     } catch (e) {
         alert("Error al guardar.");
     } finally {
@@ -539,11 +464,12 @@ async function guardarNotas() {
     }
 }
 
+// 5. LÓGICA ESTUDIANTE
 async function renderBoletin() {
     const boletinDiv = document.getElementById('boletin-res');
     if (!boletinDiv) return;
 
-    boletinDiv.innerHTML = "Generando promedios por cuatrimestre...";
+    boletinDiv.innerHTML = "Generando promedios...";
 
     try {
         const snap = await db.collection("evaluaciones")
@@ -556,14 +482,13 @@ async function renderBoletin() {
         }
 
         let html = `
-            <div class="card" style="border-left: 8px solid var(--est); background: #f9f9f9;">
+            <div class="card" style="border-left: 8px solid var(--est); background: #f9f9f9; text-align:left;">
                 <h2 style="margin:0; color: var(--est);">INFORME ACADÉMICO</h2>
                 <p style="margin:5px 0;"><b>Estudiante:</b> ${USER_DATA.nombre}</p>
                 <p style="margin:5px 0;"><b>DNI:</b> ${USER_DATA.id}</p>
             </div>
         `;
 
-        // Agrupamos notas por cuatrimestre
         const periodos = {};
         snap.forEach(d => {
             const data = d.data();
@@ -572,53 +497,24 @@ async function renderBoletin() {
             periodos[cuat].push(data);
         });
 
-        // Ordenamos y dibujamos cada cuatrimestre con su propio promedio
         for (const cuat in periodos) {
             let sumaCuat = 0;
             let cantCuat = 0;
 
-            html += `
-                <div class="card" style="margin-top:20px;">
-                    <h3 style="border-bottom: 2px solid var(--est); padding-bottom: 5px;">${cuat}</h3>
-                    <table style="width:100%; border-collapse: collapse; margin-top:10px;">
-                        <thead>
-                            <tr style="background:#f2f2f2; text-align:left;">
-                                <th style="padding:10px;">Materia</th>
-                                <th style="padding:10px;">RITE</th>
-                                <th style="padding:10px;">Nota</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
+            html += `<div class="card" style="margin-top:20px;"><h3 style="border-bottom: 2px solid var(--est); padding-bottom: 5px;">${cuat}</h3><table><thead><tr style="background:#f2f2f2;"><th>Materia</th><th>RITE</th><th>Nota</th></tr></thead><tbody>`;
 
             periodos[cuat].forEach(n => {
-                // Cálculo de promedio solo para este cuatrimestre
                 if (n.nota && !isNaN(n.nota) && n.nota !== "") {
                     sumaCuat += parseFloat(n.nota);
                     cantCuat++;
                 }
-
-                html += `
-                    <tr style="border-bottom:1px solid #eee;">
-                        <td style="padding:10px;">${n.materia}</td>
-                        <td style="padding:10px;"><b>${n.rite}</b></td>
-                        <td style="padding:10px;">${n.nota || '-'}</td>
-                    </tr>
-                `;
+                html += `<tr><td>${n.materia}</td><td><b>${n.rite}</b></td><td>${n.nota || '-'}</td></tr>`;
             });
 
             html += `</tbody></table>`;
-
-            // Si hay notas numéricas en este cuatrimestre, mostramos su promedio
             if (cantCuat > 0) {
-                const promedioCuat = (sumaCuat / cantCuat).toFixed(2);
-                html += `
-                    <div style="margin-top:15px; padding:10px; background:#f0f7ff; text-align:right; border-radius:5px;">
-                        <b style="color:#0056b3;">Promedio ${cuat}: ${promedioCuat}</b>
-                    </div>
-                `;
+                html += `<div style="margin-top:15px; padding:10px; background:#f0f7ff; text-align:right; border-radius:5px;"><b style="color:#0056b3;">Promedio ${cuat}: ${(sumaCuat / cantCuat).toFixed(2)}</b></div>`;
             }
-
             html += `</div>`;
         }
 
@@ -629,12 +525,13 @@ async function renderBoletin() {
         boletinDiv.innerHTML = "Error al calcular promedios.";
     }
 }
+
+// 6. LÓGICA LEGAJO
 async function abrirLegajo(dni) {
     try {
         const doc = await db.collection("usuarios").doc(dni).get();
         if (doc.exists) {
             const u = doc.data();
-            // Llenamos los INPUTS para editar
             document.getElementById('leg-nom').value = u.nombre || "";
             document.getElementById('leg-dni').value = dni;
             document.getElementById('leg-fec').value = u.fechaNacimiento || "";
@@ -653,11 +550,11 @@ async function abrirLegajo(dni) {
         alert("Error al cargar legajo.");
     }
 }
-    async function actualizarLegajo() {
+
+async function actualizarLegajo() {
     const dni = document.getElementById('leg-dni').value;
     const btn = event.target;
     
-    // Obtenemos los valores de los inputs
     const nuevosDatos = {
         nombre: document.getElementById('leg-nom').value,
         fechaNacimiento: document.getElementById('leg-fec').value,
@@ -673,11 +570,10 @@ async function abrirLegajo(dni) {
     btn.disabled = true;
 
     try {
-        // Guardamos en Firebase con update
         await db.collection("usuarios").doc(dni).update(nuevosDatos);
         alert("✅ Legajo actualizado exitosamente.");
         document.getElementById('ficha-legajo').classList.add('hidden');
-        renderAdmin(); // Refresca la tabla
+        renderAdmin();
     } catch (e) {
         console.error(e);
         alert("Hubo un error al guardar los datos.");
@@ -687,3 +583,5 @@ async function abrirLegajo(dni) {
     }
 }
 </script>
+</body>
+</html>
