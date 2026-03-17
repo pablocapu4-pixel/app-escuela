@@ -601,7 +601,7 @@ await batch.commit();
 alert("✅ Notas guardadas correctamente."); 
 verAlumnos(); // Recargar la vista
 } catch (e) { 
-console.error("Error al guardar:", e);
+console.error("Error al guardar:", e);  // ✅ Mostrar error real en consola
 alert("❌ Error: " + e.message); 
 } 
 }
