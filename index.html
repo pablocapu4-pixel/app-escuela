@@ -49,6 +49,10 @@ tr:hover { background: #f9f9f9; }
 .badge-tea { background: #e6f4ea; color: #137333; }
 .badge-tep { background: #fce8e2; color: #c5221f; }
 .badge-ted { background: #e8eaed; color: #5f6368; }
+.badge-presente { background: #e6f4ea; color: #137333; }
+.badge-ausente { background: #fce8e2; color: #c5221f; }
+.badge-tarde { background: #fef7e0; color: #f9ab00; }
+.badge-justificado { background: #e8eaed; color: #5f6368; }
 .pof-tabs { display: flex; border-bottom: 1px solid var(--yt-border); margin-bottom: 20px; background: white; padding: 0 24px; border-radius: 12px 12px 0 0; }
 .pof-tab { padding: 15px 20px; cursor: pointer; font-weight: 500; color: var(--yt-text-secondary); border-bottom: 3px solid transparent; margin-bottom: -1px; }
 .pof-tab.active { color: var(--dir); border-bottom-color: var(--dir); }
@@ -62,6 +66,7 @@ tr:hover { background: #f9f9f9; }
 .btn-yt.primary { background: #065fd4; }
 .btn-yt.success { background: var(--est); }
 .btn-yt.danger { background: #fff; color: #c5221f; border: 1px solid #ddd; }
+.btn-yt.warning { background: #f9ab00; }
 .chart-box { flex: 1; min-width: 250px; }
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 2000; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
 .modal-overlay.show { opacity: 1; pointer-events: all; }
@@ -73,279 +78,313 @@ tr:hover { background: #f9f9f9; }
 .auth-tab { flex: 1; padding: 12px; text-align: center; cursor: pointer; background: #f1f1f1; border: none; font-weight: 500; }
 .auth-tab.active { background: white; border-bottom: 2px solid var(--dir); color: var(--dir); }
 .hidden { display: none !important; }
+.asistencia-options { display: flex; gap: 8px; flex-wrap: wrap; }
+.asistencia-options label { display: flex; align-items: center; gap: 4px; font-size: 13px; cursor: pointer; padding: 4px 8px; border-radius: 4px; background: #f5f5f5; }
+.asistencia-options input[type="radio"] { margin: 0; }
 </style>
 </head>
 <body>
-
 <!-- PORTAL DE BIENVENIDA -->
 <div id="portal" class="view-section active" style="padding-top: 100px; text-align: center; height: 100vh; display: block;">
-    <h1 style="font-size: 3em; font-weight: 700;">CENS 451</h1>
-    <p style="color: var(--yt-text-secondary); font-size: 16px; margin-bottom: 40px;">Seleccione su portal de acceso</p>
-    <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
-        <div onclick="preLogin('director')" class="nav-item" style="background: var(--yt-dark); color: white; width: 250px; border-radius: 12px; height: 150px; flex-direction: column; justify-content: center;">
-            <i class="bi bi-shield-lock" style="font-size: 32px; margin: 0;"></i>
-            <h3 style="margin: 10px 0 0;">DIRECTIVOS</h3>
-        </div>
-        <div onclick="preLogin('docente')" class="nav-item" style="background: var(--doc); color: white; width: 250px; border-radius: 12px; height: 150px; flex-direction: column; justify-content: center;">
-            <i class="bi bi-journal-text" style="font-size: 32px; margin: 0;"></i>
-            <h3 style="margin: 10px 0 0;">DOCENTES</h3>
-        </div>
-        <div onclick="preLogin('estudiante')" class="nav-item" style="background: var(--est); color: white; width: 250px; border-radius: 12px; height: 150px; flex-direction: column; justify-content: center;">
-            <i class="bi bi-mortarboard" style="font-size: 32px; margin: 0;"></i>
-            <h3 style="margin: 10px 0 0;">ESTUDIANTES</h3>
-        </div>
-    </div>
+<h1 style="font-size: 3em; font-weight: 700;">CENS 451</h1>
+<p style="color: var(--yt-text-secondary); font-size: 16px; margin-bottom: 40px;">Seleccione su portal de acceso</p>
+<div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
+<div onclick="preLogin('director')" class="nav-item" style="background: var(--yt-dark); color: white; width: 250px; border-radius: 12px; height: 150px; flex-direction: column; justify-content: center;">
+<i class="bi bi-shield-lock" style="font-size: 32px; margin: 0;"></i>
+<h3 style="margin: 10px 0 0;">DIRECTIVOS</h3>
 </div>
-
+<div onclick="preLogin('docente')" class="nav-item" style="background: var(--doc); color: white; width: 250px; border-radius: 12px; height: 150px; flex-direction: column; justify-content: center;">
+<i class="bi bi-journal-text" style="font-size: 32px; margin: 0;"></i>
+<h3 style="margin: 10px 0 0;">DOCENTES</h3>
+</div>
+<div onclick="preLogin('estudiante')" class="nav-item" style="background: var(--est); color: white; width: 250px; border-radius: 12px; height: 150px; flex-direction: column; justify-content: center;">
+<i class="bi bi-mortarboard" style="font-size: 32px; margin: 0;"></i>
+<h3 style="margin: 10px 0 0;">ESTUDIANTES</h3>
+</div>
+</div>
+</div>
 <!-- MODAL LOGIN/REGISTRO -->
 <div id="modal-login" class="modal-overlay">
-    <div class="modal-content" style="width: 400px;">
-        <div class="modal-header">
-            <h3 style="margin: 0;" id="auth-title">Acceso</h3>
-            <i class="bi bi-x-lg" onclick="cerrarLogin()" style="cursor: pointer;"></i>
-        </div>
-        <div class="modal-body">
-            <div class="auth-tabs">
-                <button class="auth-tab active" onclick="switchAuthTab('login')">Iniciar Sesión</button>
-                <button class="auth-tab" onclick="switchAuthTab('register')">Registrar Usuario</button>
-            </div>
-            <div id="form-login">
-                <div class="form-group"><label>DNI</label><input id="f-dni" type="text" placeholder="Ingrese su DNI"></div>
-                <div class="form-group"><label>Clave</label><input id="f-pass" type="password" placeholder="Ingrese su clave" autocomplete="current-password"></div>
-                <p id="l-error" style="color:red; font-size:12px; text-align: center;"></p>
-                <button class="btn-yt primary" style="width: 100%; margin-top: 10px;" onclick="login()">ENTRAR</button>
-            </div>
-            <div id="form-register" class="hidden">
-                <p style="font-size:12px; color:var(--yt-text-secondary); margin-bottom:15px;">Cree su usuario de acceso. La clave por defecto será "123456".</p>
-                <div class="form-group"><label>DNI</label><input id="r-dni" type="text" placeholder="DNI del usuario"></div>
-                <div class="form-group"><label>Nombre Completo</label><input id="r-nom" type="text" placeholder="Nombre y Apellido"></div>
-                <div class="form-group">
-                    <label>Rol</label>
-                    <select id="r-rol">
-                        <option value="estudiante">Estudiante</option>
-                        <option value="docente">Docente</option>
-                        <option value="director">Directivo</option>
-                    </select>
-                </div>
-                <div class="form-group"><label>Año (Solo estudiantes)</label><input id="r-anio" type="text" placeholder="Ej: 1, 2, 3"></div>
-                <p id="r-error" style="color:red; font-size:12px; text-align: center;"></p>
-                <button class="btn-yt success" style="width: 100%; margin-top: 10px;" onclick="registrarUsuario()">REGISTRAR Y ENTRAR</button>
-            </div>
-        </div>
-    </div>
+<div class="modal-content" style="width: 400px;">
+<div class="modal-header">
+<h3 style="margin: 0;" id="auth-title">Acceso</h3>
+<i class="bi bi-x-lg" onclick="cerrarLogin()" style="cursor: pointer;"></i>
 </div>
-
+<div class="modal-body">
+<div class="auth-tabs">
+<button class="auth-tab active" onclick="switchAuthTab('login')">Iniciar Sesión</button>
+<button class="auth-tab" onclick="switchAuthTab('register')">Registrar Usuario</button>
+</div>
+<div id="form-login">
+<div class="form-group"><label>DNI</label><input id="f-dni" type="text" placeholder="Ingrese su DNI"></div>
+<div class="form-group"><label>Clave</label><input id="f-pass" type="password" placeholder="Ingrese su clave" autocomplete="current-password"></div>
+<p id="l-error" style="color:red; font-size:12px; text-align: center;"></p>
+<button class="btn-yt primary" style="width: 100%; margin-top: 10px;" onclick="login()">ENTRAR</button>
+</div>
+<div id="form-register" class="hidden">
+<p style="font-size:12px; color:var(--yt-text-secondary); margin-bottom:15px;">Cree su usuario de acceso. La clave por defecto será "123456".</p>
+<div class="form-group"><label>DNI</label><input id="r-dni" type="text" placeholder="DNI del usuario"></div>
+<div class="form-group"><label>Nombre Completo</label><input id="r-nom" type="text" placeholder="Nombre y Apellido"></div>
+<div class="form-group">
+<label>Rol</label>
+<select id="r-rol">
+<option value="estudiante">Estudiante</option>
+<option value="docente">Docente</option>
+<option value="director">Directivo</option>
+</select>
+</div>
+<div class="form-group"><label>Año (Solo estudiantes)</label><input id="r-anio" type="text" placeholder="Ej: 1, 2, 3"></div>
+<p id="r-error" style="color:red; font-size:12px; text-align: center;"></p>
+<button class="btn-yt success" style="width: 100%; margin-top: 10px;" onclick="registrarUsuario()">REGISTRAR Y ENTRAR</button>
+</div>
+</div>
+</div>
+</div>
 <!-- APP PRINCIPAL -->
 <div id="main-app" class="app-container hidden">
-    <nav class="sidebar" id="main-sidebar">
-        <div class="sidebar-header">
-            <i class="bi bi-list" style="font-size: 20px;"></i>
-            <h4 style="margin: 0;">CENS 451</h4>
-        </div>
-        <div class="sidebar-nav">
-            <div id="nav-director">
-                <div class="nav-item active" onclick="showSection('dir-panel')"><i class="bi bi-grid-fill"></i> Panel</div>
-                <div class="nav-item" onclick="showSection('dir-stats')"><i class="bi bi-pie-chart-fill"></i> Estadísticas</div>
-                <div class="nav-item" onclick="showSection('dir-pof')"><i class="bi bi-file-earmark-text"></i> POF-POFA</div>
-                <div class="nav-item" onclick="showSection('dir-monitor')"><i class="bi bi-bar-chart-fill"></i> Monitor</div>
-                <div class="nav-item" onclick="showSection('dir-usuarios')"><i class="bi bi-people-fill"></i> Usuarios</div>
-            </div>
-            <div id="nav-docente" class="hidden">
-                <div class="nav-item active" onclick="showSection('doc-planillas')"><i class="bi bi-pencil-square"></i> Planillas</div>
-            </div>
-            <div id="nav-estudiante" class="hidden">
-                <div class="nav-item active" onclick="showSection('est-boletin')"><i class="bi bi-file-earmark-text"></i> Boletín</div>
-            </div>
-            <div style="border-top: 1px solid #303030; margin: 10px 0;"></div>
-            <div class="nav-item" onclick="location.reload()"><i class="bi bi-box-arrow-left"></i> Salir</div>
-        </div>
-    </nav>
-    
-    <div class="main-content">
-        <header class="top-bar">
-            <h2 id="page-title" style="font-size: 18px; font-weight: 500; margin: 0;">Panel Principal</h2>
-            <div class="user-profile">
-                <span id="nav-user" style="font-size: 14px;">Usuario</span>
-                <div class="avatar" id="user-avatar">U</div>
-            </div>
-        </header>
-
-        <!-- PANEL DIRECTOR -->
-        <section id="dir-panel" class="view-section active">
-            <div class="stats-grid">
-                <div class="stat-card"><div class="stat-icon" style="background: #c5221f;"><i class="bi bi-people"></i></div><div class="stat-info"><h2 id="s-alu">0</h2><p>Alumnos</p></div></div>
-                <div class="stat-card"><div class="stat-icon" style="background: #065fd4;"><i class="bi bi-person-badge"></i></div><div class="stat-info"><h2 id="s-doc">0</h2><p>Docentes</p></div></div>
-                <div class="stat-card"><div class="stat-icon" style="background: #137333;"><i class="bi bi-clipboard-check"></i></div><div class="stat-info"><h2 id="s-not">0</h2><p>Notas</p></div></div>
-            </div>
-            <div class="yt-table-container">
-                <div class="yt-table-header"><h3>Rendimiento General</h3></div>
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--yt-border);">
-                    <div style="background: white; padding: 20px; text-align: center;"><h4 style="color: #137333;">TEA</h4><b id="p-tea" style="font-size: 24px;">0%</b></div>
-                    <div style="background: white; padding: 20px; text-align: center;"><h4 style="color: #f9ab00;">TEP</h4><b id="p-tep" style="font-size: 24px;">0%</b></div>
-                    <div style="background: white; padding: 20px; text-align: center;"><h4 style="color: #c5221f;">TED</h4><b id="p-ted" style="font-size: 24px;">0%</b></div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ESTADÍSTICAS -->
-        <section id="dir-stats" class="view-section">
-            <h3 style="margin-top:0;">Distribución de Alumnos por Año</h3>
-            <div id="stats-year-summary" class="stats-grid"></div>
-            <div id="stats-details-container"></div>
-        </section>
-
-        <!-- POF-POFA -->
-        <section id="dir-pof" class="view-section">
-             <div class="yt-table-container" style="border-radius: 12px;">
-                <div class="pof-tabs">
-                    <div class="pof-tab active" onclick="showPofTab('pof-f1')">F1: Datos Institucionales</div>
-                    <div class="pof-tab" onclick="showPofTab('pof-f2')">F2: Planta Analítica</div>
-                </div>
-                <div style="padding: 24px;">
-                    <div id="pof-f1" class="pof-content">
-                        <div class="card-pof">
-                            <h4><i class="bi bi-building"></i> Datos de Creación y Ubicación</h4>
-                            <div class="form-grid">
-                                <div class="form-group"><label>Resolución de Creación</label><input id="pof-res-creacion" type="text"></div>
-                                <div class="form-group"><label>Año de Creación</label><input id="pof-anio-creacion" type="number"></div>
-                                <div class="form-group"><label>Categoría</label><input id="pof-categoria" type="text"></div>
-                                <div class="form-group"><label>Ubicación</label><input id="pof-ubicacion" type="text"></div>
-                                <div class="form-group"><label>Domicilio</label><input id="pof-domicilio" type="text"></div>
-                                <div class="form-group"><label>Teléfono</label><input id="pof-telefono" type="text"></div>
-                                <div class="form-group"><label>Región</label><input id="pof-region" type="number"></div>
-                                <div class="form-group"><label>Distrito</label><input id="pof-distrito" type="text"></div>
-                            </div>
-                        </div>
-                        <button onclick="guardarPOF()" class="btn-yt primary"><i class="bi bi-save"></i> Guardar Formulario 1</button>
-                    </div>
-                    <div id="pof-f2" class="pof-content hidden">
-                        <div class="card-pof">
-                            <h4>Personal <button onclick="addRowPOF('tabla-personal')" class="btn-yt" style="font-size:12px; padding:5px 10px;"><i class="bi bi-plus"></i> Agregar</button></h4>
-                            <table id="tabla-personal"><thead><tr><th>Nombre</th><th>Cargo</th><th>DNI</th><th>Acción</th></tr></thead><tbody></tbody></table>
-                        </div>
-                        <button onclick="guardarPOF()" class="btn-yt primary"><i class="bi bi-save"></i> Guardar Formulario 2</button>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- MONITOR -->
-        <section id="dir-monitor" class="view-section">
-            <div class="yt-table-container">
-                <div class="yt-table-header">
-                    <h3>Monitor de Calificaciones</h3>
-                    <input id="buscador-notas" class="yt-input" placeholder="Buscar..." onkeyup="filtrarNotasGlobal()">
-                </div>
-                <div style="max-height: 60vh; overflow-y: auto;">
-                    <table id="tabla-todas-notas"><thead><tr><th>Alumno</th><th>Materia</th><th>Periodo</th><th>RITE</th><th>Nota</th></tr></thead><tbody></tbody></table>
-                </div>
-            </div>
-        </section>
-
-        <!-- USUARIOS -->
-        <section id="dir-usuarios" class="view-section">
-            <div class="yt-table-container">
-                <div class="yt-table-header" style="flex-wrap: wrap; gap: 10px;">
-                    <h3>Gestión de Usuarios</h3>
-                    <div style="display: flex; gap: 10px;">
-                        <input id="buscador-u" class="yt-input" placeholder="Buscar..." onkeyup="filtrarUsuarios()" style="width: 200px;">
-                        <button class="btn-yt success" onclick="document.getElementById('modal-alta').classList.add('show')">+ Agregar Alumno (DB)</button>
-                    </div>
-                </div>
-                <p style="font-size:12px; color:#999; padding: 0 24px;">Nota: El botón "+ Agregar" solo guarda en la Base de Datos. Para que puedan entrar al sistema, deben registrarse usando la opción "Registrar Usuario" en la pantalla de Login.</p>
-                <div style="max-height: 60vh; overflow-y: auto;">
-                    <table id="tabla-usuarios-db"><thead><tr><th>Nombre</th><th>DNI</th><th>Rol</th><th>Año</th><th>Acción</th></tr></thead><tbody></tbody></table>
-                </div>
-            </div>
-        </section>
-
-        <!-- DOCENTE -->
-        <section id="doc-planillas" class="view-section">
-            <div style="max-width: 800px;">
-                <div class="yt-table-container">
-                    <div class="yt-table-header">
-                        <h3>Planillas de Calificación</h3>
-                        <select id="sel-mats" onchange="verAlumnos()" class="yt-input" style="width: auto;"><option value="">Seleccione Materia</option></select>
-                    </div>
-                    <div id="area-planilla" class="modal-body hidden">
-                        <h3 id="txt-materia" style="color: var(--doc)"></h3>
-                        <div id="tabla-carga"></div>
-                        <button id="btn-guardar-notas" class="btn-yt primary" onclick="guardarNotas()" style="margin-top: 20px;">Guardar Notas</button>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ESTUDIANTE -->
-        <section id="est-boletin" class="view-section">
-            <div class="student-view"><div id="boletin-res">Cargando...</div></div>
-        </section>
-    </div>
+<nav class="sidebar" id="main-sidebar">
+<div class="sidebar-header">
+<i class="bi bi-list" style="font-size: 20px;"></i>
+<h4 style="margin: 0;">CENS 451</h4>
 </div>
-
+<div class="sidebar-nav">
+<div id="nav-director">
+<div class="nav-item active" onclick="showSection('dir-panel')"><i class="bi bi-grid-fill"></i> Panel</div>
+<div class="nav-item" onclick="showSection('dir-stats')"><i class="bi bi-pie-chart-fill"></i> Estadísticas</div>
+<div class="nav-item" onclick="showSection('dir-pof')"><i class="bi bi-file-earmark-text"></i> POF-POFA</div>
+<div class="nav-item" onclick="showSection('dir-monitor')"><i class="bi bi-bar-chart-fill"></i> Monitor</div>
+<div class="nav-item" onclick="showSection('dir-usuarios')"><i class="bi bi-people-fill"></i> Usuarios</div>
+<div class="nav-item" onclick="showSection('dir-asistencia')"><i class="bi bi-calendar-check"></i> Asistencia</div>
+</div>
+<div id="nav-docente" class="hidden">
+<div class="nav-item active" onclick="showSection('doc-planillas')"><i class="bi bi-pencil-square"></i> Planillas</div>
+<div class="nav-item" onclick="showSection('doc-asistencia')"><i class="bi bi-calendar-check"></i> Tomar Lista</div>
+</div>
+<div id="nav-estudiante" class="hidden">
+<div class="nav-item active" onclick="showSection('est-boletin')"><i class="bi bi-file-earmark-text"></i> Boletín</div>
+<div class="nav-item" onclick="showSection('est-asistencia')"><i class="bi bi-calendar3"></i> Mi Asistencia</div>
+</div>
+<div style="border-top: 1px solid #303030; margin: 10px 0;"></div>
+<div class="nav-item" onclick="location.reload()"><i class="bi bi-box-arrow-left"></i> Salir</div>
+</div>
+</nav>
+<div class="main-content">
+<header class="top-bar">
+<h2 id="page-title" style="font-size: 18px; font-weight: 500; margin: 0;">Panel Principal</h2>
+<div class="user-profile">
+<span id="nav-user" style="font-size: 14px;">Usuario</span>
+<div class="avatar" id="user-avatar">U</div>
+</div>
+</header>
+<!-- PANEL DIRECTOR -->
+<section id="dir-panel" class="view-section active">
+<div class="stats-grid">
+<div class="stat-card"><div class="stat-icon" style="background: #c5221f;"><i class="bi bi-people"></i></div><div class="stat-info"><h2 id="s-alu">0</h2><p>Alumnos</p></div></div>
+<div class="stat-card"><div class="stat-icon" style="background: #065fd4;"><i class="bi bi-person-badge"></i></div><div class="stat-info"><h2 id="s-doc">0</h2><p>Docentes</p></div></div>
+<div class="stat-card"><div class="stat-icon" style="background: #137333;"><i class="bi bi-clipboard-check"></i></div><div class="stat-info"><h2 id="s-not">0</h2><p>Notas</p></div></div>
+</div>
+<div class="yt-table-container">
+<div class="yt-table-header"><h3>Rendimiento General</h3></div>
+<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--yt-border);">
+<div style="background: white; padding: 20px; text-align: center;"><h4 style="color: #137333;">TEA</h4><b id="p-tea" style="font-size: 24px;">0%</b></div>
+<div style="background: white; padding: 20px; text-align: center;"><h4 style="color: #f9ab00;">TEP</h4><b id="p-tep" style="font-size: 24px;">0%</b></div>
+<div style="background: white; padding: 20px; text-align: center;"><h4 style="color: #c5221f;">TED</h4><b id="p-ted" style="font-size: 24px;">0%</b></div>
+</div>
+</div>
+</section>
+<!-- ESTADÍSTICAS -->
+<section id="dir-stats" class="view-section">
+<h3 style="margin-top:0;">Distribución de Alumnos por Año</h3>
+<div id="stats-year-summary" class="stats-grid"></div>
+<div id="stats-details-container"></div>
+</section>
+<!-- POF-POFA -->
+<section id="dir-pof" class="view-section">
+<div class="yt-table-container" style="border-radius: 12px;">
+<div class="pof-tabs">
+<div class="pof-tab active" onclick="showPofTab('pof-f1')">F1: Datos Institucionales</div>
+<div class="pof-tab" onclick="showPofTab('pof-f2')">F2: Planta Analítica</div>
+</div>
+<div style="padding: 24px;">
+<div id="pof-f1" class="pof-content">
+<div class="card-pof">
+<h4><i class="bi bi-building"></i> Datos de Creación y Ubicación</h4>
+<div class="form-grid">
+<div class="form-group"><label>Resolución de Creación</label><input id="pof-res-creacion" type="text"></div>
+<div class="form-group"><label>Año de Creación</label><input id="pof-anio-creacion" type="number"></div>
+<div class="form-group"><label>Categoría</label><input id="pof-categoria" type="text"></div>
+<div class="form-group"><label>Ubicación</label><input id="pof-ubicacion" type="text"></div>
+<div class="form-group"><label>Domicilio</label><input id="pof-domicilio" type="text"></div>
+<div class="form-group"><label>Teléfono</label><input id="pof-telefono" type="text"></div>
+<div class="form-group"><label>Región</label><input id="pof-region" type="number"></div>
+<div class="form-group"><label>Distrito</label><input id="pof-distrito" type="text"></div>
+</div>
+</div>
+<button onclick="guardarPOF()" class="btn-yt primary"><i class="bi bi-save"></i> Guardar Formulario 1</button>
+</div>
+<div id="pof-f2" class="pof-content hidden">
+<div class="card-pof">
+<h4>Personal <button onclick="addRowPOF('tabla-personal')" class="btn-yt" style="font-size:12px; padding:5px 10px;"><i class="bi bi-plus"></i> Agregar</button></h4>
+<table id="tabla-personal"><thead><tr><th>Nombre</th><th>Cargo</th><th>DNI</th><th>Acción</th></tr></thead><tbody></tbody></table>
+</div>
+<button onclick="guardarPOF()" class="btn-yt primary"><i class="bi bi-save"></i> Guardar Formulario 2</button>
+</div>
+</div>
+</div>
+</section>
+<!-- MONITOR -->
+<section id="dir-monitor" class="view-section">
+<div class="yt-table-container">
+<div class="yt-table-header">
+<h3>Monitor de Calificaciones</h3>
+<input id="buscador-notas" class="yt-input" placeholder="Buscar..." onkeyup="filtrarNotasGlobal()">
+</div>
+<div style="max-height: 60vh; overflow-y: auto;">
+<table id="tabla-todas-notas"><thead><tr><th>Alumno</th><th>Materia</th><th>Periodo</th><th>RITE</th><th>Nota</th></tr></thead><tbody></tbody></table>
+</div>
+</div>
+</section>
+<!-- USUARIOS -->
+<section id="dir-usuarios" class="view-section">
+<div class="yt-table-container">
+<div class="yt-table-header" style="flex-wrap: wrap; gap: 10px;">
+<h3>Gestión de Usuarios</h3>
+<div style="display: flex; gap: 10px;">
+<input id="buscador-u" class="yt-input" placeholder="Buscar..." onkeyup="filtrarUsuarios()" style="width: 200px;">
+<button class="btn-yt success" onclick="document.getElementById('modal-alta').classList.add('show')">+ Agregar Alumno (DB)</button>
+</div>
+</div>
+<p style="font-size:12px; color:#999; padding: 0 24px;">Nota: El botón "+ Agregar" solo guarda en la Base de Datos. Para que puedan entrar al sistema, deben registrarse usando la opción "Registrar Usuario" en la pantalla de Login.</p>
+<div style="max-height: 60vh; overflow-y: auto;">
+<table id="tabla-usuarios-db"><thead><tr><th>Nombre</th><th>DNI</th><th>Rol</th><th>Año</th><th>Acción</th></tr></thead><tbody></tbody></table>
+</div>
+</div>
+</section>
+<!-- ASISTENCIA DIRECTOR -->
+<section id="dir-asistencia" class="view-section">
+<div class="yt-table-container">
+<div class="yt-table-header">
+<h3>Reporte de Asistencia General</h3>
+<input type="date" id="dir-asistencia-fecha" class="yt-input" style="width: auto;">
+<button onclick="verAsistenciaDirector()" class="btn-yt primary">Ver Reporte</button>
+</div>
+<div id="dir-asistencia-res" style="padding: 24px;">Seleccione una fecha para ver el reporte de asistencia.</div>
+</div>
+</section>
+<!-- DOCENTE: PLANILLAS -->
+<section id="doc-planillas" class="view-section">
+<div style="max-width: 800px;">
+<div class="yt-table-container">
+<div class="yt-table-header">
+<h3>Planillas de Calificación</h3>
+<select id="sel-mats" onchange="verAlumnos()" class="yt-input" style="width: auto;"><option value="">Seleccione Materia</option></select>
+</div>
+<div id="area-planilla" class="modal-body hidden">
+<h3 id="txt-materia" style="color: var(--doc)"></h3>
+<div id="tabla-carga"></div>
+<button id="btn-guardar-notas" class="btn-yt primary" onclick="guardarNotas()" style="margin-top: 20px;">Guardar Notas</button>
+</div>
+</div>
+</div>
+</section>
+<!-- DOCENTE: TOMAR LISTA -->
+<section id="doc-asistencia" class="view-section">
+<div style="max-width: 900px;">
+<div class="yt-table-container">
+<div class="yt-table-header">
+<h3>Tomar Lista - Asistencia</h3>
+<select id="sel-mats-asistencia" onchange="cargarAlumnosAsistencia()" class="yt-input" style="width: auto;"><option value="">Seleccione Materia</option></select>
+<input type="date" id="fecha-asistencia" class="yt-input" style="width: auto;">
+</div>
+<div id="area-asistencia" class="modal-body hidden">
+<h3 id="txt-materia-asistencia" style="color: var(--doc)"></h3>
+<p style="color: #606060; font-size: 14px; margin-bottom: 15px;">
+<i class="bi bi-info-circle"></i> Marque la asistencia de cada alumno. Por defecto se considera "Presente".
+</p>
+<div id="tabla-asistencia-carga"></div>
+<button id="btn-guardar-asistencia" class="btn-yt success" onclick="guardarAsistencia()" style="margin-top: 20px;">
+<i class="bi bi-check-circle"></i> Guardar Asistencia
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- ESTUDIANTE: BOLETÍN -->
+<section id="est-boletin" class="view-section">
+<div class="student-view"><div id="boletin-res">Cargando...</div></div>
+</section>
+<!-- ESTUDIANTE: ASISTENCIA -->
+<section id="est-asistencia" class="view-section">
+<div class="yt-table-container">
+<div class="yt-table-header">
+<h3>Mi Historial de Asistencia</h3>
+</div>
+<div id="est-asistencia-res" style="padding: 24px;">Cargando...</div>
+</div>
+</section>
+</div>
+</div>
 <!-- MODAL LEGAJO -->
 <div id="modal-legajo" class="modal-overlay">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 style="margin:0;">Legajo Digital</h3>
-            <i class="bi bi-x-lg" onclick="document.getElementById('modal-legajo').classList.remove('show')" style="cursor: pointer;"></i>
-        </div>
-        <div class="modal-body">
-            <input id="leg-dni" type="hidden">
-            <div class="form-group"><label>Nombre Completo</label><input id="leg-nom" type="text"></div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
-                <div class="form-group"><label>Año</label><input id="leg-anio" type="text"></div>
-                <div class="form-group"><label>Fecha Nacimiento</label><input id="leg-fec" type="date"></div>
-                <div class="form-group">
-                    <label>Sexo</label>
-                    <select id="leg-sexo">
-                        <option value="">Seleccionar</option>
-                        <option value="Femenino">Femenino</option>
-                        <option value="Masculino">Masculino</option>
-                        <option value="No binario">No binario</option>
-                    </select>
-                </div>
-            </div>
-            <div class="form-group"><label>Dirección</label><input id="leg-dir" type="text"></div>
-            <div class="form-group" id="field-materias" style="display:none;">
-                <label>Materias (Formato JSON)</label>
-                <textarea id="leg-materias" class="yt-input" rows="3" placeholder='{"1":{"Cuatri 1":["Matemática"]}}'></textarea>
-                <small style="color:#999;">Ejemplo: {"1":{"Cuatrimestre 1":["Matemática","Física"]},"2":{"Cuatrimestre 1":["Química"]}}</small>
-            </div>
-            <div class="form-group" style="margin-top: 20px; background: #f9f9f9; padding: 15px; border-radius: 8px;">
-                <label style="font-weight: bold; color: var(--dir);">📝 Observaciones</label>
-                <textarea id="leg-obs" rows="3" placeholder="Observaciones..."></textarea>
-            </div>
-            <button onclick="actualizarLegajo()" class="btn-yt primary" style="width: 100%; margin-top: 20px;">Guardar Cambios</button>
-        </div>
-    </div>
+<div class="modal-content">
+<div class="modal-header">
+<h3 style="margin:0;">Legajo Digital</h3>
+<i class="bi bi-x-lg" onclick="document.getElementById('modal-legajo').classList.remove('show')" style="cursor: pointer;"></i>
 </div>
-
+<div class="modal-body">
+<input id="leg-dni" type="hidden">
+<div class="form-group"><label>Nombre Completo</label><input id="leg-nom" type="text"></div>
+<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
+<div class="form-group"><label>Año</label><input id="leg-anio" type="text"></div>
+<div class="form-group"><label>Fecha Nacimiento</label><input id="leg-fec" type="date"></div>
+<div class="form-group">
+<label>Sexo</label>
+<select id="leg-sexo">
+<option value="">Seleccionar</option>
+<option value="Femenino">Femenino</option>
+<option value="Masculino">Masculino</option>
+<option value="No binario">No binario</option>
+</select>
+</div>
+</div>
+<div class="form-group"><label>Dirección</label><input id="leg-dir" type="text"></div>
+<div class="form-group" id="field-materias" style="display:none;">
+<label>Materias (Formato JSON)</label>
+<textarea id="leg-materias" class="yt-input" rows="3" placeholder='{"1":{"Cuatri 1":["Matemática"]}}'></textarea>
+<small style="color:#999;">Ejemplo: {"1":{"Cuatrimestre 1":["Matemática","Física"]},"2":{"Cuatrimestre 1":["Química"]}}</small>
+</div>
+<div class="form-group" style="margin-top: 20px; background: #f9f9f9; padding: 15px; border-radius: 8px;">
+<label style="font-weight: bold; color: var(--dir);">📝 Observaciones</label>
+<textarea id="leg-obs" rows="3" placeholder="Observaciones..."></textarea>
+</div>
+<button onclick="actualizarLegajo()" class="btn-yt primary" style="width: 100%; margin-top: 20px;">Guardar Cambios</button>
+</div>
+</div>
+</div>
 <!-- MODAL ALTA SIMPLE -->
 <div id="modal-alta" class="modal-overlay">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 style="margin:0;">Agregar Alumno a la Base de Datos</h3>
-            <i class="bi bi-x-lg" onclick="document.getElementById('modal-alta').classList.remove('show')" style="cursor: pointer;"></i>
-        </div>
-        <div class="modal-body">
-            <div class="form-group"><label>DNI</label><input id="alta-dni" type="text"></div>
-            <div class="form-group"><label>Nombre Completo</label><input id="alta-nom" type="text"></div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                <div class="form-group"><label>Rol</label><select id="alta-rol"><option value="estudiante">Estudiante</option><option value="docente">Docente</option></select></div>
-                <div class="form-group"><label>Año</label><input id="alta-anio" type="text"></div>
-            </div>
-            <button onclick="crearUsuarioDB()" class="btn-yt success" style="width: 100%; margin-top: 20px;">Guardar en Base de Datos</button>
-        </div>
-    </div>
+<div class="modal-content">
+<div class="modal-header">
+<h3 style="margin:0;">Agregar Alumno a la Base de Datos</h3>
+<i class="bi bi-x-lg" onclick="document.getElementById('modal-alta').classList.remove('show')" style="cursor: pointer;"></i>
 </div>
-
+<div class="modal-body">
+<div class="form-group"><label>DNI</label><input id="alta-dni" type="text"></div>
+<div class="form-group"><label>Nombre Completo</label><input id="alta-nom" type="text"></div>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+<div class="form-group"><label>Rol</label><select id="alta-rol"><option value="estudiante">Estudiante</option><option value="docente">Docente</option></select></div>
+<div class="form-group"><label>Año</label><input id="alta-anio" type="text"></div>
+</div>
+<button onclick="crearUsuarioDB()" class="btn-yt success" style="width: 100%; margin-top: 20px;">Guardar en Base de Datos</button>
+</div>
+</div>
+</div>
 <script>
 // 1. CONFIGURACIÓN FIREBASE
 const firebaseConfig = {
-    apiKey: "AIzaSyAeezu1BHZch8eaNnVV-MJ6Rpdl1BzFHXY",
-    authDomain: "app-escuela-cens451.firebaseapp.com",
-    projectId: "app-escuela-cens451"
+apiKey: "AIzaSyAeezu1BHZch8eaNnVV-MJ6Rpdl1BzFHXY",
+authDomain: "app-escuela-cens451.firebaseapp.com",
+projectId: "app-escuela-cens451"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
@@ -356,189 +395,208 @@ let CACHE_ALUMNOS = [];
 
 // 2. NAVEGACIÓN UI
 function showSection(id) {
-    document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-    const titles = {
-        'dir-panel': 'Panel Principal', 'dir-stats': 'Estadísticas', 'dir-pof': 'POF-POFA', 'dir-monitor': 'Monitor Académico', 'dir-usuarios': 'Gestión de Usuarios',
-        'doc-planillas': 'Planillas de Calificación', 'est-boletin': 'Mi Boletín Académico'
-    };
-    document.getElementById('page-title').innerText = titles[id] || 'Panel';
+document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+document.getElementById(id).classList.add('active');
+const titles = {
+'dir-panel': 'Panel Principal', 'dir-stats': 'Estadísticas', 'dir-pof': 'POF-POFA', 'dir-monitor': 'Monitor Académico', 
+'dir-usuarios': 'Gestión de Usuarios', 'dir-asistencia': 'Reporte de Asistencia',
+'doc-planillas': 'Planillas de Calificación', 'doc-asistencia': 'Tomar Lista',
+'est-boletin': 'Mi Boletín Académico', 'est-asistencia': 'Mi Asistencia'
+};
+document.getElementById('page-title').innerText = titles[id] || 'Panel';
 }
 function preLogin(r) { ROL_LOGIN = r; document.getElementById('modal-login').classList.add('show'); document.getElementById('l-error').innerText = ""; document.getElementById('r-error').innerText = ""; }
 function cerrarLogin() { document.getElementById('modal-login').classList.remove('show'); }
 function switchAuthTab(tab) {
-    if(tab === 'login') {
-        document.getElementById('form-login').classList.remove('hidden');
-        document.getElementById('form-register').classList.add('hidden');
-        document.querySelectorAll('.auth-tab')[0].classList.add('active');
-        document.querySelectorAll('.auth-tab')[1].classList.remove('active');
-    } else {
-        document.getElementById('form-login').classList.add('hidden');
-        document.getElementById('form-register').classList.remove('hidden');
-        document.querySelectorAll('.auth-tab')[0].classList.remove('active');
-        document.querySelectorAll('.auth-tab')[1].classList.add('active');
-    }
+if(tab === 'login') {
+document.getElementById('form-login').classList.remove('hidden');
+document.getElementById('form-register').classList.add('hidden');
+document.querySelectorAll('.auth-tab')[0].classList.add('active');
+document.querySelectorAll('.auth-tab')[1].classList.remove('active');
+} else {
+document.getElementById('form-login').classList.add('hidden');
+document.getElementById('form-register').classList.remove('hidden');
+document.querySelectorAll('.auth-tab')[0].classList.remove('active');
+document.querySelectorAll('.auth-tab')[1].classList.add('active');
+}
 }
 
 // --- FUNCIÓN DE REGISTRO ---
 async function registrarUsuario() {
-    const d = document.getElementById('r-dni').value.trim();
-    const n = document.getElementById('r-nom').value.trim();
-    const r = document.getElementById('r-rol').value;
-    const a = document.getElementById('r-anio').value.trim();
-    const err = document.getElementById('r-error');
-    if (!/^\d{7,8}$/.test(d)) { err.innerText = "DNI inválido (7-8 dígitos)"; return; }
-    if (!/^[a-zA-Z\sáéíóúñ]{3,}$/.test(n)) { err.innerText = "Nombre inválido"; return; }
-    try {
-        await auth.createUserWithEmailAndPassword(d + "@cens451.edu.ar", "123456");
-        await db.collection("usuarios").doc(d).set({ nombre: n, rol: r, año: a, fechaAlta: new Date().toISOString() });
-        USER_DATA = { id: d, nombre: n, rol: r, año: a };
-        abrirApp();
-    } catch (e) {
-        console.error(e);
-        if(e.code === 'auth/email-already-exists') { err.innerText = "El DNI ya está registrado."; }
-        else { err.innerText = "Error: " + e.message; }
-    }
+const d = document.getElementById('r-dni').value.trim();
+const n = document.getElementById('r-nom').value.trim();
+const r = document.getElementById('r-rol').value;
+const a = document.getElementById('r-anio').value.trim();
+const err = document.getElementById('r-error');
+if (!/^\d{7,8}$/.test(d)) { err.innerText = "DNI inválido (7-8 dígitos)"; return; }
+if (!/^[a-zA-Z\sáéíóúñ]{3,}$/.test(n)) { err.innerText = "Nombre inválido"; return; }
+try {
+await auth.createUserWithEmailAndPassword(d + "@cens451.edu.ar", "123456");
+await db.collection("usuarios").doc(d).set({ nombre: n, rol: r, año: a, fechaAlta: new Date().toISOString() });
+USER_DATA = { id: d, nombre: n, rol: r, año: a };
+abrirApp();
+} catch (e) {
+console.error(e);
+if(e.code === 'auth/email-already-exists') { err.innerText = "El DNI ya está registrado."; }
+else { err.innerText = "Error: " + e.message; }
+}
 }
 
 async function login() {
-    const d = document.getElementById('f-dni').value.trim();
-    const p = document.getElementById('f-pass').value;
-    const err = document.getElementById('l-error');
-    if (!d || !p) { err.innerText = "Completa DNI y Clave"; return; }
-    err.innerText = "Verificando...";
-    try {
-        await auth.signInWithEmailAndPassword(d + "@cens451.edu.ar", p);
-        const doc = await db.collection("usuarios").doc(d).get();
-        if (!doc.exists) { err.innerText = "Usuario sin datos en DB"; return; }
-        const data = doc.data();
-        const rDb = data.rol.toLowerCase();
-        const matchDir = (ROL_LOGIN === 'director' && (rDb === 'director' || rDb === 'directivo'));
-        const matchDoc = (ROL_LOGIN === 'docente' && rDb === 'docente');
-        const matchEst = (ROL_LOGIN === 'estudiante' && rDb === 'estudiante');
-        if (matchDir || matchDoc || matchEst) { USER_DATA = { id: d, ...data }; abrirApp(); }
-        else { err.innerText = "Error: El rol no coincide."; auth.signOut(); }
-    } catch (e) { err.innerText = "DNI o Clave incorrectos"; }
+const d = document.getElementById('f-dni').value.trim();
+const p = document.getElementById('f-pass').value;
+const err = document.getElementById('l-error');
+if (!d || !p) { err.innerText = "Completa DNI y Clave"; return; }
+err.innerText = "Verificando...";
+try {
+await auth.signInWithEmailAndPassword(d + "@cens451.edu.ar", p);
+const doc = await db.collection("usuarios").doc(d).get();
+if (!doc.exists) { err.innerText = "Usuario sin datos en DB"; return; }
+const data = doc.data();
+const rDb = data.rol.toLowerCase();
+const matchDir = (ROL_LOGIN === 'director' && (rDb === 'director' || rDb === 'directivo'));
+const matchDoc = (ROL_LOGIN === 'docente' && rDb === 'docente');
+const matchEst = (ROL_LOGIN === 'estudiante' && rDb === 'estudiante');
+if (matchDir || matchDoc || matchEst) { USER_DATA = { id: d, ...data }; abrirApp(); }
+else { err.innerText = "Error: El rol no coincide."; auth.signOut(); }
+} catch (e) { err.innerText = "DNI o Clave incorrectos"; }
 }
 
 function abrirApp() {
-    document.getElementById('portal').classList.add('hidden');
-    document.getElementById('modal-login').classList.remove('show');
-    document.getElementById('main-app').classList.remove('hidden');
-    document.getElementById('nav-director').classList.add('hidden');
-    document.getElementById('nav-docente').classList.add('hidden');
-    document.getElementById('nav-estudiante').classList.add('hidden');
-    const avatar = USER_DATA.nombre.charAt(0).toUpperCase();
-    document.getElementById('user-avatar').innerText = avatar;
-    document.getElementById('nav-user').innerText = USER_DATA.nombre;
-    const sidebar = document.getElementById('main-sidebar');
-    if(ROL_LOGIN === 'director') { sidebar.style.background = '#0f0f0f'; document.getElementById('nav-director').classList.remove('hidden'); showSection('dir-panel'); renderAdmin(); }
-    else if(ROL_LOGIN === 'docente') { sidebar.style.background = 'var(--doc)'; document.getElementById('nav-docente').classList.remove('hidden'); showSection('doc-planillas'); cargarMatsDocente(); }
-    else { sidebar.style.background = 'var(--est)'; document.getElementById('nav-estudiante').classList.remove('hidden'); showSection('est-boletin'); renderBoletin(); }
+document.getElementById('portal').classList.add('hidden');
+document.getElementById('modal-login').classList.remove('show');
+document.getElementById('main-app').classList.remove('hidden');
+document.getElementById('nav-director').classList.add('hidden');
+document.getElementById('nav-docente').classList.add('hidden');
+document.getElementById('nav-estudiante').classList.add('hidden');
+const avatar = USER_DATA.nombre.charAt(0).toUpperCase();
+document.getElementById('user-avatar').innerText = avatar;
+document.getElementById('nav-user').innerText = USER_DATA.nombre;
+const sidebar = document.getElementById('main-sidebar');
+if(ROL_LOGIN === 'director') { 
+  sidebar.style.background = '#0f0f0f'; 
+  document.getElementById('nav-director').classList.remove('hidden'); 
+  showSection('dir-panel'); 
+  renderAdmin(); 
+}
+else if(ROL_LOGIN === 'docente') { 
+  sidebar.style.background = 'var(--doc)'; 
+  document.getElementById('nav-docente').classList.remove('hidden'); 
+  showSection('doc-planillas'); 
+  cargarMatsDocente();
+  document.getElementById('fecha-asistencia').valueAsDate = new Date();
+}
+else { 
+  sidebar.style.background = 'var(--est)'; 
+  document.getElementById('nav-estudiante').classList.remove('hidden'); 
+  showSection('est-boletin'); 
+  renderBoletin(); 
+  verAsistenciaEstudiante();
+}
 }
 
 // 3. LÓGICA DIRECTOR
 async function renderAdmin() {
-    try {
-        const snapUsuarios = await db.collection("usuarios").get();
-        const snapNotas = await db.collection("evaluaciones").get();
-        let cAlu = 0, cDoc = 0, stats = { TEA: 0, TEP: 0, TED: 0, total: 0 };
-        CACHE_ALUMNOS = [];
-        let rowsU = "";
-        snapUsuarios.forEach(d => {
-            const u = d.data(); const rol = (u.rol || "").toLowerCase();
-            if(rol === 'estudiante') { cAlu++; CACHE_ALUMNOS.push(u); }
-            if(rol === 'docente') cDoc++;
-            rowsU += `<tr><td>${u.nombre || '-'}</td><td><b>${d.id}</b></td><td>${u.rol}</td><td>${u.año || u.anio || '-'}</td><td><button class="btn-yt" onclick="abrirLegajo('${d.id}')">Editar</button></td></tr>`;
-        });
-        document.querySelector("#tabla-usuarios-db tbody").innerHTML = rowsU;
-        let rowsN = "";
-        snapNotas.forEach(doc => {
-            const n = doc.data();
-            if (n.rite) { stats[n.rite]++; stats.total++; }
-            const aluDoc = snapUsuarios.docs.find(u => u.id === n.alumnoDni);
-            const nombreAlu = aluDoc ? aluDoc.data().nombre : n.alumnoDni;
-            rowsN += `<tr><td>${nombreAlu}</td><td>${n.materia}</td><td>${n.cuat}</td><td><span class="badge badge-${n.rite.toLowerCase()}">${n.rite}</span></td><td>${n.nota || '-'}</td></tr>`;
-        });
-        document.querySelector("#tabla-todas-notas tbody").innerHTML = rowsN;
-        const calc = (tipo) => stats.total > 0 ? ((stats[tipo] / stats.total) * 100).toFixed(1) : 0;
-        document.getElementById('s-alu').innerText = cAlu; document.getElementById('s-doc').innerText = cDoc; document.getElementById('s-not').innerText = snapNotas.size;
-        document.getElementById('p-tea').innerText = calc('TEA') + "%"; document.getElementById('p-tep').innerText = calc('TEP') + "%"; document.getElementById('p-ted').innerText = calc('TED') + "%";
-        renderDemographics();
-        cargarPOF();
-    } catch (e) { console.error(e); }
+try {
+const snapUsuarios = await db.collection("usuarios").get();
+const snapNotas = await db.collection("evaluaciones").get();
+let cAlu = 0, cDoc = 0, stats = { TEA: 0, TEP: 0, TED: 0, total: 0 };
+CACHE_ALUMNOS = [];
+let rowsU = "";
+snapUsuarios.forEach(d => {
+const u = d.data(); const rol = (u.rol || "").toLowerCase();
+if(rol === 'estudiante') { cAlu++; CACHE_ALUMNOS.push(u); }
+if(rol === 'docente') cDoc++;
+rowsU += `<tr><td>${u.nombre || '-'}</td><td><b>${d.id}</b></td><td>${u.rol}</td><td>${u.año || u.anio || '-'}</td><td><button class="btn-yt" onclick="abrirLegajo('${d.id}')">Editar</button></td></tr>`;
+});
+document.querySelector("#tabla-usuarios-db tbody").innerHTML = rowsU;
+let rowsN = "";
+snapNotas.forEach(doc => {
+const n = doc.data();
+if (n.rite) { stats[n.rite]++; stats.total++; }
+const aluDoc = snapUsuarios.docs.find(u => u.id === n.alumnoDni);
+const nombreAlu = aluDoc ? aluDoc.data().nombre : n.alumnoDni;
+rowsN += `<tr><td>${nombreAlu}</td><td>${n.materia}</td><td>${n.cuat}</td><td><span class="badge badge-${n.rite.toLowerCase()}">${n.rite}</span></td><td>${n.nota || '-'}</td></tr>`;
+});
+document.querySelector("#tabla-todas-notas tbody").innerHTML = rowsN;
+const calc = (tipo) => stats.total > 0 ? ((stats[tipo] / stats.total) * 100).toFixed(1) : 0;
+document.getElementById('s-alu').innerText = cAlu; document.getElementById('s-doc').innerText = cDoc; document.getElementById('s-not').innerText = snapNotas.size;
+document.getElementById('p-tea').innerText = calc('TEA') + "%"; document.getElementById('p-tep').innerText = calc('TEP') + "%"; document.getElementById('p-ted').innerText = calc('TED') + "%";
+renderDemographics();
+cargarPOF();
+} catch (e) { console.error(e); }
 }
 
 async function crearUsuarioDB() {
-    const dni = document.getElementById('alta-dni').value.trim();
-    const nombre = document.getElementById('alta-nom').value.trim();
-    const rol = document.getElementById('alta-rol').value;
-    const anio = document.getElementById('alta-anio').value.trim();
-    if (!dni || !nombre) { alert("Complete DNI y Nombre"); return; }
-    try {
-        await db.collection("usuarios").doc(dni).set({ nombre: nombre, rol: rol, año: anio, fechaAlta: new Date().toISOString() });
-        alert("Usuario guardado en la Base de Datos.");
-        document.getElementById('modal-alta').classList.remove('show');
-        renderAdmin();
-    } catch (e) { alert("Error al guardar en DB."); console.error(e); }
+const dni = document.getElementById('alta-dni').value.trim();
+const nombre = document.getElementById('alta-nom').value.trim();
+const rol = document.getElementById('alta-rol').value;
+const anio = document.getElementById('alta-anio').value.trim();
+if (!dni || !nombre) { alert("Complete DNI y Nombre"); return; }
+try {
+await db.collection("usuarios").doc(dni).set({ nombre: nombre, rol: rol, año: anio, fechaAlta: new Date().toISOString() });
+alert("Usuario guardado en la Base de Datos.");
+document.getElementById('modal-alta').classList.remove('show');
+renderAdmin();
+} catch (e) { alert("Error al guardar en DB."); console.error(e); }
 }
 
 // --- ESTADÍSTICAS ---
-function getAnio(u) { 
-    const val = (u.año || u.anio || "0").toString().trim().toLowerCase();
-    if (["1", "1°", "primero", "primer", "1ro"].includes(val)) return "1";
-    if (["2", "2°", "segundo", "2do"].includes(val)) return "2";
-    if (["3", "3°", "tercero", "3ro"].includes(val)) return "3";
-    return "Sin Año"; 
+function getAnio(u) {
+const val = (u.año || u.anio || "0").toString().trim().toLowerCase();
+if (["1", "1°", "primero", "primer", "1ro"].includes(val)) return "1";
+if (["2", "2°", "segundo", "2do"].includes(val)) return "2";
+if (["3", "3°", "tercero", "3ro"].includes(val)) return "3";
+return "Sin Año";
 }
 function calculateAge(u) { if (u.fechaNacimiento) { const today = new Date(); const birthDate = new Date(u.fechaNacimiento); let age = today.getFullYear() - birthDate.getFullYear(); const m = today.getMonth() - birthDate.getMonth(); if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--; return age; } const dni = parseInt(u.dni || u.id); if (!dni) return 18; if (dni < 20000000) return 55; if (dni < 35000000) return 40; return 25; }
 function getAgeGroup(age) { if (age < 18) age = 18; if (age <= 20) return "18 - 20"; const start = Math.floor((age - 21) / 5) * 5 + 21; if (start > 65) return "Mayor de 65"; return `${start} - ${start + 4}`; }
 const ageOrder = ["18 - 20", "21 - 25", "26 - 30", "31 - 35", "36 - 40", "41 - 45", "46 - 50", "51 - 55", "56 - 60", "61 - 65", "Mayor de 65"];
 
 function renderDemographics() {
-    const summaryDiv = document.getElementById('stats-year-summary');
-    const detailsDiv = document.getElementById('stats-details-container');
-    const groups = {
-        "1": { label: "Primer Año", total: 0, sexo: {}, edad: {} },
-        "2": { label: "Segundo Año", total: 0, sexo: {}, edad: {} },
-        "3": { label: "Tercer Año", total: 0, sexo: {}, edad: {} },
-        "Sin Año": { label: "Sin Asignar", total: 0, sexo: {}, edad: {} }
-    };
-    CACHE_ALUMNOS.forEach(u => {
-        const yearKey = getAnio(u);
-        if (!groups[yearKey]) return;
-        groups[yearKey].total++;
-        const sex = u.sexo || "Sin Dato";
-        groups[yearKey].sexo[sex] = (groups[yearKey].sexo[sex] || 0) + 1;
-        const ageG = getAgeGroup(calculateAge(u));
-        groups[yearKey].edad[ageG] = (groups[yearKey].edad[ageG] || 0) + 1;
-    });
-    let htmlSummary = "";
-    ["1", "2", "3"].forEach(k => {
-        htmlSummary += `<div class="stat-card"><div class="stat-icon" style="background: ${k === '1' ? '#f44336' : k === '2' ? '#ff9800' : '#4caf50'};">${k}°</div><div class="stat-info"><h2>${groups[k].total}</h2><p>${groups[k].label}</p></div></div>`;
-    });
-    summaryDiv.innerHTML = htmlSummary;
-    let htmlDetails = "";
-    ["1", "2", "3"].forEach(k => {
-        const g = groups[k];
-        if (g.total === 0) return;
-        const colorsSex = { 'Femenino': '#e91e63', 'Masculino': '#2196f3', 'No binario': '#9c27b0', 'Sin Dato': '#bdbdbd' };
-        const colorsAge = { '18 - 20': '#4caf50', '21 - 25': '#8bc34a', '26 - 30': '#cddc39', '31 - 35': '#ffeb3b', '36 - 40': '#ffc107', '41 - 45': '#ff9800', '46 - 50': '#ff5722', '51 - 55': '#f44336', '56 - 60': '#e91e63', 'Mayor de 65': '#9c27b0' };
-        let sexBars = "";
-        Object.entries(g.sexo).sort((a,b) => b[1] - a[1]).forEach(([key, val]) => {
-            const pct = ((val / g.total) * 100).toFixed(0);
-            sexBars += `<div class="bar-group"><div class="bar-label"><span>${key}</span><span>${val}</span></div><div class="bar-track"><div class="bar-fill" style="width: ${pct}%; background: ${colorsSex[key] || '#ccc'};"></div></div></div>`;
-        });
-        let ageBars = "";
-        ageOrder.forEach(key => {
-            if (!g.edad[key]) return;
-            const val = g.edad[key];
-            const pct = ((val / g.total) * 100).toFixed(0);
-            ageBars += `<div class="bar-group"><div class="bar-label"><span>${key}</span><span>${val}</span></div><div class="bar-track"><div class="bar-fill" style="width: ${pct}%; background: ${colorsAge[key] || '#ccc'};"></div></div></div>`;
-        });
-        htmlDetails += `<div class="card-pof" style="border-left: 5px solid ${k === '1' ? '#f44336' : k === '2' ? '#ff9800' : '#4caf50'};"><h3>${g.label} <span>${g.total} estudiantes</span></h3><div style="display:flex; gap:40px; flex-wrap:wrap;"><div class="chart-box"><div class="chart-title"><i class="bi bi-gender-ambiguous"></i> Sexo</div>${sexBars}</div><div class="chart-box"><div class="chart-title"><i class="bi bi-calendar3"></i> Edad</div>${ageBars}</div></div></div>`;
-    });
-    detailsDiv.innerHTML = htmlDetails;
+const summaryDiv = document.getElementById('stats-year-summary');
+const detailsDiv = document.getElementById('stats-details-container');
+const groups = {
+"1": { label: "Primer Año", total: 0, sexo: {}, edad: {} },
+"2": { label: "Segundo Año", total: 0, sexo: {}, edad: {} },
+"3": { label: "Tercer Año", total: 0, sexo: {}, edad: {} },
+"Sin Año": { label: "Sin Asignar", total: 0, sexo: {}, edad: {} }
+};
+CACHE_ALUMNOS.forEach(u => {
+const yearKey = getAnio(u);
+if (!groups[yearKey]) return;
+groups[yearKey].total++;
+const sex = u.sexo || "Sin Dato";
+groups[yearKey].sexo[sex] = (groups[yearKey].sexo[sex] || 0) + 1;
+const ageG = getAgeGroup(calculateAge(u));
+groups[yearKey].edad[ageG] = (groups[yearKey].edad[ageG] || 0) + 1;
+});
+let htmlSummary = "";
+["1", "2", "3"].forEach(k => {
+htmlSummary += `<div class="stat-card"><div class="stat-icon" style="background: ${k === '1' ? '#f44336' : k === '2' ? '#ff9800' : '#4caf50'};">${k}°</div><div class="stat-info"><h2>${groups[k].total}</h2><p>${groups[k].label}</p></div></div>`;
+});
+summaryDiv.innerHTML = htmlSummary;
+let htmlDetails = "";
+["1", "2", "3"].forEach(k => {
+const g = groups[k];
+if (g.total === 0) return;
+const colorsSex = { 'Femenino': '#e91e63', 'Masculino': '#2196f3', 'No binario': '#9c27b0', 'Sin Dato': '#bdbdbd' };
+const colorsAge = { '18 - 20': '#4caf50', '21 - 25': '#8bc34a', '26 - 30': '#cddc39', '31 - 35': '#ffeb3b', '36 - 40': '#ffc107', '41 - 45': '#ff9800', '46 - 50': '#ff5722', '51 - 55': '#f44336', '56 - 60': '#e91e63', 'Mayor de 65': '#9c27b0' };
+let sexBars = "";
+Object.entries(g.sexo).sort((a,b) => b[1] - a[1]).forEach(([key, val]) => {
+const pct = ((val / g.total) * 100).toFixed(0);
+sexBars += `<div class="bar-group"><div class="bar-label"><span>${key}</span><span>${val}</span></div><div class="bar-track"><div class="bar-fill" style="width: ${pct}%; background: ${colorsSex[key] || '#ccc'};"></div></div></div>`;
+});
+let ageBars = "";
+ageOrder.forEach(key => {
+if (!g.edad[key]) return;
+const val = g.edad[key];
+const pct = ((val / g.total) * 100).toFixed(0);
+ageBars += `<div class="bar-group"><div class="bar-label"><span>${key}</span><span>${val}</span></div><div class="bar-track"><div class="bar-fill" style="width: ${pct}%; background: ${colorsAge[key] || '#ccc'};"></div></div></div>`;
+});
+htmlDetails += `<div class="card-pof" style="border-left: 5px solid ${k === '1' ? '#f44336' : k === '2' ? '#ff9800' : '#4caf50'};"><h3>${g.label} <span>${g.total} estudiantes</span></h3><div style="display:flex; gap:40px; flex-wrap:wrap;"><div class="chart-box"><div class="chart-title"><i class="bi bi-gender-ambiguous"></i> Sexo</div>${sexBars}</div><div class="chart-box"><div class="chart-title"><i class="bi bi-calendar3"></i> Edad</div>${ageBars}</div></div></div>`;
+});
+detailsDiv.innerHTML = htmlDetails;
 }
 
 // --- POF-POFA ---
@@ -550,238 +608,397 @@ async function guardarPOF() { const data = { res_creacion: document.getElementBy
 function filtrarNotasGlobal() { const t = document.getElementById('buscador-notas').value.toLowerCase(); document.querySelectorAll("#tabla-todas-notas tbody tr").forEach(r => { r.style.display = r.innerText.toLowerCase().includes(t) ? "" : "none"; }); }
 function filtrarUsuarios() { const t = document.getElementById('buscador-u').value.toLowerCase(); document.querySelectorAll("#tabla-usuarios-db tbody tr").forEach(r => { r.style.display = r.innerText.toLowerCase().includes(t) ? "" : "none"; }); }
 
-// 4. DOCENTE
-function cargarMatsDocente() { 
-    const sel = document.getElementById('sel-mats'); 
-    const key = Object.keys(USER_DATA).find(k => k.toLowerCase() === 'materias' || k.toLowerCase() === 'materia'); 
-    const m = USER_DATA[key]; 
-    if (!m) {
-        document.getElementById('area-planilla').innerHTML = "<p style='padding:20px; color:red; font-weight:bold;'>⚠️ No tiene materias asignadas. Un directivo debe editar su usuario y asignarlas.</p>";
-        document.getElementById('area-planilla').classList.remove('hidden');
-        return;
-    }
-    sel.innerHTML = '<option value="">Seleccione Materia</option>'; 
-    for (let anioKey in m) { 
-        for (let cuatKey in m[anioKey]) { 
-            let lista = m[anioKey][cuatKey]; 
-            if (Array.isArray(lista)) lista.forEach(nom => { 
-                let opt = document.createElement('option'); 
-                opt.value = `${nom}|${anioKey}|${cuatKey}`; 
-                opt.innerText = `${nom} (${anioKey} - ${cuatKey})`; 
-                sel.appendChild(opt); 
-            }); 
-        } 
-    } 
+// 4. DOCENTE - MATERIAS
+function cargarMatsDocente() {
+const sel = document.getElementById('sel-mats');
+const selAsist = document.getElementById('sel-mats-asistencia');
+const key = Object.keys(USER_DATA).find(k => k.toLowerCase() === 'materias' || k.toLowerCase() === 'materia');
+const m = USER_DATA[key];
+if (!m) {
+document.getElementById('area-planilla').innerHTML = "<p style='padding:20px; color:red; font-weight:bold;'>⚠️ No tiene materias asignadas. Un directivo debe editar su usuario y asignarlas.</p>";
+document.getElementById('area-planilla').classList.remove('hidden');
+return;
+}
+sel.innerHTML = '<option value="">Seleccione Materia</option>';
+selAsist.innerHTML = '<option value="">Seleccione Materia</option>';
+for (let anioKey in m) {
+for (let cuatKey in m[anioKey]) {
+let lista = m[anioKey][cuatKey];
+if (Array.isArray(lista)) lista.forEach(nom => {
+let opt = document.createElement('option');
+let opt2 = document.createElement('option');
+opt.value = opt2.value = `${nom}|${anioKey}|${cuatKey}`;
+opt.innerText = opt2.innerText = `${nom} (${anioKey} - ${cuatKey})`;
+sel.appendChild(opt);
+selAsist.appendChild(opt2);
+});
+}
+}
 }
 
-// ✅ FUNCIÓN MEJORADA: Cargar alumnos con coincidencia de año flexible
-async function verAlumnos() { 
-    const val = document.getElementById('sel-mats').value; 
-    if(!val) return; 
-    
-    const [materiaSel, anioSel, cuatSel] = val.split('|'); 
-    // Normalizamos el año de la materia para comparación
-    const anioMatNum = anioSel.replace(/\D/g, ""); 
-    
-    document.getElementById('area-planilla').classList.remove('hidden'); 
-    document.getElementById('txt-materia').innerText = materiaSel + " (" + cuatSel + " - " + anioSel + ")"; 
-    
-    try { 
-        const snapAlu = await db.collection("usuarios").where("rol","==","estudiante").get(); 
-        const snapNotas = await db.collection("evaluaciones").where("materia", "==", materiaSel).where("cuat", "==", cuatSel).get(); 
-        const notasCargadas = {}; 
-        snapNotas.forEach(doc => { notasCargadas[doc.data().alumnoDni] = doc.data(); }); 
-        
-        let html = `<table style="width:100%" id="tabla-planilla-active"><thead><tr><th>Alumno</th><th>RITE</th><th>Nota</th></tr></thead><tbody>`; 
-        let count = 0;
-        
-        snapAlu.forEach(doc => { 
-            const u = doc.data(); 
-            // Normalizamos el año del alumno
-            const uAnioRaw = (u.año || u.anio || "").toString().trim().toLowerCase();
-            let uAnioNorm = uAnioRaw.replace(/\D/g, ""); // Quitamos todo lo que no sea número
-            
-            // Comparamos números normalizados
-            if(uAnioNorm === anioMatNum) { 
-                count++;
-                const p = notasCargadas[doc.id] || { rite: "", nota: "" }; 
-                html += `<tr>
-                    <td>${u.nombre} <small style="color:#999">(DNI: ${doc.id})</small></td>
-                    <td>
-                        <select id="r-${doc.id}" class="yt-input" style="width:100%">
-                            <option value="">-</option>
-                            <option value="TEA" ${p.rite==='TEA'?'selected':''}>TEA</option>
-                            <option value="TEP" ${p.rite==='TEP'?'selected':''}>TEP</option>
-                            <option value="TED" ${p.rite==='TED'?'selected':''}>TED</option>
-                        </select>
-                    </td>
-                    <td><input id="n-${doc.id}" type="number" class="yt-input" value="${p.nota || ''}" style="width:70px" min="1" max="10"></td>
-                </tr>`; 
-            } 
-        }); 
-        
-        html += `</tbody></table>`; 
-        
-        if(count === 0) {
-            document.getElementById('tabla-carga').innerHTML = `<div style='padding:20px; text-align:center; color:#c5221f; background:#fce8e2; border-radius:8px;'>
-                <i class='bi bi-exclamation-triangle'></i> <b>No se encontraron alumnos</b><br>
-                No hay alumnos inscriptos en el año <b>${anioMatNum}</b> que coincidan con esta materia.<br>
-                <small>Verifique que los alumnos tengan el campo 'Año' completo correctamente (ej: '1' o '1ro').</small>
-            </div>`;
-        } else {
-            document.getElementById('tabla-carga').innerHTML = html;
-        }
-        
-    } catch (e) { 
-        console.error(e); 
-        document.getElementById('tabla-carga').innerText = "Error al cargar alumnos: " + e.message; 
-    } 
+// VER ALUMNOS PARA NOTAS
+async function verAlumnos() {
+const val = document.getElementById('sel-mats').value;
+if(!val) return;
+const [materiaSel, anioSel, cuatSel] = val.split('|');
+const anioMatNum = anioSel.replace(/\D/g, "");
+document.getElementById('area-planilla').classList.remove('hidden');
+document.getElementById('txt-materia').innerText = materiaSel + " (" + cuatSel + " - " + anioSel + ")";
+try {
+const snapAlu = await db.collection("usuarios").where("rol","==","estudiante").get();
+const snapNotas = await db.collection("evaluaciones").where("materia", "==", materiaSel).where("cuat", "==", cuatSel).get();
+const notasCargadas = {};
+snapNotas.forEach(doc => { notasCargadas[doc.data().alumnoDni] = doc.data(); });
+let html = `<table style="width:100%" id="tabla-planilla-active"><thead><tr><th>Alumno</th><th>RITE</th><th>Nota</th></tr></thead><tbody>`;
+let count = 0;
+snapAlu.forEach(doc => {
+const u = doc.data();
+const uAnioRaw = (u.año || u.anio || "").toString().trim().toLowerCase();
+let uAnioNorm = uAnioRaw.replace(/\D/g, "");
+if(uAnioNorm === anioMatNum) {
+count++;
+const p = notasCargadas[doc.id] || { rite: "", nota: "" };
+html += `<tr>
+<td>${u.nombre} <small style="color:#999">(DNI: ${doc.id})</small></td>
+<td>
+<select id="r-${doc.id}" class="yt-input" style="width:100%">
+<option value="">-</option>
+<option value="TEA" ${p.rite==='TEA'?'selected':''}>TEA</option>
+<option value="TEP" ${p.rite==='TEP'?'selected':''}>TEP</option>
+<option value="TED" ${p.rite==='TED'?'selected':''}>TED</option>
+</select>
+</td>
+<td><input id="n-${doc.id}" type="number" class="yt-input" value="${p.nota || ''}" style="width:70px" min="1" max="10"></td>
+</tr>`;
+}
+});
+html += `</tbody></table>`;
+if(count === 0) {
+document.getElementById('tabla-carga').innerHTML = `<div style='padding:20px; text-align:center; color:#c5221f; background:#fce8e2; border-radius:8px;'>
+<i class='bi bi-exclamation-triangle'></i> <b>No se encontraron alumnos</b><br>
+No hay alumnos inscriptos en el año <b>${anioMatNum}</b> que coincidan con esta materia.
+</div>`;
+} else {
+document.getElementById('tabla-carga').innerHTML = html;
+}
+} catch (e) {
+console.error(e);
+document.getElementById('tabla-carga').innerText = "Error al cargar alumnos: " + e.message;
+}
 }
 
-// ✅ FUNCIÓN MEJORADA: Guardar Notas con debug
-async function guardarNotas() { 
-    // 1. Referencia al botón para feedback visual
-    const btn = document.getElementById('btn-guardar-notas');
-    const originalText = btn.innerText;
-    btn.innerText = "Guardando...";
-    btn.disabled = true;
-
-    // 2. Validar selección
-    const val = document.getElementById('sel-mats').value; 
-    if(!val) { 
-        alert("Error: No hay materia seleccionada."); 
-        btn.innerText = originalText; btn.disabled = false;
-        return; 
-    }
-    
-    const [m, a, c] = val.split('|'); 
-    
-    // 3. Buscar filas de la tabla activa
-    const rows = document.querySelectorAll('#tabla-planilla-active tbody tr');
-    if(rows.length === 0) {
-        alert("No hay alumnos en la lista para guardar.");
-        btn.innerText = originalText; btn.disabled = false;
-        return;
-    }
-
-    const batch = db.batch(); 
-    let cambios = 0;
-
-    // 4. Iterar sobre filas
-    rows.forEach(row => {
-        const select = row.querySelector('select[id^="r-"]');
-        const input = row.querySelector('input[type="number"]');
-        
-        if(!select) return; // Seguridad
-
-        const dni = select.id.replace('r-', '');
-        const riteVal = select.value; 
-        const notaVal = input ? input.value : '';
-
-        // Convertir a número
-        let notaNum = null;
-        if(notaVal !== '') {
-            notaNum = parseFloat(notaVal);
-            if(isNaN(notaNum)) notaNum = null;
-        }
-
-        // Lógica: Guardar si hay RITE o Nota
-        if(riteVal || notaNum !== null) { 
-            const idDoc = `${dni}_${m.replace(/\s+/g,'')}_${c.replace(/\s+/g,'')}`; 
-            const ref = db.collection("evaluaciones").doc(idDoc);
-            
-            batch.set(ref, { 
-                alumnoDni: dni, 
-                materia: m, 
-                cuat: c, 
-                rite: riteVal || null, 
-                nota: notaNum, 
-                fechaUpdate: new Date().toISOString(),
-                docenteDni: USER_DATA.id 
-            }, { merge: true }); 
-            cambios++;
-        } 
-    }); 
-
-    if(cambios === 0) {
-        alert("No se detectaron cambios para guardar (campos vacíos).");
-        btn.innerText = originalText; btn.disabled = false;
-        return;
-    }
-
-    // 5. Ejecutar Batch
-    try { 
-        await batch.commit(); 
-        alert(`✅ ¡Éxito! ${cambios} calificaciones guardadas.`); 
-        verAlumnos(); // Recargar para limpiar/sincronizar
-    } catch (e) { 
-        console.error("Error Firebase:", e);  
-        alert("❌ Error al guardar en la base de datos: " + e.message); 
-    } 
-    
-    // Restaurar botón
-    btn.innerText = originalText;
-    btn.disabled = false;
+// GUARDAR NOTAS
+async function guardarNotas() {
+const btn = document.getElementById('btn-guardar-notas');
+const originalText = btn.innerText;
+btn.innerText = "Guardando...";
+btn.disabled = true;
+const val = document.getElementById('sel-mats').value;
+if(!val) {
+alert("Error: No hay materia seleccionada.");
+btn.innerText = originalText; btn.disabled = false;
+return;
+}
+const [m, a, c] = val.split('|');
+const rows = document.querySelectorAll('#tabla-planilla-active tbody tr');
+if(rows.length === 0) {
+alert("No hay alumnos en la lista para guardar.");
+btn.innerText = originalText; btn.disabled = false;
+return;
+}
+const batch = db.batch();
+let cambios = 0;
+rows.forEach(row => {
+const select = row.querySelector('select[id^="r-"]');
+const input = row.querySelector('input[type="number"]');
+if(!select) return;
+const dni = select.id.replace('r-', '');
+const riteVal = select.value;
+const notaVal = input ? input.value : '';
+let notaNum = null;
+if(notaVal !== '') {
+notaNum = parseFloat(notaVal);
+if(isNaN(notaNum)) notaNum = null;
+}
+if(riteVal || notaNum !== null) {
+const idDoc = `${dni}_${m.replace(/\s+/g,'')}_${c.replace(/\s+/g,'')}`;
+const ref = db.collection("evaluaciones").doc(idDoc);
+batch.set(ref, {
+alumnoDni: dni,
+materia: m,
+cuat: c,
+rite: riteVal || null,
+nota: notaNum,
+fechaUpdate: new Date().toISOString(),
+docenteDni: USER_DATA.id
+}, { merge: true });
+cambios++;
+}
+});
+if(cambios === 0) {
+alert("No se detectaron cambios para guardar (campos vacíos).");
+btn.innerText = originalText; btn.disabled = false;
+return;
+}
+try {
+await batch.commit();
+alert(`✅ ¡Éxito! ${cambios} calificaciones guardadas.`);
+verAlumnos();
+} catch (e) {
+console.error("Error Firebase:", e);
+alert("❌ Error al guardar en la base de datos: " + e.message);
+}
+btn.innerText = originalText;
+btn.disabled = false;
 }
 
-// 5. ESTUDIANTE
+// 5. ASISTENCIA - CARGAR ALUMNOS
+async function cargarAlumnosAsistencia() {
+const val = document.getElementById('sel-mats-asistencia').value;
+const fecha = document.getElementById('fecha-asistencia').value;
+if(!val || !fecha) return;
+const [materiaSel, anioSel, cuatSel] = val.split('|');
+const anioMatNum = anioSel.replace(/\D/g, "");
+document.getElementById('area-asistencia').classList.remove('hidden');
+document.getElementById('txt-materia-asistencia').innerText = `${materiaSel} - ${fecha}`;
+try {
+const snapAlu = await db.collection("usuarios").where("rol","==","estudiante").get();
+const snapAsist = await db.collection("asistencia")
+  .where("materia", "==", materiaSel)
+  .where("fecha", "==", fecha)
+  .get();
+const asistCargadas = {};
+snapAsist.forEach(doc => { asistCargadas[doc.data().alumnoDni] = doc.data().estado; });
+let html = `<table style="width:100%" id="tabla-asistencia-active"><thead><tr><th>Alumno</th><th>Asistencia</th></tr></thead><tbody>`;
+let count = 0;
+snapAlu.forEach(doc => {
+const u = doc.data();
+const uAnioRaw = (u.año || u.anio || "").toString().trim().toLowerCase();
+let uAnioNorm = uAnioRaw.replace(/\D/g, "");
+if(uAnioNorm === anioMatNum) {
+count++;
+const estadoPrevio = asistCargadas[doc.id] || 'presente';
+html += `<tr>
+<td>${u.nombre} <small style="color:#999">(DNI: ${doc.id})</small></td>
+<td>
+<div class="asistencia-options">
+<label><input type="radio" name="asist-${doc.id}" value="presente" ${estadoPrevio==='presente'?'checked':''}> Presente</label>
+<label><input type="radio" name="asist-${doc.id}" value="ausente" ${estadoPrevio==='ausente'?'checked':''}> Ausente</label>
+<label><input type="radio" name="asist-${doc.id}" value="tarde" ${estadoPrevio==='tarde'?'checked':''}> Tarde</label>
+<label><input type="radio" name="asist-${doc.id}" value="justificado" ${estadoPrevio==='justificado'?'checked':''}> Justificado</label>
+</div>
+</td>
+</tr>`;
+}
+});
+html += `</tbody></table>`;
+if(count === 0) {
+document.getElementById('tabla-asistencia-carga').innerHTML = `<div style='padding:20px; text-align:center; color:#c5221f; background:#fce8e2; border-radius:8px;'>
+<i class='bi bi-exclamation-triangle'></i> <b>No se encontraron alumnos</b>
+</div>`;
+} else {
+document.getElementById('tabla-asistencia-carga').innerHTML = html;
+}
+} catch (e) {
+console.error(e);
+document.getElementById('tabla-asistencia-carga').innerText = "Error: " + e.message;
+}
+}
+
+// 6. ASISTENCIA - GUARDAR
+async function guardarAsistencia() {
+const btn = document.getElementById('btn-guardar-asistencia');
+const originalText = btn.innerText;
+btn.innerText = "Guardando...";
+btn.disabled = true;
+const val = document.getElementById('sel-mats-asistencia').value;
+const fecha = document.getElementById('fecha-asistencia').value;
+if(!val || !fecha) {
+alert("Error: Seleccione materia y fecha.");
+btn.innerText = originalText; btn.disabled = false;
+return;
+}
+const [m, a, c] = val.split('|');
+const rows = document.querySelectorAll('#tabla-asistencia-active tbody tr');
+if(rows.length === 0) {
+alert("No hay alumnos en la lista.");
+btn.innerText = originalText; btn.disabled = false;
+return;
+}
+const batch = db.batch();
+let cambios = 0;
+rows.forEach(row => {
+const select = row.querySelector('select[id^="r-"]');
+const radioGroup = row.querySelector('td:last-child');
+if(!radioGroup) return;
+const dni = radioGroup.innerHTML.match(/asist-(\d+)/)?.[1];
+if(!dni) return;
+const estado = radioGroup.querySelector('input[type="radio"]:checked')?.value || 'presente';
+const idDoc = `${dni}_${m.replace(/\s+/g,'')}_${fecha}`;
+const ref = db.collection("asistencia").doc(idDoc);
+batch.set(ref, {
+alumnoDni: dni,
+materia: m,
+cuat: c,
+año: a,
+fecha: fecha,
+estado: estado,
+docenteDni: USER_DATA.id,
+fechaRegistro: new Date().toISOString()
+}, { merge: true });
+cambios++;
+});
+try {
+await batch.commit();
+alert(`✅ ¡Éxito! Asistencia de ${cambios} alumnos guardada.`);
+cargarAlumnosAsistencia();
+} catch (e) {
+console.error("Error Firebase:", e);
+alert("❌ Error: " + e.message);
+}
+btn.innerText = originalText;
+btn.disabled = false;
+}
+
+// 7. ASISTENCIA - DIRECTOR
+async function verAsistenciaDirector() {
+const fecha = document.getElementById('dir-asistencia-fecha').value;
+if(!fecha) {
+alert("Seleccione una fecha");
+return;
+}
+const resDiv = document.getElementById('dir-asistencia-res');
+resDiv.innerHTML = "<p>Cargando...</p>";
+try {
+const snap = await db.collection("asistencia").where("fecha", "==", fecha).get();
+if(snap.empty) {
+resDiv.innerHTML = "<p>No hay registros de asistencia para esta fecha.</p>";
+return;
+}
+const usuarios = await db.collection("usuarios").get();
+const usuariosMap = {};
+usuarios.forEach(doc => { usuariosMap[doc.id] = doc.data(); });
+let stats = { presente: 0, ausente: 0, tarde: 0, justificado: 0 };
+let html = `<table style="width:100%"><thead><tr><th>Alumno</th><th>Materia</th><th>Estado</th><th>Docente</th></tr></thead><tbody>`;
+snap.forEach(doc => {
+const d = doc.data();
+stats[d.estado]++;
+const alumno = usuariosMap[d.alumnoDni] || { nombre: d.alumnoDni };
+const docente = usuariosMap[d.docenteDni] || { nombre: d.docenteDni };
+html += `<tr>
+<td>${alumno.nombre}</td>
+<td>${d.materia}</td>
+<td><span class="badge badge-${d.estado}">${d.estado.toUpperCase()}</span></td>
+<td>${docente.nombre}</td>
+</tr>`;
+});
+html += `</tbody></table>`;
+html += `<div style="margin-top:20px; display:grid; grid-template-columns:repeat(4,1fr); gap:10px;">
+<div style="background:#e6f4ea; padding:15px; border-radius:8px; text-align:center;"><b>${stats.presente}</b><br>Presentes</div>
+<div style="background:#fce8e2; padding:15px; border-radius:8px; text-align:center;"><b>${stats.ausente}</b><br>Ausentes</div>
+<div style="background:#fef7e0; padding:15px; border-radius:8px; text-align:center;"><b>${stats.tarde}</b><br>Tarde</div>
+<div style="background:#e8eaed; padding:15px; border-radius:8px; text-align:center;"><b>${stats.justificado}</b><br>Justificados</div>
+</div>`;
+resDiv.innerHTML = html;
+} catch (e) {
+console.error(e);
+resDiv.innerHTML = "<p>Error: " + e.message + "</p>";
+}
+}
+
+// 8. ASISTENCIA - ESTUDIANTE
+async function verAsistenciaEstudiante() {
+const resDiv = document.getElementById('est-asistencia-res');
+resDiv.innerHTML = "<p>Cargando...</p>";
+try {
+const snap = await db.collection("asistencia").where("alumnoDni", "==", USER_DATA.id).get();
+if(snap.empty) {
+resDiv.innerHTML = "<p>No hay registros de asistencia.</p>";
+return;
+}
+const materias = {};
+snap.forEach(doc => {
+const d = doc.data();
+if(!materias[d.materia]) materias[d.materia] = { presente: 0, ausente: 0, tarde: 0, justificado: 0, total: 0 };
+materias[d.materia][d.estado]++;
+materias[d.materia].total++;
+});
+let html = `<div style="display:grid; gap:15px;">`;
+for(const mat in materias) {
+const m = materias[mat];
+const pct = m.total > 0 ? ((m.presente / m.total) * 100).toFixed(0) : 0;
+html += `<div class="card-pof">
+<h4>${mat}</h4>
+<p><b>Asistencia:</b> ${pct}% (${m.presente}/${m.total} clases)</p>
+<div style="display:grid; grid-template-columns:repeat(4,1fr); gap:5px; margin-top:10px;">
+<span class="badge badge-presente">${m.presente} Presentes</span>
+<span class="badge badge-ausente">${m.ausente} Ausentes</span>
+<span class="badge badge-tarde">${m.tarde} Tarde</span>
+<span class="badge badge-justificado">${m.justificado} Just.</span>
+</div>
+</div>`;
+}
+html += `</div>`;
+resDiv.innerHTML = html;
+} catch (e) {
+console.error(e);
+resDiv.innerHTML = "<p>Error: " + e.message + "</p>";
+}
+}
+
+// 9. ESTUDIANTE - BOLETÍN
 async function renderBoletin() { const div = document.getElementById('boletin-res'); try { const userDoc = await db.collection("usuarios").doc(USER_DATA.id).get(); const u = userDoc.data(); const anio = u.año || u.anio || "-"; const obs = u.observaciones || "<i>Sin observaciones.</i>"; const snap = await db.collection("evaluaciones").where("alumnoDni", "==", USER_DATA.id).get(); let html = `<div class="boletin-card" style="border-left: 5px solid var(--est);"><h2 style="margin:0">${USER_DATA.nombre}</h2><p style="margin:5px 0 0; color:#666;">DNI: ${USER_DATA.id} | <span style="background:var(--est); color:white; padding:2px 6px; border-radius:4px; font-size:12px;">Año ${anio}</span></p></div>`; const periodos = {}; snap.forEach(d => { const n = d.data(); const cuat = n.cuat || "General"; if (!periodos[cuat]) periodos[cuat] = []; periodos[cuat].push(n); }); for (const cuat in periodos) { html += `<div class="boletin-card"><h4 style="margin-top:0; color:var(--yt-text-secondary);">${cuat}</h4><table style="margin:0;">`; periodos[cuat].forEach(n => { html += `<tr><td style="padding:8px 0;">${n.materia}</td><td style="text-align:right;"><b>${n.nota || '-'}</b></td><td style="text-align:right; width:50px;"><span class="badge badge-${n.rite.toLowerCase()}">${n.rite}</span></td></tr>`; }); html += `</table></div>`; } html += `<div class="boletin-card" style="background: #fffde7; border: 1px solid #f9a825;"><h4 style="margin:0; color:#f57f17;">Observaciones</h4><p style="margin: 10px 0 0; white-space: pre-wrap;">${obs}</p></div>`; div.innerHTML = html; } catch(e) { div.innerHTML = "Error."; } }
 
-// 6. LEGAJO
-async function abrirLegajo(dni) { 
-    const doc = await db.collection("usuarios").doc(dni).get(); 
-    if (doc.exists) { 
-        const u = doc.data(); 
-        document.getElementById('leg-dni').value = dni; 
-        document.getElementById('leg-nom').value = u.nombre || ""; 
-        document.getElementById('leg-anio').value = u.año || u.anio || ""; 
-        document.getElementById('leg-fec').value = u.fechaNacimiento || ""; 
-        document.getElementById('leg-sexo').value = u.sexo || ""; 
-        document.getElementById('leg-dir').value = u.direccion || ""; 
-        document.getElementById('leg-obs').value = u.observaciones || ""; 
-        
-        const fieldMaterias = document.getElementById('field-materias');
-        if(u.rol === 'docente') {
-            fieldMaterias.style.display = 'block';
-            document.getElementById('leg-materias').value = u.materias ? JSON.stringify(u.materias, null, 2) : "";
-        } else {
-            fieldMaterias.style.display = 'none';
-            document.getElementById('leg-materias').value = "";
-        }
-
-        document.getElementById('modal-legajo').classList.add('show'); 
-    } 
+// 10. LEGAJO
+async function abrirLegajo(dni) {
+const doc = await db.collection("usuarios").doc(dni).get();
+if (doc.exists) {
+const u = doc.data();
+document.getElementById('leg-dni').value = dni;
+document.getElementById('leg-nom').value = u.nombre || "";
+document.getElementById('leg-anio').value = u.año || u.anio || "";
+document.getElementById('leg-fec').value = u.fechaNacimiento || "";
+document.getElementById('leg-sexo').value = u.sexo || "";
+document.getElementById('leg-dir').value = u.direccion || "";
+document.getElementById('leg-obs').value = u.observaciones || "";
+const fieldMaterias = document.getElementById('field-materias');
+if(u.rol === 'docente') {
+fieldMaterias.style.display = 'block';
+document.getElementById('leg-materias').value = u.materias ? JSON.stringify(u.materias, null, 2) : "";
+} else {
+fieldMaterias.style.display = 'none';
+document.getElementById('leg-materias').value = "";
 }
-
-async function actualizarLegajo() { 
-    const dni = document.getElementById('leg-dni').value; 
-    const data = { 
-        nombre: document.getElementById('leg-nom').value, 
-        año: document.getElementById('leg-anio').value, 
-        fechaNacimiento: document.getElementById('leg-fec').value, 
-        sexo: document.getElementById('leg-sexo').value, 
-        direccion: document.getElementById('leg-dir').value, 
-        observaciones: document.getElementById('leg-obs').value 
-    }; 
-    
-    const matInput = document.getElementById('leg-materias').value;
-    if(matInput) {
-        try {
-            data.materias = JSON.parse(matInput);
-        } catch(e) {
-            alert("Error en el formato JSON de materias. Corríjalo antes de guardar.");
-            return;
-        }
-    }
-
-    try { 
-        await db.collection("usuarios").doc(dni).update(data); 
-        alert("Legajo actualizado"); 
-        document.getElementById('modal-legajo').classList.remove('show'); 
-        renderAdmin(); 
-    } catch(e) { 
-        alert("Error al guardar: " + e.message); 
-    } 
+document.getElementById('modal-legajo').classList.add('show');
+}
+}
+async function actualizarLegajo() {
+const dni = document.getElementById('leg-dni').value;
+const data = {
+nombre: document.getElementById('leg-nom').value,
+año: document.getElementById('leg-anio').value,
+fechaNacimiento: document.getElementById('leg-fec').value,
+sexo: document.getElementById('leg-sexo').value,
+direccion: document.getElementById('leg-dir').value,
+observaciones: document.getElementById('leg-obs').value
+};
+const matInput = document.getElementById('leg-materias').value;
+if(matInput) {
+try {
+data.materias = JSON.parse(matInput);
+} catch(e) {
+alert("Error en el formato JSON de materias. Corríjalo antes de guardar.");
+return;
+}
+}
+try {
+await db.collection("usuarios").doc(dni).update(data);
+alert("Legajo actualizado");
+document.getElementById('modal-legajo').classList.remove('show');
+renderAdmin();
+} catch(e) {
+alert("Error al guardar: " + e.message);
+}
 }
 </script>
 </body>
