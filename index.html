@@ -81,7 +81,6 @@ tr:hover { background: #f9f9f9; }
 </style>
 </head>
 <body>
-<!-- PORTAL DE BIENVENIDA -->
 <div id="portal" class="view-section active" style="padding-top: 100px; text-align: center; height: 100vh; display: block;">
 <h1 style="font-size: 3em; font-weight: 700;">CENS 451</h1>
 <p style="color: var(--yt-text-secondary); font-size: 16px; margin-bottom: 40px;">Seleccione su portal de acceso</p>
@@ -100,7 +99,6 @@ tr:hover { background: #f9f9f9; }
 </div>
 </div>
 </div>
-<!-- MODAL LOGIN/REGISTRO -->
 <div id="modal-login" class="modal-overlay">
 <div class="modal-content" style="width: 400px;">
 <div class="modal-header">
@@ -137,7 +135,6 @@ tr:hover { background: #f9f9f9; }
 </div>
 </div>
 </div>
-<!-- APP PRINCIPAL -->
 <div id="main-app" class="app-container hidden">
 <nav class="sidebar" id="main-sidebar">
 <div class="sidebar-header">
@@ -170,7 +167,6 @@ tr:hover { background: #f9f9f9; }
 <div class="avatar" id="user-avatar">U</div>
 </div>
 </header>
-<!-- PANEL -->
 <section id="dir-panel" class="view-section active">
 <div class="stats-grid">
 <div class="stat-card"><div class="stat-icon" style="background: #c5221f;"><i class="bi bi-people"></i></div><div class="stat-info"><h2 id="s-alu">0</h2><p>Alumnos</p></div></div>
@@ -186,13 +182,11 @@ tr:hover { background: #f9f9f9; }
 </div>
 </div>
 </section>
-<!-- ESTADÍSTICAS -->
 <section id="dir-stats" class="view-section">
 <h3 style="margin-top:0;">Distribución de Alumnos por Año</h3>
 <div id="stats-year-summary" class="stats-grid"></div>
 <div id="stats-details-container"></div>
 </section>
-<!-- POF-POFA -->
 <section id="dir-pof" class="view-section">
 <div class="yt-table-container" style="border-radius: 12px;">
 <div class="pof-tabs">
@@ -226,7 +220,6 @@ tr:hover { background: #f9f9f9; }
 </div>
 </div>
 </section>
-<!-- MONITOR -->
 <section id="dir-monitor" class="view-section">
 <div class="yt-table-container">
 <div class="yt-table-header">
@@ -238,7 +231,6 @@ tr:hover { background: #f9f9f9; }
 </div>
 </div>
 </section>
-<!-- USUARIOS -->
 <section id="dir-usuarios" class="view-section">
 <div class="yt-table-container">
 <div class="yt-table-header" style="flex-wrap: wrap; gap: 10px;">
@@ -254,7 +246,6 @@ tr:hover { background: #f9f9f9; }
 </div>
 </div>
 </section>
-<!-- DOCENTE -->
 <section id="doc-planillas" class="view-section">
 <div style="max-width: 800px;">
 <div class="yt-table-container">
@@ -270,13 +261,11 @@ tr:hover { background: #f9f9f9; }
 </div>
 </div>
 </section>
-<!-- ESTUDIANTE -->
 <section id="est-boletin" class="view-section">
 <div class="student-view"><div id="boletin-res">Cargando...</div></div>
 </section>
 </div>
 </div>
-<!-- MODAL LEGAJO -->
 <div id="modal-legajo" class="modal-overlay">
 <div class="modal-content">
 <div class="modal-header">
@@ -308,7 +297,6 @@ tr:hover { background: #f9f9f9; }
 </div>
 </div>
 </div>
-<!-- MODAL ALTA SIMPLE (Solo DB) -->
 <div id="modal-alta" class="modal-overlay">
 <div class="modal-content">
 <div class="modal-header">
@@ -327,7 +315,6 @@ tr:hover { background: #f9f9f9; }
 </div>
 </div>
 <script>
-// 1. CONFIGURACIÓN FIREBASE
 const firebaseConfig = {
 apiKey: "AIzaSyAeezu1BHZch8eaNnVV-MJ6Rpdl1BzFHXY",
 authDomain: "app-escuela-cens451.firebaseapp.com",
@@ -340,7 +327,6 @@ let ROL_LOGIN = "";
 let USER_DATA = null;
 let CACHE_ALUMNOS = [];
 
-// 2. NAVEGACIÓN UI
 function showSection(id) {
 document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
 document.getElementById(id).classList.add('active');
@@ -366,7 +352,6 @@ document.querySelectorAll('.auth-tab')[1].classList.add('active');
 }
 }
 
-// --- FUNCIÓN DE REGISTRO ---
 async function registrarUsuario() {
 const d = document.getElementById('r-dni').value.trim();
 const n = document.getElementById('r-nom').value.trim();
@@ -423,7 +408,6 @@ else if(ROL_LOGIN === 'docente') { sidebar.style.background = 'var(--doc)'; docu
 else { sidebar.style.background = 'var(--est)'; document.getElementById('nav-estudiante').classList.remove('hidden'); showSection('est-boletin'); renderBoletin(); }
 }
 
-// 3. LÓGICA DIRECTOR
 async function renderAdmin() {
 try {
 const snapUsuarios = await db.collection("usuarios").get();
@@ -469,7 +453,6 @@ renderAdmin();
 } catch (e) { alert("Error al guardar en DB."); console.error(e); }
 }
 
-// --- ESTADÍSTICAS ---
 function getAnio(u) { 
 const val = (u.año || u.anio || "0").toString().trim().toLowerCase();
 if (["1", "1°", "primero", "primer"].includes(val)) return "1";
@@ -527,7 +510,6 @@ htmlDetails += `<div class="card-pof" style="border-left: 5px solid ${k === '1' 
 detailsDiv.innerHTML = htmlDetails;
 }
 
-// --- POF-POFA ---
 function showPofTab(id) { document.querySelectorAll('.pof-content').forEach(el => el.classList.add('hidden')); document.querySelectorAll('.pof-tab').forEach(el => el.classList.remove('active')); document.getElementById(id).classList.remove('hidden'); event.target.classList.add('active'); }
 async function cargarPOF() { try { const doc = await db.collection("configuracion").doc("pof_2025").get(); if (doc.exists) { const data = doc.data(); document.getElementById('pof-res-creacion').value = data.res_creacion || ""; document.getElementById('pof-anio-creacion').value = data.anio_creacion || ""; document.getElementById('pof-categoria').value = data.categoria || ""; document.getElementById('pof-ubicacion').value = data.ubicacion || ""; document.getElementById('pof-domicilio').value = data.domicilio || ""; document.getElementById('pof-telefono').value = data.telefono || ""; document.getElementById('pof-region').value = data.region || ""; document.getElementById('pof-distrito').value = data.distrito || ""; renderTablaPOF('tabla-personal', data.personal || []); } } catch(e) { console.error(e); } }
 function renderTablaPOF(tableId, dataArray) { const tbody = document.querySelector(`#${tableId} tbody`); tbody.innerHTML = ""; dataArray.forEach((item) => { tbody.innerHTML += `<tr><td><input type="text" value="${item.nombre || ''}" class="yt-input"></td><td><input type="text" value="${item.cargo || ''}" class="yt-input"></td><td><input type="text" value="${item.dni || ''}" class="yt-input"></td><td><button class="btn-yt danger" onclick="this.parentElement.parentElement.remove()"><i class="bi bi-trash"></i></button></td></tr>`; }); }
@@ -536,7 +518,6 @@ async function guardarPOF() { const data = { res_creacion: document.getElementBy
 function filtrarNotasGlobal() { const t = document.getElementById('buscador-notas').value.toLowerCase(); document.querySelectorAll("#tabla-todas-notas tbody tr").forEach(r => { r.style.display = r.innerText.toLowerCase().includes(t) ? "" : "none"; }); }
 function filtrarUsuarios() { const t = document.getElementById('buscador-u').value.toLowerCase(); document.querySelectorAll("#tabla-usuarios-db tbody tr").forEach(r => { r.style.display = r.innerText.toLowerCase().includes(t) ? "" : "none"; }); }
 
-// 4. DOCENTE
 function cargarMatsDocente() { const sel = document.getElementById('sel-mats'); const key = Object.keys(USER_DATA).find(k => k.toUpperCase() === 'MATERIA' || k.toUpperCase() === 'MATERIAS'); const m = USER_DATA[key]; if (!m) return; sel.innerHTML = '<option value="">Seleccione Materia</option>'; for (let anioKey in m) { for (let cuatKey in m[anioKey]) { let lista = m[anioKey][cuatKey]; if (Array.isArray(lista)) lista.forEach(nom => { let opt = document.createElement('option'); opt.value = `${nom}|${anioKey}|${cuatKey}`; opt.innerText = `${nom} (${anioKey})`; sel.appendChild(opt); }); } } }
 
 async function verAlumnos() { 
@@ -565,7 +546,7 @@ document.getElementById('tabla-carga').innerHTML = html || "No hay alumnos.";
 } catch (e) { console.error(e); } 
 }
 
-// ✅ FUNCIÓN guardarNotas() CORREGIDA - AHORA FUNCIONA
+// ✅ FUNCIÓN guardarNotas() 100% CORREGIDA
 async function guardarNotas() { 
 const val = document.getElementById('sel-mats').value; 
 if(!val) return; 
@@ -580,7 +561,7 @@ const notaInput = document.getElementById('n-'+dni).value;
 // ✅ CONVERTIR NOTA A NÚMERO (o null si está vacío)
 const notaNum = notaInput !== '' ? Number(notaInput) : null;
 
-// ✅ GUARDAR si hay RITE O hay nota (al menos uno)
+// ✅ GUARDAR SI HAY RITE O NOTA (al menos uno)
 if(rite || notaNum !== null) { 
 const idDoc = `${dni}_${m.replace(/\s+/g,'')}_${c.replace(/\s+/g,'')}`; 
 
@@ -591,7 +572,7 @@ cuat: c,
 rite: rite || null,           // ✅ Enviar null si está vacío
 nota: notaNum,                // ✅ Número o null (cumple reglas de Firestore)
 fechaUpdate: new Date().toISOString(),
-docenteDni: USER_DATA.id      // ✅ Para auditoría
+docenteDni: USER_DATA.id      // ✅ Requerido por tus reglas de seguridad
 }, { merge: true }); 
 } 
 }); 
@@ -599,17 +580,15 @@ docenteDni: USER_DATA.id      // ✅ Para auditoría
 try { 
 await batch.commit(); 
 alert("✅ Notas guardadas correctamente."); 
-verAlumnos(); // Recargar la vista
+verAlumnos(); 
 } catch (e) { 
-console.error("Error al guardar:", e);  // ✅ Mostrar error real en consola
+console.error("Error al guardar:", e);
 alert("❌ Error: " + e.message); 
 } 
 }
 
-// 5. ESTUDIANTE
 async function renderBoletin() { const div = document.getElementById('boletin-res'); try { const userDoc = await db.collection("usuarios").doc(USER_DATA.id).get(); const u = userDoc.data(); const anio = u.año || u.anio || "-"; const obs = u.observaciones || "<i>Sin observaciones.</i>"; const snap = await db.collection("evaluaciones").where("alumnoDni", "==", USER_DATA.id).get(); let html = `<div class="boletin-card" style="border-left: 5px solid var(--est);"><h2 style="margin:0">${USER_DATA.nombre}</h2><p style="margin:5px 0 0; color:#666;">DNI: ${USER_DATA.id} | <span style="background:var(--est); color:white; padding:2px 6px; border-radius:4px; font-size:12px;">Año ${anio}</span></p></div>`; const periodos = {}; snap.forEach(d => { const n = d.data(); const cuat = n.cuat || "General"; if (!periodos[cuat]) periodos[cuat] = []; periodos[cuat].push(n); }); for (const cuat in periodos) { html += `<div class="boletin-card"><h4 style="margin-top:0; color:var(--yt-text-secondary);">${cuat}</h4><table style="margin:0;">`; periodos[cuat].forEach(n => { html += `<tr><td style="padding:8px 0;">${n.materia}</td><td style="text-align:right;"><b>${n.nota || '-'}</b></td><td style="text-align:right; width:50px;"><span class="badge badge-${n.rite.toLowerCase()}">${n.rite}</span></td></tr>`; }); html += `</table></div>`; } html += `<div class="boletin-card" style="background: #fffde7; border: 1px solid #f9a825;"><h4 style="margin:0; color:#f57f17;">Observaciones</h4><p style="margin: 10px 0 0; white-space: pre-wrap;">${obs}</p></div>`; div.innerHTML = html; } catch(e) { div.innerHTML = "Error."; } }
 
-// 6. LEGAJO
 async function abrirLegajo(dni) { const doc = await db.collection("usuarios").doc(dni).get(); if (doc.exists) { const u = doc.data(); document.getElementById('leg-dni').value = dni; document.getElementById('leg-nom').value = u.nombre || ""; document.getElementById('leg-anio').value = u.año || u.anio || ""; document.getElementById('leg-fec').value = u.fechaNacimiento || ""; document.getElementById('leg-sexo').value = u.sexo || ""; document.getElementById('leg-dir').value = u.direccion || ""; document.getElementById('leg-obs').value = u.observaciones || ""; document.getElementById('modal-legajo').classList.add('show'); } }
 async function actualizarLegajo() { const dni = document.getElementById('leg-dni').value; const data = { nombre: document.getElementById('leg-nom').value, año: document.getElementById('leg-anio').value, fechaNacimiento: document.getElementById('leg-fec').value, sexo: document.getElementById('leg-sexo').value, direccion: document.getElementById('leg-dir').value, observaciones: document.getElementById('leg-obs').value }; try { await db.collection("usuarios").doc(dni).update(data); alert("Legajo actualizado"); document.getElementById('modal-legajo').classList.remove('show'); renderAdmin(); } catch(e) { alert("Error al guardar"); } }
 </script>
